@@ -1,5 +1,12 @@
 ﻿@page "/clients"
+@using InvoiceAutomationWebApp.Data
+@using InvoiceAutomationWebApp.Data.Clients
+@using System.Threading.Tasks
+@using InvoiceAutomationWebApp.Data.Clients.Entities
 @rendermode InteractiveServer
+
+@inject ApiClient api
+@inject NavigationManager NavigationManager
 
 <PageTitle>Clients</PageTitle>
 
@@ -19,3 +26,47 @@
                 StartIcon="@Icons.Material.Filled.Delete" />
     </div>
 </div>
+
+<MudTable Breakpoint="Breakpoint.Sm"
+          Items="@clients"
+          Hover="true"
+          Loading="@loading"
+          LoadingProgressColor="Color.Info"
+          OnRowClick="ClientSelected"
+          RowClass="cursor-pointer"
+          T="Client">
+    <HeaderContent>
+        <MudTh>ID</MudTh>
+        <MudTh>Name</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="ID">@context.ClientID</MudTd>
+        <MudTd DataLabel="Name">@context.ClientName</MudTd>
+    </RowTemplate>
+</MudTable>
+
+@code {
+    private List<Client> clients = [];
+    private bool loading = true;
+
+    private void ClientSelected(TableRowClickEventArgs<Client> args)
+    {
+        var _SelectedClient = args.Item;
+
+        if (_SelectedClient is not null)
+            NavigationManager.NavigateTo($"/clients/{_SelectedClient.ClientID}");
+    }
+
+    private async Task GetClients()
+    {
+        var _Response = await api.GetClientsAsync();
+
+        clients = _Response.Clients ?? [];
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await GetClients();
+        loading = false;
+    }
+}

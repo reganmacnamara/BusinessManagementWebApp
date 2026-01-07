@@ -1,0 +1,37 @@
+﻿@page "/clients/{id}"
+
+@using InvoiceAutomationWebApp.Data
+@using InvoiceAutomationWebApp.Data.Clients.Entities
+@inject ApiClient api
+
+@if (isLoading)
+{
+    <h1>Fetching Data...</h1>
+}
+else
+{
+    <h1>@client!.ClientName</h1>
+}
+
+@code {
+
+    private Client? client;
+    private bool isLoading = true;
+
+    [Parameter]
+    public string id { get; set; } = string.Empty;
+
+    private async Task GetClient()
+    {
+        var _Response = await api.GetClientAsync(id);
+
+        client = _Response.Client;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await GetClient();
+        isLoading = false;
+        this.StateHasChanged();
+    }
+}
