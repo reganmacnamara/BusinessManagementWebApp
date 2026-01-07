@@ -17,10 +17,8 @@
 
     <div class="p-2">
         <MudFab Color="Color.Success"
+                OnClick="NavigateToCreateClient"
                 StartIcon="@Icons.Material.Filled.Add" />
-
-        <MudFab Color="Color.Warning"
-                StartIcon="@Icons.Material.Filled.Edit" />
 
         <MudFab Color="Color.Error"
                 StartIcon="@Icons.Material.Filled.Delete" />
@@ -36,12 +34,14 @@
           RowClass="cursor-pointer"
           T="Client">
     <HeaderContent>
-        <MudTh>ID</MudTh>
         <MudTh>Name</MudTh>
+        <MudTh>Phone</MudTh>
+        <MudTh>Email</MudTh>
     </HeaderContent>
     <RowTemplate>
-        <MudTd DataLabel="ID">@context.ClientID</MudTd>
         <MudTd DataLabel="Name">@context.ClientName</MudTd>
+        <MudTd DataLabel="Phone">@context.ClientPhone</MudTd>
+        <MudTd DataLabel="Email">@context.ClientEmail</MudTd>
     </RowTemplate>
 </MudTable>
 
@@ -56,6 +56,9 @@
         if (_SelectedClient is not null)
             NavigationManager.NavigateTo($"/clients/{_SelectedClient.ClientID}");
     }
+
+    private void NavigateToCreateClient()
+        => NavigationManager.NavigateTo($"/clients/create");
 
     private async Task GetClients()
     {

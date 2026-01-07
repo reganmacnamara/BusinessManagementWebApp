@@ -1,13 +1,8 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-namespace InvoiceAutomationWebApp.Data.Clients.Entities
+﻿namespace InvoiceAutomationWebApp.Data.Clients.CreateClient
 {
 
-    public class Client
+    public class CreateClientRequest
     {
-        [Key]
-        public long ClientID { get; set; }
-
         public string ClientName { get; set; } = string.Empty;
 
         public string ClientEmail { get; set; } = string.Empty;

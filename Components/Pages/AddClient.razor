@@ -1,0 +1,55 @@
+﻿@page "/clients/create"
+@using AutoMapper
+@using InvoiceAutomationWebApp.Data
+@using InvoiceAutomationWebApp.Data.Clients.CreateClient
+@using InvoiceAutomationWebApp.Data.Clients.Entities
+@using System.Threading.Tasks
+
+@inject ApiClient api
+@inject IMapper mapper
+@inject NavigationManager NavigationManager
+
+<div class="d-flex">
+    <div class="mr-auto p-2">
+        <h1>New Client</h1>
+    </div>
+
+    <div class="p-2">
+        <MudFab Color="Color.Default"
+                OnClick="OnSave"
+                StartIcon="@Icons.Material.Filled.Save" />
+
+        <MudFab Color="Color.Error"
+                OnClick="NavigateToClients"
+                StartIcon="@Icons.Material.Filled.Cancel" />
+    </div>
+</div>
+
+<MudPaper MaxWidth="70%">
+    <MudTextField @bind-Value="client.ClientName" Label="Name" Variant="Variant.Outlined" Required="true" RequiredError="Client Name Required"></MudTextField>
+    <MudTextField @bind-Value="client.ClientEmail" Label="Email" Variant="Variant.Outlined"></MudTextField>
+    <MudTextField @bind-Value="client.ClientPhone" Label="Phone" Variant="Variant.Outlined"></MudTextField>
+    <MudTextField @bind-Value="client.ClientMobile" Label="Mobile" Variant="Variant.Outlined"></MudTextField>
+    <MudTextField @bind-Value="client.AddressLine1" Label="Address Line 1" Variant="Variant.Outlined"></MudTextField>
+    <MudTextField @bind-Value="client.AddressLine2" Label="Address Line 2" Variant="Variant.Outlined"></MudTextField>
+    <MudTextField @bind-Value="client.PostCode" Label="Postcode" Variant="Variant.Outlined"></MudTextField>
+    <MudTextField @bind-Value="client.State" Label="State" Variant="Variant.Outlined"></MudTextField>
+    <MudTextField @bind-Value="client.Country" Label="Country" Variant="Variant.Outlined"></MudTextField>
+</MudPaper>
+
+@code {
+
+    private Client client = new Client();
+
+    private void NavigateToClients()
+        => NavigationManager.NavigateTo("clients");
+
+
+    private async Task OnSave()
+    {
+        var _Request = mapper.Map<CreateClientRequest>(client);
+
+        var _Response = await api.CreateClientAsync(_Request);
+    }
+}
+

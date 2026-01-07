@@ -8,6 +8,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
+builder.Services.AddAutoMapper(cfg => { }, typeof(Program));
+
 builder.Services.AddMudServices();
 
 builder.Services.AddHttpClient<ApiClient>("WebAPI", client => client.BaseAddress = new Uri("https://localhost:7285"));
