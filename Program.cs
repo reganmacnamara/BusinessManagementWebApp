@@ -1,5 +1,6 @@
 using InvoiceAutomationWebApp.Components;
 using InvoiceAutomationWebApp.Data;
+using MudBlazor;
 using MudBlazor.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -10,7 +11,18 @@ builder.Services.AddRazorComponents()
 
 builder.Services.AddAutoMapper(cfg => { }, typeof(Program));
 
-builder.Services.AddMudServices();
+builder.Services.AddMudServices(config =>
+{
+    config.SnackbarConfiguration.PositionClass = Defaults.Classes.Position.BottomRight;
+
+    config.SnackbarConfiguration.PreventDuplicates = false;
+    config.SnackbarConfiguration.NewestOnTop = false;
+    config.SnackbarConfiguration.ShowCloseIcon = true;
+    config.SnackbarConfiguration.VisibleStateDuration = 3000;
+    config.SnackbarConfiguration.HideTransitionDuration = 500;
+    config.SnackbarConfiguration.ShowTransitionDuration = 500;
+    config.SnackbarConfiguration.SnackbarVariant = Variant.Filled;
+});
 
 builder.Services.AddHttpClient<ApiClient>("WebAPI", client => client.BaseAddress = new Uri("https://localhost:7285"));
 

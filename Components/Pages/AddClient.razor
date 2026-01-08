@@ -7,6 +7,7 @@
 
 @inject ApiClient api
 @inject IMapper mapper
+@inject ISnackbar Snackbar
 @inject NavigationManager NavigationManager
 
 <div class="d-flex">
@@ -15,13 +16,18 @@
     </div>
 
     <div class="p-2">
-        <MudFab Color="Color.Default"
-                OnClick="OnSave"
-                StartIcon="@Icons.Material.Filled.Save" />
 
-        <MudFab Color="Color.Error"
-                OnClick="NavigateToClients"
-                StartIcon="@Icons.Material.Filled.Cancel" />
+        <MudTooltip Delay="300" Text="Save">
+            <MudFab Color="Color.Default"
+                    OnClick="OnSave"
+                    StartIcon="@Icons.Material.Filled.Save" />
+        </MudTooltip>
+
+        <MudTooltip Delay="300" Text="Cancel">
+            <MudFab Color="Color.Error"
+                    OnClick="NavigateToClients"
+                    StartIcon="@Icons.Material.Filled.Cancel" />
+        </MudTooltip>
     </div>
 </div>
 
@@ -38,18 +44,23 @@
 </MudPaper>
 
 @code {
-
     private Client client = new Client();
 
     private void NavigateToClients()
         => NavigationManager.NavigateTo("clients");
 
-
-    private async Task OnSave()
+    private void OnSave()
     {
-        var _Request = mapper.Map<CreateClientRequest>(client);
-
-        var _Response = await api.CreateClientAsync(_Request);
+        if (string.IsNullOrEmpty(client.ClientName))
+        {
+            Snackbar.Add("Client must have a name.", Severity.Error);
+        }
+        else
+        {
+            var _Request = mapper.Map<CreateClientRequest>(client);
+            var _Response = api.CreateClientAsync(_Request);
+            NavigateToClients();
+        }
     }
 }
 
