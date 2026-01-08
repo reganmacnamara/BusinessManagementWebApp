@@ -49,7 +49,7 @@
     private void NavigateToClients()
         => NavigationManager.NavigateTo("clients");
 
-    private void OnSave()
+    private async Task OnSave()
     {
         if (string.IsNullOrEmpty(client.ClientName))
         {
@@ -58,7 +58,7 @@
         else
         {
             var _Request = mapper.Map<CreateClientRequest>(client);
-            var _Response = api.CreateClientAsync(_Request);
+            var _Response = await api.CreateClientAsync(_Request);
             NavigateToClients();
         }
     }

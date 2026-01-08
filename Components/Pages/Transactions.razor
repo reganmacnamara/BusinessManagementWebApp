@@ -1,0 +1,21 @@
+﻿@page "/transactions"
+@using InvoiceAutomationWebApp.Data.Transactions.Entities
+
+<div class="d-flex">
+    <div class="mr-auto p-2">
+        <h1>Transactions</h1>
+    </div>
+
+    <div class="p-2">
+        <MudFab Color="Color.Success"
+                StartIcon="@Icons.Material.Filled.Add" />
+
+        <MudFab Color="Color.Error"
+                Disabled="selectedTransactions.Count == 0"
+                StartIcon="@Icons.Material.Filled.Delete" />
+    </div>
+</div>
+
+@code {
+    List<Transaction> selectedTransactions = [];
+}
