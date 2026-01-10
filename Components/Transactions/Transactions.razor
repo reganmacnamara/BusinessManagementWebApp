@@ -1,0 +1,118 @@
+﻿@page "/transactions"
+@using AutoMapper
+@using InvoiceAutomationWebApp.Data
+@using InvoiceAutomationWebApp.Data.Transactions.DeleteTransaction
+@using InvoiceAutomationWebApp.Data.Transactions.Entities
+@using System.Threading.Tasks
+
+@inject ApiClient api
+@inject IMapper mapper
+@inject NavigationManager NavigationManager
+
+<div class="d-flex">
+    <div class="mr-auto p-2">
+        <h1>Transactions</h1>
+    </div>
+
+    <div class="p-2">
+        <MudFab Color="Color.Success"
+                OnClick="NavigateToCreateTransaction"
+                StartIcon="@Icons.Material.Filled.Add" />
+
+        <MudFab Color="Color.Error"
+                Disabled="selectedTransactions.Count == 0"
+                OnClick="OnDelete"
+                StartIcon="@Icons.Material.Filled.Delete" />
+    </div>
+</div>
+
+<MudDataGrid @bind-SelectedItems="selectedTransactions"
+             Breakpoint="Breakpoint.Sm"
+             Items="transactions"
+             Hover="true"
+             Loading="@loading"
+             LoadingProgressColor="Color.Info"
+             MultiSelection="true"
+             RowClass="cursor-pointer"
+             RowClick="TransactionSelected"
+             SelectOnRowClick="false"
+             T="Transaction">
+    <Columns>
+        <SelectColumn T="Transaction" />
+        <PropertyColumn Property="x => x.TransactionDate" Title="Date" />
+        <PropertyColumn Property="x => x.TransactionRef" Title="Reference" />
+        <PropertyColumn Property="x => x.TransactionType" Title="Type" />
+        <PropertyColumn Property="x => x.Client.ClientName" Title="Client" />
+        <PropertyColumn Property="x => x.NetValue" Title="Net Value" Format="C" />
+    </Columns>
+</MudDataGrid>
+
+<MudMessageBox @ref="deleteConfirmationMessage"
+               Title="Warning"
+               CancelText="Cancel">
+    <MessageContent>
+        Are you sure you want to delete @(selectedTransactions.Count > 1
+                ? $"{selectedTransactions.Count} Transactions"
+                : $"{selectedTransactions.First().TransactionRef}")?
+    </MessageContent>
+    <YesButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.DeleteForever">Delete!</MudButton>
+    </YesButton>
+</MudMessageBox>
+
+@code {
+    private MudMessageBox deleteConfirmationMessage = default!;
+    private string deleteState = string.Empty;
+    private bool loading;
+    HashSet<Transaction> selectedTransactions = [];
+    List<Transaction> transactions = [];
+
+    private async Task GetTransactionsDataAsync()
+    {
+        loading = true;
+
+        var _Response = await api.GetTransactionsAsync();
+        transactions = _Response.Transactions ?? [];
+
+        loading = false;
+        this.StateHasChanged();
+    }
+
+    private void NavigateToCreateTransaction()
+        => NavigationManager.NavigateTo($"/transactions/create");
+
+    private async Task OnDelete()
+    {
+        if (selectedTransactions.Count != 0)
+        {
+            bool? result = await deleteConfirmationMessage.ShowAsync();
+            deleteState = result is null ? "Canceled" : "Deleted!";
+
+            if (deleteState == "Deleted!")
+            {
+                foreach (var transaction in selectedTransactions)
+                {
+                    var _Request = mapper.Map<DeleteTransactionRequest>(transaction);
+                    var _Response = api.DeleteTransactionAsync(_Request);
+                    transactions.Remove(transaction);
+                }
+                this.StateHasChanged();
+            }
+            await GetTransactionsDataAsync();
+            selectedTransactions.Clear();
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await GetTransactionsDataAsync();
+    }
+
+    private void TransactionSelected(DataGridRowClickEventArgs<Transaction> args)
+    {
+        var _SelectedTransaction = args.Item;
+
+        if (_SelectedTransaction is not null)
+            NavigationManager.NavigateTo($"/transactions/{_SelectedTransaction.TransactionID}");
+    }
+}

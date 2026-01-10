@@ -1,4 +1,4 @@
-﻿using InvoiceAutomationAPI.Models;
+﻿using InvoiceAutomationWebApp.Data.Transactions.Entities;
 
 namespace InvoiceAutomationWebApp.Data.Transactions.GetTransaction
 {

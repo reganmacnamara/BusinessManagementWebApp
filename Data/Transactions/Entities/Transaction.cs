@@ -7,13 +7,15 @@ namespace InvoiceAutomationWebApp.Data.Transactions.Entities
     {
         public long TransactionID { get; set; }
 
-        public DateTime TransactionDate { get; set; }
+        public string TransactionRef { get; set; } = string.Empty;
 
-        public string TransactionType { get; init; }
+        public DateTime? TransactionDate { get; set; }
 
-        public DateOnly DueDate { get; set; }
+        public string TransactionType { get; set; }
 
-        public Client Client { get; set; } = null!;
+        public DateTime? DueDate { get; set; }
+
+        public long ClientID { get; set; }
 
         public decimal GrossValue { get; set; }
 
@@ -22,6 +24,8 @@ namespace InvoiceAutomationWebApp.Data.Transactions.Entities
         public decimal NetValue { get; set; }
 
         public decimal OffsetValue { get; set; }
+
+        public Client Client { get; set; }
     }
 
 }

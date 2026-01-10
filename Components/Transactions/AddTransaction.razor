@@ -1,0 +1,145 @@
+﻿@page "/transactions/create"
+@using AutoMapper
+@using InvoiceAutomationWebApp.Components.Clients
+@using InvoiceAutomationWebApp.Data
+@using InvoiceAutomationWebApp.Data.Clients.Entities
+@using InvoiceAutomationWebApp.Data.Transactions.CreateTransaction
+@using InvoiceAutomationWebApp.Data.Transactions.Entities
+@using InvoiceAutomationWebApp.Infrastructure.Enums
+
+@inject ApiClient api
+@inject IMapper mapper
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject NavigationManager NavigationManager
+
+<div class="d-flex">
+    <div class="mr-auto p-2">
+        <h1>New Transaction</h1>
+    </div>
+
+    <div class="p-2">
+        <MudTooltip Delay="300"
+                    Text="Save">
+
+            <MudFab Color="Color.Default"
+                    OnClick="OnSave"
+                    StartIcon="@Icons.Material.Filled.Save" />
+
+        </MudTooltip>
+
+        <MudTooltip Delay="300"
+                    Text="Cancel">
+
+            <MudFab Color="Color.Error"
+                    OnClick="NavigateToTransactions"
+                    StartIcon="@Icons.Material.Filled.Cancel" />
+
+        </MudTooltip>
+    </div>
+</div>
+
+<MudPaper MaxWidth="30%">
+    <MudTextField @bind-Value="transaction.TransactionRef" Label="Transaction Reference" Variant="Variant.Outlined" Required="true" RequiredError="Transaction Reference Required" />
+    <MudDatePicker @bind-Date="transaction.TransactionDate" Label="Transaction Date" />
+    <MudSelect @bind-Value="transaction.TransactionType" Label="Transaction Type" Placeholder="Please Select">
+        <MudSelectItem Value="TransactionType.Invoice.ToString()">Invoice</MudSelectItem>
+        <MudSelectItem Value="TransactionType.Receipt.ToString()">Receipt</MudSelectItem>
+    </MudSelect>
+    <MudDatePicker @bind-Date="transaction.DueDate" Label="Transaction Due Date" Disabled="IsReciept()" />
+    <div class="d-flex flex-row">
+        <MudSelect Value="transaction.Client" T="Client" Label="Client" Placeholder="Select Client" ValueChanged="OnClientChanged">
+            @foreach (var client in clients)
+            {
+                <MudSelectItem Value="client">@client.ClientName</MudSelectItem>
+            }
+        </MudSelect>
+        <MudFab Color="Color.Success"
+                IconSize="Size.Small"
+                OnClick="OpenCreateClientDialogAsync"
+                Size="Size.Small"
+                StartIcon="@Icons.Material.Filled.Add" />
+    </div>
+    <MudNumericField Value="transaction.GrossValue" Format="N2" T="decimal" Label="Gross" ValueChanged="OnGrossUpdated" />
+    <MudNumericField @bind-Value="transaction.TaxValue" Format="N2" T="decimal" Label="Tax" />
+    <MudNumericField @bind-Value="transaction.NetValue" Format="N2" T="decimal" Label="Net" />
+</MudPaper>
+
+<AddClientDialog />
+
+@code {
+    private List<Client> clients = [];
+    private Transaction transaction = new();
+
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; }
+
+    private async Task GetClients()
+    {
+        var _Response = await api.GetClientsAsync();
+
+        clients = _Response.Clients ?? [];
+        this.StateHasChanged();
+    }
+
+    private bool IsReciept()
+        => transaction.TransactionType == TransactionType.Receipt.ToString();
+
+    private void NavigateToTransactions()
+        => NavigationManager.NavigateTo("transactions");
+
+    protected override async Task OnInitializedAsync()
+    {
+        await GetClients();
+    }
+
+    private async Task OnSave()
+    {
+        if (string.IsNullOrEmpty(transaction.TransactionRef))
+        {
+            Snackbar.Add("Transaction must have a reference.", Severity.Error);
+        }
+        else
+        {
+            var _Request = mapper.Map<CreateTransactionRequest>(transaction);
+            var _Response = await api.CreateTransactionAsync(_Request);
+            if (_Response.IsSuccessStatusCode)
+            {
+                Snackbar.Add("Transaction Created.", Severity.Success);
+            }
+            else
+            {
+                Snackbar.Add($"Error {(int)_Response.StatusCode}: Transaction could not be created.", Severity.Error);
+            }
+        }
+    }
+
+    private async Task OpenCreateClientDialogAsync()
+    {
+        //Tech Debt: Make work with ShowAsync
+        var dialog = DialogService.Show<AddClientDialog>();
+        var result = await dialog.Result;
+
+        if (result != null && !result.Canceled)
+        {
+            await GetClients();
+            StateHasChanged();
+        }
+    }
+
+    private async Task OnClientChanged(Client value)
+    {
+        transaction.Client = value;
+        transaction.ClientID = value.ClientID;
+    }
+
+    private async Task OnGrossUpdated(decimal value)
+    {
+        transaction.GrossValue = value;
+        if (value != 0)
+        {
+            transaction.TaxValue = value / 10;
+            transaction.NetValue = value + transaction.TaxValue;
+        }
+    }
+}

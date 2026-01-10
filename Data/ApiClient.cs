@@ -44,7 +44,7 @@ namespace InvoiceAutomationWebApp.Data
         public async Task<GetTransactionResponse> GetTransactionAsync(string transactionID)
             => await http.GetFromJsonAsync<GetTransactionResponse>($"/Transaction/{transactionID}") ?? new GetTransactionResponse();
 
-        public async Task<GetTransactionsResponse> GetTransactionAsync()
+        public async Task<GetTransactionsResponse> GetTransactionsAsync()
             => await http.GetFromJsonAsync<GetTransactionsResponse>("/Transaction") ?? new GetTransactionsResponse();
 
         #endregion
