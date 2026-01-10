@@ -9,11 +9,11 @@ namespace InvoiceAutomationWebApp.Data.Transactions.Entities
 
         public string TransactionRef { get; set; } = string.Empty;
 
-        public DateTime? TransactionDate { get; set; }
+        public DateTime? TransactionDate { get; set; } = DateTime.Now;
 
         public string TransactionType { get; set; }
 
-        public DateTime? DueDate { get; set; }
+        public DateTime? DueDate { get; set; } = DateTime.Today.AddDays(30);
 
         public long ClientID { get; set; }
 

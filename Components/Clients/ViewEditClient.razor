@@ -3,6 +3,7 @@
 @using InvoiceAutomationWebApp.Data
 @using InvoiceAutomationWebApp.Data.Clients.Entities
 @using InvoiceAutomationWebApp.Data.Clients.UpdateClient
+@using InvoiceAutomationWebApp.Data.Transactions.Entities
 
 @inject ApiClient api
 @inject IMapper mapper
@@ -60,7 +61,25 @@ else
         </MudTabPanel>
 
         <MudTabPanel Text="Transactions">
-
+            <MudDataGrid @bind-SelectedItems="selectedTransactions"
+                         Breakpoint="Breakpoint.Sm"
+                         Items="transactions"
+                         Hover="true"
+                         Loading="@isLoading"
+                         LoadingProgressColor="Color.Info"
+                         MultiSelection="true"
+                         RowClass="cursor-pointer"
+                         SelectOnRowClick="false"
+                         T="Transaction">
+                <Columns>
+                    <SelectColumn T="Transaction" />
+                    <PropertyColumn Property="x => x.TransactionDate" Title="Date" />
+                    <PropertyColumn Property="x => x.TransactionRef" Title="Reference" />
+                    <PropertyColumn Property="x => x.TransactionType" Title="Type" />
+                    <PropertyColumn Property="x => x.Client.ClientName" Title="Client" />
+                    <PropertyColumn Property="x => x.NetValue" Title="Net Value" Format="C" />
+                </Columns>
+            </MudDataGrid>
         </MudTabPanel>
     </MudTabs>
 }
@@ -69,15 +88,19 @@ else
 
     private Client? client;
     private bool isLoading = true;
+    private HashSet<Transaction> selectedTransactions = [];
+    private List<Transaction> transactions = [];
 
     [Parameter]
     public string id { get; set; } = string.Empty;
 
-    private async Task GetClient()
+    private async Task GetClientData()
     {
-        var _Response = await api.GetClientAsync(id);
+        var _Client = await api.GetClientAsync(id);
+        var _ClientTransactions = await api.GetClientTransactionsAsync(id);
 
-        client = _Response.Client;
+        client = _Client.Client;
+        transactions = _ClientTransactions.Transactions;
     }
 
     private void NavigateToClients()
@@ -85,7 +108,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        await GetClient();
+        await GetClientData();
         isLoading = false;
         this.StateHasChanged();
     }

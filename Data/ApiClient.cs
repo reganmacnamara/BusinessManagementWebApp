@@ -5,6 +5,7 @@ using InvoiceAutomationWebApp.Data.Clients.GetClients;
 using InvoiceAutomationWebApp.Data.Clients.UpdateClient;
 using InvoiceAutomationWebApp.Data.Transactions.CreateTransaction;
 using InvoiceAutomationWebApp.Data.Transactions.DeleteTransaction;
+using InvoiceAutomationWebApp.Data.Transactions.GetClientTransactions;
 using InvoiceAutomationWebApp.Data.Transactions.GetTransaction;
 using InvoiceAutomationWebApp.Data.Transactions.GetTransactions;
 
@@ -40,6 +41,9 @@ namespace InvoiceAutomationWebApp.Data
 
         public async Task<HttpResponseMessage> DeleteTransactionAsync(DeleteTransactionRequest request)
             => await http.PostAsJsonAsync("/Transaction/Delete", request);
+
+        public async Task<GetClientTransactionsResponse> GetClientTransactionsAsync(string clientID)
+            => await http.GetFromJsonAsync<GetClientTransactionsResponse>($"/Transaction/Client/{clientID}") ?? new GetClientTransactionsResponse();
 
         public async Task<GetTransactionResponse> GetTransactionAsync(string transactionID)
             => await http.GetFromJsonAsync<GetTransactionResponse>($"/Transaction/{transactionID}") ?? new GetTransactionResponse();
