@@ -2,6 +2,7 @@
 using InvoiceAutomationWebApp.Data.Transactions.CreateTransaction;
 using InvoiceAutomationWebApp.Data.Transactions.DeleteTransaction;
 using InvoiceAutomationWebApp.Data.Transactions.Entities;
+using InvoiceAutomationWebApp.Data.Transactions.UpdateTransaction;
 
 namespace InvoiceAutomationWebApp.Infrastructure.AutoMapper
 {
@@ -13,6 +14,8 @@ namespace InvoiceAutomationWebApp.Infrastructure.AutoMapper
             CreateMap<Transaction, DeleteTransactionRequest>();
 
             CreateMap<Transaction, CreateTransactionRequest>();
+
+            CreateMap<Transaction, UpdateTransactionRequest>();
         }
     }
 }

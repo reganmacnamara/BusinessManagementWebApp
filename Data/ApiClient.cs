@@ -8,6 +8,7 @@ using InvoiceAutomationWebApp.Data.Transactions.DeleteTransaction;
 using InvoiceAutomationWebApp.Data.Transactions.GetClientTransactions;
 using InvoiceAutomationWebApp.Data.Transactions.GetTransaction;
 using InvoiceAutomationWebApp.Data.Transactions.GetTransactions;
+using InvoiceAutomationWebApp.Data.Transactions.UpdateTransaction;
 
 namespace InvoiceAutomationWebApp.Data
 {
@@ -50,6 +51,9 @@ namespace InvoiceAutomationWebApp.Data
 
         public async Task<GetTransactionsResponse> GetTransactionsAsync()
             => await http.GetFromJsonAsync<GetTransactionsResponse>("/Transaction") ?? new GetTransactionsResponse();
+
+        public async Task<HttpResponseMessage> UpdateTransactionAsync(UpdateTransactionRequest request)
+            => await http.PostAsJsonAsync("/Transaction/Update", request);
 
         #endregion
 

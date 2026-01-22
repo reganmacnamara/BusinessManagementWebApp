@@ -1,0 +1,120 @@
+﻿@page "/transactions/{id}"
+@using AutoMapper
+@using InvoiceAutomationWebApp.Data
+@using InvoiceAutomationWebApp.Data.Clients.Entities
+@using InvoiceAutomationWebApp.Data.Clients.UpdateClient
+@using InvoiceAutomationWebApp.Data.Transactions.Entities
+@using InvoiceAutomationWebApp.Data.Transactions.UpdateTransaction
+
+@inject ApiClient api
+@inject IMapper mapper
+@inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
+
+@if (isLoading)
+{
+    <h1>Fetching Data...</h1>
+    <MudSkeleton Width="70%" Height="50px" />
+    <MudSkeleton Width="70%" Height="50px" />
+    <MudSkeleton Width="70%" Height="50px" />
+    <MudSkeleton Width="70%" Height="50px" />
+    <MudSkeleton Width="70%" Height="50px" />
+    <MudSkeleton Width="70%" Height="50px" />
+    <MudSkeleton Width="70%" Height="50px" />
+    <MudSkeleton Width="70%" Height="50px" />
+    <MudSkeleton Width="70%" Height="50px" />
+}
+else
+{
+    <div class="d-flex">
+        <div class="mr-auto p-2">
+            <h1>@transaction!.TransactionRef</h1>
+        </div>
+
+        <div class="p-2">
+            <MudTooltip Delay="300" Text="Save">
+                <MudFab Color="Color.Default"
+                        OnClick="OnSave"
+                        StartIcon="@Icons.Material.Filled.Save" />
+            </MudTooltip>
+
+            <MudTooltip Delay="300" Text="Cancel">
+                <MudFab Color="Color.Error"
+                        OnClick="NavigateToTransactions"
+                        StartIcon="@Icons.Material.Filled.Cancel" />
+            </MudTooltip>
+        </div>
+    </div>
+
+    <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6">
+        <MudTabPanel Text="Details">
+            <MudPaper MaxWidth="70%">
+                <MudTextField @bind-Value="transaction.TransactionDate"
+                              Disabled="true"
+                              Format="dd/MM/yyyy"
+                              Label="Transaction Date"
+                              Variant="Variant.Outlined" />
+
+                <MudTextField @bind-Value="transaction.TransactionType"
+                              Disabled="true"
+                              Label="Transaction Type"
+                              Variant="Variant.Outlined" />
+
+                <MudTextField @bind-Value="transaction.DueDate"
+                              Label="Due Date"
+                              Format="dd/MM/yyyy"
+                              Variant="Variant.Outlined"
+                              T="DateTime?" />
+
+                <MudTextField @bind-Value="transaction.Client.ClientName"
+                              Disabled="true"
+                              Label="Client Name"
+                              Variant="Variant.Outlined" />
+            </MudPaper>
+        </MudTabPanel>
+    </MudTabs>
+}
+
+@code {
+    private bool isLoading = true;
+    private Transaction transaction = default!;
+
+    [Parameter]
+    public string id { get; set; } = string.Empty;
+
+    private async Task GetTranctionData()
+    {
+        var _Response = await api.GetTransactionAsync(id);
+
+        transaction = _Response.Transaction;
+        isLoading = false;
+    }
+
+    private void NavigateToTransactions()
+        => NavigationManager.NavigateTo("transactions");
+
+    protected override async Task OnInitializedAsync()
+        => await GetTranctionData();
+
+    private async Task OnSave()
+    {
+        if (string.IsNullOrEmpty(transaction!.TransactionRef))
+        {
+            Snackbar.Add("Transaction must have a reference.", Severity.Error);
+        }
+        else
+        {
+            var _Request = mapper.Map<UpdateTransactionRequest>(transaction);
+            var _Response = await api.UpdateTransactionAsync(_Request);
+            if (_Response.IsSuccessStatusCode)
+            {
+                Snackbar.Add("Transaction Updated.", Severity.Success);
+                NavigationManager.NavigateTo("transactions");
+            }
+            else
+            {
+                Snackbar.Add($"Error {(int)_Response.StatusCode}: Transaction could not be updated.", Severity.Error);
+            }
+        }
+    }
+}
