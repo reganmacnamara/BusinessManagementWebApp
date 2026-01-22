@@ -28,7 +28,7 @@ else
 {
     <div class="d-flex">
         <div class="mr-auto p-2">
-            <h1>@transaction!.TransactionRef</h1>
+            <h1>@transaction.TransactionType - @transaction!.TransactionRef</h1>
         </div>
 
         <div class="p-2">
@@ -70,6 +70,11 @@ else
                               Disabled="true"
                               Label="Client Name"
                               Variant="Variant.Outlined" />
+            </MudPaper>
+        </MudTabPanel>
+        <MudTabPanel Text="Transaction Items">
+            <MudPaper MaxWidth="70%">
+
             </MudPaper>
         </MudTabPanel>
     </MudTabs>

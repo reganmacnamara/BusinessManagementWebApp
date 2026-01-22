@@ -42,20 +42,18 @@
         if (string.IsNullOrEmpty(client.ClientName))
         {
             Snackbar.Add("Client must have a name.", Severity.Error);
+            return;
+        }
+        var _Request = mapper.Map<CreateClientRequest>(client);
+        var _Response = await api.CreateClientAsync(_Request);
+        if (_Response.IsSuccessStatusCode)
+        {
+            Snackbar.Add("Client Created.", Severity.Success);
+            MudDialog.Close(DialogResult.Ok(true));
         }
         else
         {
-            var _Request = mapper.Map<CreateClientRequest>(client);
-            var _Response = await api.CreateClientAsync(_Request);
-            if (_Response.IsSuccessStatusCode)
-            {
-                Snackbar.Add("Client Created.", Severity.Success);
-                MudDialog.Close(DialogResult.Ok(true));
-            }
-            else
-            {
-                Snackbar.Add($"Error {(int)_Response.StatusCode}: Client could not be created.", Severity.Error);
-            }
+            Snackbar.Add($"Error {(int)_Response.StatusCode}: Client could not be created.", Severity.Error);
         }
     }
 }

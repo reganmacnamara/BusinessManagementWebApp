@@ -1,10 +1,9 @@
-﻿@page "/clients"
+﻿@page "/products"
 @using AutoMapper
 @using InvoiceAutomationWebApp.Data
-@using InvoiceAutomationWebApp.Data.Clients
 @using System.Threading.Tasks
-@using InvoiceAutomationWebApp.Data.Clients.DeleteClient
-@using InvoiceAutomationWebApp.Data.Clients.Entities
+@using InvoiceAutomationWebApp.Data.Products.DeleteProduct
+@using InvoiceAutomationWebApp.Data.Products.Entities
 @using Microsoft.AspNetCore.Components.Web
 @using MudBlazor
 @rendermode InteractiveServer
@@ -15,59 +14,57 @@
 @inject NavigationManager NavigationManager
 @inject ISnackbar Snackbar
 
-<PageTitle>Clients</PageTitle>
+<PageTitle>Products</PageTitle>
 
 <div class="d-flex">
     <div class="mr-auto p-2">
-        <h1>Clients</h1>
+        <h1>Products</h1>
     </div>
 
     <div class="p-2">
         <MudFab Color="Color.Success"
-                OnClick="OpenCreateClientDialogAsync"
+                OnClick="OpenCreateProductDialogAsync"
                 StartIcon="@Icons.Material.Filled.Add" />
 
         <MudFab Color="Color.Error"
-                Disabled="selectedClients.Count == 0"
+                Disabled="selectedProducts.Count == 0"
                 OnClick="OnDelete"
                 StartIcon="@Icons.Material.Filled.Delete" />
     </div>
 </div>
 
-<MudTable @bind-SelectedItems="selectedClients"
+<MudTable @bind-SelectedItems="selectedProducts"
           Breakpoint="Breakpoint.Sm"
-          Items="@clients"
+          Items="@products"
           Hover="true"
           Loading="@loading"
           LoadingProgressColor="Color.Info"
           MultiSelection="true"
-          OnRowClick="ClientSelected"
+          OnRowClick="ProductSelected"
           RowClass="cursor-pointer"
-          T="Client">
+          T="Product">
 
     <HeaderContent>
+        <MudTh>Code</MudTh>
         <MudTh>Name</MudTh>
-        <MudTh>Phone</MudTh>
-        <MudTh>Email</MudTh>
     </HeaderContent>
 
     <RowTemplate>
-        <MudTd DataLabel="Name">@context.ClientName</MudTd>
-        <MudTd DataLabel="Phone">@context.ClientPhone</MudTd>
-        <MudTd DataLabel="Email">@context.ClientEmail</MudTd>
+        <MudTd DataLabel="Name">@context.ProductCode</MudTd>
+        <MudTd DataLabel="Name">@context.ProductName</MudTd>
     </RowTemplate>
 
 </MudTable>
 
-<AddClientDialog />
+<AddProductDialog />
 
 <MudMessageBox @ref="deleteConfirmationMessage"
                Title="Warning"
                CancelText="Cancel">
     <MessageContent>
-        Are you sure you want to delete @(selectedClients.Count > 1
-                ? $"{selectedClients.Count} Clients"
-                : $"{selectedClients.First().ClientName}")?
+        Are you sure you want to delete @(selectedProducts.Count > 1
+                ? $"{selectedProducts.Count} Products"
+                : $"{selectedProducts.First().ProductName}")?
     </MessageContent>
     <YesButton>
         <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.DeleteForever">Delete!</MudButton>
@@ -75,67 +72,67 @@
 </MudMessageBox>
 
 @code {
-    private List<Client> clients = [];
     private string deleteState = string.Empty;
     private MudMessageBox deleteConfirmationMessage = default!;
     private bool loading;
-    private HashSet<Client> selectedClients = [];
+    private List<Product> products = [];
+    private HashSet<Product> selectedProducts = [];
 
-    private void ClientSelected(TableRowClickEventArgs<Client> args)
-    {
-        var _SelectedClient = args.Item;
-
-        if (_SelectedClient is not null)
-            NavigationManager.NavigateTo($"/clients/{_SelectedClient.ClientID}");
-    }
-
-    private async Task GetClients()
+    private async Task GetProducts()
     {
         loading = true;
-        var _Response = await api.GetClientsAsync();
+        var _Response = await api.GetProductsAsync();
 
-        clients = _Response.Clients ?? [];
+        products = _Response.Products ?? [];
         loading = false;
         this.StateHasChanged();
     }
 
     private async Task OnDelete()
     {
-        if (selectedClients.Count != 0)
+        if (selectedProducts.Count != 0)
         {
             bool? result = await deleteConfirmationMessage.ShowAsync();
             deleteState = result is null ? "Canceled" : "Deleted!";
 
             if (deleteState == "Deleted!")
             {
-                foreach (var client in selectedClients)
+                foreach (var product in selectedProducts)
                 {
-                    var _Request = mapper.Map<DeleteClientRequest>(client);
-                    var _Response = api.DeleteClientAsync(_Request);
-                    Snackbar.Add($"Client {client.ClientName} Deleted.", Severity.Error);
-                    clients.Remove(client);
+                    var _Request = mapper.Map<DeleteProductRequest>(product);
+                    var _Response = api.DeleteProductAsync(_Request);
+                    Snackbar.Add($"Product {product.ProductCode} Deleted.", Severity.Error);
+                    products.Remove(product);
                 }
             }
-            await GetClients();
-            selectedClients.Clear();
-        }
-    }
-
-    private async Task OpenCreateClientDialogAsync()
-    {
-        //Tech Debt: Make work with ShowAsync
-        var dialog = DialogService.Show<AddClientDialog>();
-        var result = await dialog.Result;
-
-        if (result != null && !result.Canceled)
-        {
-            await GetClients();
-            StateHasChanged();
+            await GetProducts();
+            selectedProducts.Clear();
         }
     }
 
     protected override async Task OnInitializedAsync()
     {
-        await GetClients();
+        await GetProducts();
+    }
+
+    private async Task OpenCreateProductDialogAsync()
+    {
+        //Tech Debt: Make work with ShowAsync
+        var dialog = DialogService.Show<AddProductDialog>();
+        var result = await dialog.Result;
+
+        if (result != null && !result.Canceled)
+        {
+            await GetProducts();
+            StateHasChanged();
+        }
+    }
+
+    private void ProductSelected(TableRowClickEventArgs<Product> args)
+    {
+        var _SelectedProduct = args.Item;
+
+        if (_SelectedProduct is not null)
+            NavigationManager.NavigateTo($"/products/{_SelectedProduct.ProductID}");
     }
 }
