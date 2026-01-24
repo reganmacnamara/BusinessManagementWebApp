@@ -5,7 +5,9 @@ using InvoiceAutomationWebApp.Data.Clients.GetClients;
 using InvoiceAutomationWebApp.Data.Clients.UpdateClient;
 using InvoiceAutomationWebApp.Data.Products.CreateProduct;
 using InvoiceAutomationWebApp.Data.Products.DeleteProduct;
+using InvoiceAutomationWebApp.Data.Products.GetProduct;
 using InvoiceAutomationWebApp.Data.Products.GetProducts;
+using InvoiceAutomationWebApp.Data.Products.UpdateProduct;
 using InvoiceAutomationWebApp.Data.Transactions.CreateTransaction;
 using InvoiceAutomationWebApp.Data.Transactions.DeleteTransaction;
 using InvoiceAutomationWebApp.Data.Transactions.GetClientTransactions;
@@ -46,8 +48,14 @@ namespace InvoiceAutomationWebApp.Data
         public async Task<HttpResponseMessage> DeleteProductAsync(DeleteProductRequest request)
             => await http.PostAsJsonAsync("/Product/Delete", request);
 
+        public async Task<GetProductResponse> GetProductAsync(string productID)
+            => await http.GetFromJsonAsync<GetProductResponse>($"/Product/{productID}") ?? new GetProductResponse();
+
         public async Task<GetProductsResponse> GetProductsAsync()
             => await http.GetFromJsonAsync<GetProductsResponse>("/Product") ?? new GetProductsResponse();
+
+        public async Task<HttpResponseMessage> UpdateProductAsync(UpdateProductRequest request)
+            => await http.PostAsJsonAsync("/Product/Update", request);
 
         #endregion
 

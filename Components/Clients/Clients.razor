@@ -123,11 +123,9 @@
 
     private async Task OpenCreateClientDialogAsync()
     {
-        //Tech Debt: Make work with ShowAsync
-        var dialog = DialogService.Show<AddClientDialog>();
-        var result = await dialog.Result;
+        var dialog = await DialogService.ShowAsync<AddClientDialog>();
 
-        if (result != null && !result.Canceled)
+        if (dialog.Result != null && !dialog.Result.IsCanceled)
         {
             await GetClients();
             StateHasChanged();

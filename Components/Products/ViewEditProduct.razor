@@ -1,0 +1,108 @@
+﻿@page "/products/{id}"
+@using AutoMapper
+@using InvoiceAutomationWebApp.Data
+@using InvoiceAutomationWebApp.Data.Products.Entities
+@using InvoiceAutomationWebApp.Data.Products.UpdateProduct
+@using InvoiceAutomationWebApp.Data.Transactions.Entities
+
+@inject ApiClient api
+@inject IMapper mapper
+@inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
+
+@if (isLoading)
+{
+    <h1>Fetching Data...</h1>
+    <MudSkeleton Width="70%" Height="50px" />
+    <MudSkeleton Width="70%" Height="50px" />
+    <MudSkeleton Width="70%" Height="50px" />
+    <MudSkeleton Width="70%" Height="50px" />
+    <MudSkeleton Width="70%" Height="50px" />
+    <MudSkeleton Width="70%" Height="50px" />
+    <MudSkeleton Width="70%" Height="50px" />
+    <MudSkeleton Width="70%" Height="50px" />
+    <MudSkeleton Width="70%" Height="50px" />
+}
+else
+{
+    <div class="d-flex">
+        <div class="mr-auto p-2">
+            <h1>@product.ProductCode - @product.ProductName</h1>
+        </div>
+
+        <div class="p-2">
+            <MudTooltip Delay="300" Text="Save">
+                <MudFab Color="Color.Default"
+                        OnClick="OnSave"
+                        StartIcon="@Icons.Material.Filled.Save" />
+            </MudTooltip>
+
+            <MudTooltip Delay="300" Text="Cancel">
+                <MudFab Color="Color.Error"
+                        OnClick="NavigateToClients"
+                        StartIcon="@Icons.Material.Filled.Cancel" />
+            </MudTooltip>
+        </div>
+    </div>
+
+    <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6">
+        <MudTabPanel Text="Details">
+            <MudPaper MaxWidth="70%">
+                <MudTextField @bind-Value="product.ProductCode" Label="Code" Variant="Variant.Outlined" Required="true" RequiredError="Product Code Required"></MudTextField>
+                <MudTextField @bind-Value="product.ProductName" Label="Name" Variant="Variant.Outlined" Required="true" RequiredError="Product Name Required"></MudTextField>
+                <MudTextField @bind-Value="product.ProductDescription" Label="Description" Lines="3" Variant="Variant.Outlined"></MudTextField>
+                <MudNumericField @bind-Value="product.UnitCost" Label="Unit Cost" Format="N2" T="decimal" Variant="Variant.Outlined"></MudNumericField>
+                <MudNumericField @bind-Value="product.UnitPrice" Label="Unit Price" Format="N2" T="decimal" Variant="Variant.Outlined"></MudNumericField>
+                <MudNumericField @bind-Value="product.QuantityOnHand" Label="Quantity on Hand" T="long" Variant="Variant.Outlined"></MudNumericField>
+            </MudPaper>
+        </MudTabPanel>
+    </MudTabs>
+}
+
+@code {
+
+    private Product product = default!;
+    private bool isLoading = true;
+
+    [Parameter]
+    public string id { get; set; } = string.Empty;
+
+    private async Task GetProductData()
+    {
+        var _Product = await api.GetProductAsync(id);
+
+        product = _Product.Product;
+    }
+
+    private void NavigateToClients()
+        => NavigationManager.NavigateTo("products");
+
+    protected override async Task OnInitializedAsync()
+    {
+        await GetProductData();
+        isLoading = false;
+        this.StateHasChanged();
+    }
+
+    private async Task OnSave()
+    {
+        if (string.IsNullOrEmpty(product.ProductCode))
+        {
+            Snackbar.Add("Product must have a Code.", Severity.Error);
+            return;
+        }
+
+        if (string.IsNullOrEmpty(product.ProductName))
+        {
+            Snackbar.Add("Product must have a Name.", Severity.Error);
+            return;
+        }
+
+        var _Request = mapper.Map<UpdateProductRequest>(product);
+        var _Response = await api.UpdateProductAsync(_Request);
+        if (_Response.IsSuccessStatusCode)
+            Snackbar.Add("Product Updated.", Severity.Success);
+        else
+            Snackbar.Add($"Error {(int)_Response.StatusCode}: Product could not be created.", Severity.Error);
+    }
+}

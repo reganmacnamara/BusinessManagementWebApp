@@ -16,7 +16,7 @@
     </TitleContent>
     <DialogContent>
         <MudTextField @bind-Value="product.ProductCode" Label="Code" Variant="Variant.Outlined" Required="true" RequiredError="Product Code Required"></MudTextField>
-        <MudTextField @bind-Value="product.ProductName" Label="Name" Variant="Variant.Outlined" Required="true" RequiredError="Product Code Required"></MudTextField>
+        <MudTextField @bind-Value="product.ProductName" Label="Name" Variant="Variant.Outlined" Required="true" RequiredError="Product Name Required"></MudTextField>
         <MudTextField @bind-Value="product.ProductDescription" Label="Description" Lines="3" Variant="Variant.Outlined"></MudTextField>
         <MudNumericField @bind-Value="product.UnitCost" Label="Unit Cost" Format="N2" T="decimal" Variant="Variant.Outlined"></MudNumericField>
         <MudNumericField @bind-Value="product.UnitPrice" Label="Unit Price" Format="N2" T="decimal" Variant="Variant.Outlined"></MudNumericField>

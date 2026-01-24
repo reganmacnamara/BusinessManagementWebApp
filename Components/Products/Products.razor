@@ -117,11 +117,9 @@
 
     private async Task OpenCreateProductDialogAsync()
     {
-        //Tech Debt: Make work with ShowAsync
-        var dialog = DialogService.Show<AddProductDialog>();
-        var result = await dialog.Result;
+        var dialog = await  DialogService.ShowAsync<AddProductDialog>();
 
-        if (result != null && !result.Canceled)
+        if (dialog.Result != null && !dialog.Result.IsCanceled)
         {
             await GetProducts();
             StateHasChanged();
