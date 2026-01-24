@@ -1,4 +1,5 @@
-﻿using InvoiceAutomationWebApp.Data.Transactions.Entities;
+﻿using InvoiceAutomationWebApp.Data.TransactionItems.Entities;
+using System.Transactions;
 
 namespace InvoiceAutomationWebApp.Data.Transactions.GetTransaction
 {
@@ -6,6 +7,8 @@ namespace InvoiceAutomationWebApp.Data.Transactions.GetTransaction
     public class GetTransactionResponse
     {
         public Transaction Transaction { get; set; } = default!;
+
+        public List<TransactionItem> TransactionItems { get; set; } = [];
     }
 
 }
