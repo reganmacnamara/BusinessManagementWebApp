@@ -48,7 +48,7 @@
     </MudSelect>
     <MudDatePicker @bind-Date="transaction.DueDate" Label="Transaction Due Date" Disabled="IsReciept()" />
     <div class="d-flex flex-row">
-        <MudSelect Value="transaction.Client" T="Client" Label="Client" Placeholder="Select Client" ValueChanged="OnClientChanged">
+        <MudSelect @key="clients.Count" Value="transaction.Client" T="Client" Label="Client" Placeholder="Select Client" ValueChanged="OnClientChanged">
             @foreach (var client in clients)
             {
                 <MudSelectItem Value="client">@client.ClientName</MudSelectItem>
@@ -60,12 +60,11 @@
                 Size="Size.Small"
                 StartIcon="@Icons.Material.Filled.Add" />
     </div>
-    <MudNumericField Value="transaction.GrossValue" Format="N2" T="decimal" Label="Gross" ValueChanged="OnGrossUpdated" />
-    <MudNumericField @bind-Value="transaction.TaxValue" Format="N2" T="decimal" Label="Tax" />
-    <MudNumericField @bind-Value="transaction.NetValue" Format="N2" T="decimal" Label="Net" />
 </MudPaper>
 
 <AddClientDialog />
+
+<AddTransactionItemDialog />
 
 @code {
     private List<Client> clients = [];
@@ -104,42 +103,37 @@
             var _Request = mapper.Map<CreateTransactionRequest>(transaction);
             var _Response = await api.CreateTransactionAsync(_Request);
             if (_Response.IsSuccessStatusCode)
-            {
                 Snackbar.Add("Transaction Created.", Severity.Success);
-            }
             else
-            {
                 Snackbar.Add($"Error {(int)_Response.StatusCode}: Transaction could not be created.", Severity.Error);
-            }
         }
     }
 
     private async Task OpenCreateClientDialogAsync()
     {
-        //Tech Debt: Make work with ShowAsync
-        var dialog = DialogService.Show<AddClientDialog>();
+        var dialog = await DialogService.ShowAsync<AddClientDialog>();
+
         var result = await dialog.Result;
 
-        if (result != null && !result.Canceled)
+        if (dialog.Result is not null && !dialog.Result.IsCanceled && result is not null && result.Data is not null)
         {
+            SelectCreatedClient((Client)result.Data);
             await GetClients();
             StateHasChanged();
         }
     }
 
-    private async Task OnClientChanged(Client value)
+    private async Task OnClientChanged(Client client)
     {
-        transaction.Client = value;
-        transaction.ClientID = value.ClientID;
+        transaction.Client = client;
+        transaction.ClientID = client.ClientID;
     }
 
-    private async Task OnGrossUpdated(decimal value)
+    private void SelectCreatedClient(Client client)
     {
-        transaction.GrossValue = value;
-        if (value != 0)
-        {
-            transaction.TaxValue = value / 10;
-            transaction.NetValue = value + transaction.TaxValue;
-        }
+        clients.Add(client);
+        transaction.Client = client;
+        transaction.ClientID = client.ClientID;
+        StateHasChanged();
     }
 }

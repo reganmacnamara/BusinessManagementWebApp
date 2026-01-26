@@ -75,7 +75,7 @@
         transactions = _Response.Transactions ?? [];
 
         loading = false;
-        this.StateHasChanged();
+        await InvokeAsync(StateHasChanged);
     }
 
     private void NavigateToCreateTransaction()
@@ -96,10 +96,10 @@
                     var _Response = api.DeleteTransactionAsync(_Request);
                     transactions.Remove(transaction);
                 }
-                this.StateHasChanged();
             }
             await GetTransactionsDataAsync();
             selectedTransactions.Clear();
+            await InvokeAsync(StateHasChanged);
         }
     }
 

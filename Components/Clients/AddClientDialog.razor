@@ -2,6 +2,7 @@
 @using InvoiceAutomationWebApp.Data
 @using InvoiceAutomationWebApp.Data.Clients.CreateClient
 @using InvoiceAutomationWebApp.Data.Clients.Entities
+@using System.Text.Json
 
 @inject ApiClient api
 @inject IDialogService DialogService
@@ -48,12 +49,14 @@
         var _Response = await api.CreateClientAsync(_Request);
         if (_Response.IsSuccessStatusCode)
         {
+            var json = await _Response.Content.ReadAsStringAsync();
+            var doc = JsonDocument.Parse(json);
+            client.ClientID = doc.RootElement.GetProperty("clientID").GetInt32();
+
             Snackbar.Add("Client Created.", Severity.Success);
-            MudDialog.Close(DialogResult.Ok(true));
+            MudDialog.Close(DialogResult.Ok(client));
         }
         else
-        {
             Snackbar.Add($"Error {(int)_Response.StatusCode}: Client could not be created.", Severity.Error);
-        }
     }
 }

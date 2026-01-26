@@ -8,6 +8,10 @@ using InvoiceAutomationWebApp.Data.Products.DeleteProduct;
 using InvoiceAutomationWebApp.Data.Products.GetProduct;
 using InvoiceAutomationWebApp.Data.Products.GetProducts;
 using InvoiceAutomationWebApp.Data.Products.UpdateProduct;
+using InvoiceAutomationWebApp.Data.TransactionItems.CreateTransactionItem;
+using InvoiceAutomationWebApp.Data.TransactionItems.DeleteTransactionItem;
+using InvoiceAutomationWebApp.Data.TransactionItems.GetTransactionItems;
+using InvoiceAutomationWebApp.Data.TransactionItems.UpdateTransactionItem;
 using InvoiceAutomationWebApp.Data.Transactions.CreateTransaction;
 using InvoiceAutomationWebApp.Data.Transactions.DeleteTransaction;
 using InvoiceAutomationWebApp.Data.Transactions.GetClientTransactions;
@@ -81,6 +85,21 @@ namespace InvoiceAutomationWebApp.Data
 
         #endregion
 
+        #region TransactionItem Endpoints
+
+        public async Task<HttpResponseMessage> CreateTransactionItemAsync(CreateTransactionItemRequest request)
+            => await http.PostAsJsonAsync("/TransactionItem/Create", request);
+
+        public async Task<HttpResponseMessage> DeleteTransactionItemAsync(DeleteTransactionItemRequest request)
+            => await http.PostAsJsonAsync("/TransactionItem/Delete", request);
+
+        public async Task<GetTransactionItemsResponse> GetTransactionItemsAsync()
+            => await http.GetFromJsonAsync<GetTransactionItemsResponse>("/Transaction") ?? new GetTransactionItemsResponse();
+
+        public async Task<HttpResponseMessage> UpdateTransactionItemAsync(UpdateTransactionItemRequest request)
+            => await http.PostAsJsonAsync("/TransactionItem/Update", request);
+
+        #endregion
     }
 
 }

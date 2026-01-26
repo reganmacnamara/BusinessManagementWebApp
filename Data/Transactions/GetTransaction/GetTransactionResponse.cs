@@ -1,5 +1,5 @@
 ﻿using InvoiceAutomationWebApp.Data.TransactionItems.Entities;
-using System.Transactions;
+using InvoiceAutomationWebApp.Data.Transactions.Entities;
 
 namespace InvoiceAutomationWebApp.Data.Transactions.GetTransaction
 {

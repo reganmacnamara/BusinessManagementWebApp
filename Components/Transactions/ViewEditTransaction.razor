@@ -3,10 +3,13 @@
 @using InvoiceAutomationWebApp.Data
 @using InvoiceAutomationWebApp.Data.Clients.Entities
 @using InvoiceAutomationWebApp.Data.Clients.UpdateClient
+@using InvoiceAutomationWebApp.Data.Products.Entities
+@using InvoiceAutomationWebApp.Data.TransactionItems.Entities
 @using InvoiceAutomationWebApp.Data.Transactions.Entities
 @using InvoiceAutomationWebApp.Data.Transactions.UpdateTransaction
 
 @inject ApiClient api
+@inject IDialogService DialogService
 @inject IMapper mapper
 @inject NavigationManager NavigationManager
 @inject ISnackbar Snackbar
@@ -64,7 +67,7 @@ else
                               Label="Due Date"
                               Format="dd/MM/yyyy"
                               Variant="Variant.Outlined"
-                              T="DateTime?" />
+                              T="DateTime ?" />
 
                 <MudTextField @bind-Value="transaction.Client.ClientName"
                               Disabled="true"
@@ -74,24 +77,90 @@ else
         </MudTabPanel>
         <MudTabPanel Text="Transaction Items">
             <MudPaper MaxWidth="70%">
+                <div class="d-flex justify-content-start">
+                    <MudButton Color="Color.Success"
+                               OnClick="OpenCreateTransactionItemDialogAsync"
+                               StartIcon="@Icons.Material.Filled.Add">Add Item</MudButton>
 
+                    <MudButton Color="Color.Error"
+                               StartIcon="@Icons.Material.Filled.Delete">Remove Item</MudButton>
+                </div>
+
+                <MudDataGrid Items="@transactionItems"
+                             MultiSelection="true">
+
+                    <Columns>
+                        <PropertyColumn Property="x => x.Product.ProductCode"
+                                        Title="Code" />
+
+                        <PropertyColumn Property="x => x.Product.ProductName"
+                                        Title="Name" />
+
+                        <PropertyColumn Property="x => x.Product.ProductDescription"
+                                        Title="Description" />
+
+                        <PropertyColumn Editable="true"
+                                        Property="x => x.Quantity"
+                                        Title="Quantity" />
+
+                        <PropertyColumn Editable="true"
+                                        Property="x => x.PricePerItem"
+                                        Title="Each"
+                                        Format="C" />
+
+                        <PropertyColumn Editable="true"
+                                        Property="x => x.LineGross"
+                                        Title="Gross"
+                                        Format="C" />
+
+                        <PropertyColumn Editable="true"
+                                        Property="x => x.LineTax"
+                                        Title="Tax"
+                                        Format="C" />
+
+                        <PropertyColumn Property="x => x.LineNet"
+                                        Title="Net"
+                                        Format="C" />
+
+                    </Columns>
+
+                </MudDataGrid>
             </MudPaper>
         </MudTabPanel>
     </MudTabs>
+
+    <AddTransactionItemDialog />
 }
 
 @code {
     private bool isLoading = true;
     private Transaction transaction = default!;
+    private List<TransactionItem> transactionItems = [];
 
     [Parameter]
     public string id { get; set; } = string.Empty;
+
+    private void AddTransactionItem(Product product)
+    {
+        transactionItems.Add(new()
+        {
+            Product = product,
+            ProductID = product.ProductID,
+            PricePerItem = product.UnitPrice,
+            Quantity = 1,
+            LineGross = product.UnitPrice,
+            LineTax = product.UnitPrice,
+            LineNet = product.UnitPrice,
+        });
+        StateHasChanged();
+    }
 
     private async Task GetTranctionData()
     {
         var _Response = await api.GetTransactionAsync(id);
 
         transaction = _Response.Transaction;
+        transactionItems = _Response.TransactionItems;
         isLoading = false;
     }
 
@@ -120,6 +189,19 @@ else
             {
                 Snackbar.Add($"Error {(int)_Response.StatusCode}: Transaction could not be updated.", Severity.Error);
             }
+        }
+    }
+
+    private async Task OpenCreateTransactionItemDialogAsync()
+    {
+        var dialog = await DialogService.ShowAsync<AddTransactionItemDialog>();
+
+        var result = await dialog.Result;
+
+        if (dialog.Result is not null && !dialog.Result.IsCanceled && result is not null && result.Data is not null)
+        {
+            AddTransactionItem((Product)result.Data);
+            StateHasChanged();
         }
     }
 }

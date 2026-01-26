@@ -74,7 +74,7 @@
     </YesButton>
 </MudMessageBox>
 
-@code {
+                @code {
     private List<Client> clients = [];
     private string deleteState = string.Empty;
     private MudMessageBox deleteConfirmationMessage = default!;
@@ -112,12 +112,12 @@
                 {
                     var _Request = mapper.Map<DeleteClientRequest>(client);
                     var _Response = api.DeleteClientAsync(_Request);
-                    Snackbar.Add($"Client {client.ClientName} Deleted.", Severity.Error);
+                    // Snackbar.Add($"Client {client.ClientName} Deleted.", Severity.Error);
                     clients.Remove(client);
                 }
             }
             await GetClients();
-            selectedClients.Clear();
+            StateHasChanged();
         }
     }
 
