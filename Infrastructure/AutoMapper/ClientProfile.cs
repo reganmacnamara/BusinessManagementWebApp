@@ -1,10 +1,10 @@
 ﻿using AutoMapper;
-using InvoiceAutomationWebApp.Data.Clients.CreateClient;
-using InvoiceAutomationWebApp.Data.Clients.DeleteClient;
-using InvoiceAutomationWebApp.Data.Clients.Entities;
-using InvoiceAutomationWebApp.Data.Clients.UpdateClient;
+using BusinessManagementWebApp.Data.Clients.CreateClient;
+using BusinessManagementWebApp.Data.Clients.DeleteClient;
+using BusinessManagementWebApp.Data.Clients.Entities;
+using BusinessManagementWebApp.Data.Clients.UpdateClient;
 
-namespace InvoiceAutomationWebApp.Infrastructure.AutoMapper
+namespace BusinessManagementWebApp.Infrastructure.AutoMapper
 {
 
     public class ClientProfile : Profile

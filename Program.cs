@@ -1,5 +1,5 @@
+using BusinessManagementWebApp.Data;
 using InvoiceAutomationWebApp.Components;
-using InvoiceAutomationWebApp.Data;
 using MudBlazor;
 using MudBlazor.Services;
 

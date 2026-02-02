@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace InvoiceAutomationWebApp.Data.Clients.Entities
+namespace BusinessManagementWebApp.Data.Clients.Entities
 {
 
     public class Client

@@ -1,10 +1,10 @@
 ﻿using AutoMapper;
-using InvoiceAutomationWebApp.Data.Transactions.CreateTransaction;
-using InvoiceAutomationWebApp.Data.Transactions.DeleteTransaction;
-using InvoiceAutomationWebApp.Data.Transactions.Entities;
-using InvoiceAutomationWebApp.Data.Transactions.UpdateTransaction;
+using BusinessManagementWebApp.Data.Transactions.CreateTransaction;
+using BusinessManagementWebApp.Data.Transactions.DeleteTransaction;
+using BusinessManagementWebApp.Data.Transactions.Entities;
+using BusinessManagementWebApp.Data.Transactions.UpdateTransaction;
 
-namespace InvoiceAutomationWebApp.Infrastructure.AutoMapper
+namespace BusinessManagementWebApp.Infrastructure.AutoMapper
 {
 
     public class TransactionProfile : Profile

@@ -1,4 +1,4 @@
-﻿namespace InvoiceAutomationWebApp.Data.Clients.GetClient
+﻿namespace BusinessManagementWebApp.Data.Clients.GetClient
 {
 
     public class GetClientRequest

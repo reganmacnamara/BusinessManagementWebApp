@@ -1,4 +1,4 @@
-﻿namespace InvoiceAutomationWebApp.Data.Products.CreateProduct;
+﻿namespace BusinessManagementWebApp.Data.Products.CreateProduct;
 
 public class CreateProductRequest
 {

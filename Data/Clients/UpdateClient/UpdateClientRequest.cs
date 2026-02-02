@@ -1,4 +1,4 @@
-﻿namespace InvoiceAutomationWebApp.Data.Clients.UpdateClient
+﻿namespace BusinessManagementWebApp.Data.Clients.UpdateClient
 {
 
     public class UpdateClientRequest

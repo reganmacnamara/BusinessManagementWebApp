@@ -1,7 +1,7 @@
-﻿using InvoiceAutomationWebApp.Data.Products.Entities;
-using InvoiceAutomationWebApp.Data.Transactions.Entities;
+﻿using BusinessManagementWebApp.Data.Products.Entities;
+using BusinessManagementWebApp.Data.Transactions.Entities;
 
-namespace InvoiceAutomationWebApp.Data.TransactionItems.Entities;
+namespace BusinessManagementWebApp.Data.TransactionItems.Entities;
 
 public class TransactionItem
 {

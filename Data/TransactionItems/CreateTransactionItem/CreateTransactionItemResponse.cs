@@ -1,4 +1,4 @@
-﻿namespace InvoiceAutomationWebApp.Data.TransactionItems.CreateTransactionItem;
+﻿namespace BusinessManagementWebApp.Data.TransactionItems.CreateTransactionItem;
 
 public class CreateTransactionItemResponse
 {

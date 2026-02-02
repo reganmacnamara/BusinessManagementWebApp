@@ -1,4 +1,4 @@
-﻿namespace InvoiceAutomationWebApp.Data.Transactions.UpdateTransaction;
+﻿namespace BusinessManagementWebApp.Data.Transactions.UpdateTransaction;
 
 public class UpdateTransactionRequest
 {

@@ -1,4 +1,4 @@
-﻿namespace InvoiceAutomationWebApp.Data.Products.UpdateProduct;
+﻿namespace BusinessManagementWebApp.Data.Products.UpdateProduct;
 
 public class UpdateProductRequest
 {

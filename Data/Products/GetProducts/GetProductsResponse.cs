@@ -1,6 +1,6 @@
-﻿using InvoiceAutomationWebApp.Data.Products.Entities;
+﻿using BusinessManagementWebApp.Data.Products.Entities;
 
-namespace InvoiceAutomationWebApp.Data.Products.GetProducts;
+namespace BusinessManagementWebApp.Data.Products.GetProducts;
 
 public class GetProductsResponse
 {

@@ -1,4 +1,4 @@
-﻿namespace InvoiceAutomationWebApp.Data.Transactions.DeleteTransaction
+﻿namespace BusinessManagementWebApp.Data.Transactions.DeleteTransaction
 {
 
     public class DeleteTransactionRequest

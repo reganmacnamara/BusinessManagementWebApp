@@ -1,4 +1,4 @@
-﻿namespace InvoiceAutomationWebApp.Data.Transactions.GetTransaction
+﻿namespace BusinessManagementWebApp.Data.Transactions.GetTransaction
 {
 
     public class GetTransactionRequest

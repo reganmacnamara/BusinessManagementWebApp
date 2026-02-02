@@ -1,4 +1,4 @@
-﻿namespace InvoiceAutomationWebApp.Data.Products.DeleteProduct;
+﻿namespace BusinessManagementWebApp.Data.Products.DeleteProduct;
 
 public class DeleteProductRequest
 {

@@ -1,4 +1,4 @@
-﻿namespace InvoiceAutomationWebApp.Data.Products.GetProduct;
+﻿namespace BusinessManagementWebApp.Data.Products.GetProduct;
 
 public class GetProductRequest
 {

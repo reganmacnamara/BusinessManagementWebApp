@@ -1,10 +1,10 @@
 ﻿using AutoMapper;
-using InvoiceAutomationWebApp.Data.Products.CreateProduct;
-using InvoiceAutomationWebApp.Data.Products.DeleteProduct;
-using InvoiceAutomationWebApp.Data.Products.Entities;
-using InvoiceAutomationWebApp.Data.Products.UpdateProduct;
+using BusinessManagementWebApp.Data.Products.CreateProduct;
+using BusinessManagementWebApp.Data.Products.DeleteProduct;
+using BusinessManagementWebApp.Data.Products.Entities;
+using BusinessManagementWebApp.Data.Products.UpdateProduct;
 
-namespace InvoiceAutomationWebApp.Infrastructure.AutoMapper
+namespace BusinessManagementWebApp.Infrastructure.AutoMapper
 {
     public class ProductProfile : Profile
     {

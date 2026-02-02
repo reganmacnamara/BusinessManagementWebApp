@@ -1,6 +1,6 @@
-﻿using InvoiceAutomationWebApp.Data.Clients.Entities;
+﻿using BusinessManagementWebApp.Data.Clients.Entities;
 
-namespace InvoiceAutomationWebApp.Data.Clients.GetClient
+namespace BusinessManagementWebApp.Data.Clients.GetClient
 {
 
     public class GetClientResponse

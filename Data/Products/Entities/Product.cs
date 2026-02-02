@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace InvoiceAutomationWebApp.Data.Products.Entities;
+namespace BusinessManagementWebApp.Data.Products.Entities;
 
 public class Product
 {

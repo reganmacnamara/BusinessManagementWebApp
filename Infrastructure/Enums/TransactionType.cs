@@ -1,4 +1,4 @@
-﻿namespace InvoiceAutomationWebApp.Infrastructure.Enums
+﻿namespace BusinessManagementWebApp.Infrastructure.Enums
 {
     public sealed class TransactionType
     {

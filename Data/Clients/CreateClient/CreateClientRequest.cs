@@ -1,4 +1,4 @@
-﻿namespace InvoiceAutomationWebApp.Data.Clients.CreateClient
+﻿namespace BusinessManagementWebApp.Data.Clients.CreateClient
 {
 
     public class CreateClientRequest

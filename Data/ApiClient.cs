@@ -1,25 +1,25 @@
-﻿using InvoiceAutomationWebApp.Data.Clients.CreateClient;
-using InvoiceAutomationWebApp.Data.Clients.DeleteClient;
-using InvoiceAutomationWebApp.Data.Clients.GetClient;
-using InvoiceAutomationWebApp.Data.Clients.GetClients;
-using InvoiceAutomationWebApp.Data.Clients.UpdateClient;
-using InvoiceAutomationWebApp.Data.Products.CreateProduct;
-using InvoiceAutomationWebApp.Data.Products.DeleteProduct;
-using InvoiceAutomationWebApp.Data.Products.GetProduct;
-using InvoiceAutomationWebApp.Data.Products.GetProducts;
-using InvoiceAutomationWebApp.Data.Products.UpdateProduct;
-using InvoiceAutomationWebApp.Data.TransactionItems.CreateTransactionItem;
-using InvoiceAutomationWebApp.Data.TransactionItems.DeleteTransactionItem;
-using InvoiceAutomationWebApp.Data.TransactionItems.GetTransactionItems;
-using InvoiceAutomationWebApp.Data.TransactionItems.UpdateTransactionItem;
-using InvoiceAutomationWebApp.Data.Transactions.CreateTransaction;
-using InvoiceAutomationWebApp.Data.Transactions.DeleteTransaction;
-using InvoiceAutomationWebApp.Data.Transactions.GetClientTransactions;
-using InvoiceAutomationWebApp.Data.Transactions.GetTransaction;
-using InvoiceAutomationWebApp.Data.Transactions.GetTransactions;
-using InvoiceAutomationWebApp.Data.Transactions.UpdateTransaction;
+﻿using BusinessManagementWebApp.Data.Clients.CreateClient;
+using BusinessManagementWebApp.Data.Clients.DeleteClient;
+using BusinessManagementWebApp.Data.Clients.GetClient;
+using BusinessManagementWebApp.Data.Clients.GetClients;
+using BusinessManagementWebApp.Data.Clients.UpdateClient;
+using BusinessManagementWebApp.Data.Products.CreateProduct;
+using BusinessManagementWebApp.Data.Products.DeleteProduct;
+using BusinessManagementWebApp.Data.Products.GetProduct;
+using BusinessManagementWebApp.Data.Products.GetProducts;
+using BusinessManagementWebApp.Data.Products.UpdateProduct;
+using BusinessManagementWebApp.Data.TransactionItems.CreateTransactionItem;
+using BusinessManagementWebApp.Data.TransactionItems.DeleteTransactionItem;
+using BusinessManagementWebApp.Data.TransactionItems.GetTransactionItems;
+using BusinessManagementWebApp.Data.TransactionItems.UpdateTransactionItem;
+using BusinessManagementWebApp.Data.Transactions.CreateTransaction;
+using BusinessManagementWebApp.Data.Transactions.DeleteTransaction;
+using BusinessManagementWebApp.Data.Transactions.GetClientTransactions;
+using BusinessManagementWebApp.Data.Transactions.GetTransaction;
+using BusinessManagementWebApp.Data.Transactions.GetTransactions;
+using BusinessManagementWebApp.Data.Transactions.UpdateTransaction;
 
-namespace InvoiceAutomationWebApp.Data
+namespace BusinessManagementWebApp.Data
 {
 
     public class ApiClient(HttpClient http)

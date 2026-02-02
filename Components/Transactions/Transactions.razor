@@ -1,9 +1,12 @@
 ﻿@page "/transactions"
+@using System.Threading.Tasks
 @using AutoMapper
+@using BusinessManagementWebApp.Data
+@using BusinessManagementWebApp.Data.Transactions.DeleteTransaction
+@using BusinessManagementWebApp.Data.Transactions.Entities
 @using InvoiceAutomationWebApp.Data
 @using InvoiceAutomationWebApp.Data.Transactions.DeleteTransaction
 @using InvoiceAutomationWebApp.Data.Transactions.Entities
-@using System.Threading.Tasks
 
 @inject ApiClient api
 @inject IMapper mapper

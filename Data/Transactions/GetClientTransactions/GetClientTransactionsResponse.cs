@@ -1,6 +1,6 @@
-﻿using InvoiceAutomationWebApp.Data.Transactions.Entities;
+﻿using BusinessManagementWebApp.Data.Transactions.Entities;
 
-namespace InvoiceAutomationWebApp.Data.Transactions.GetClientTransactions
+namespace BusinessManagementWebApp.Data.Transactions.GetClientTransactions
 {
 
     public class GetClientTransactionsResponse
