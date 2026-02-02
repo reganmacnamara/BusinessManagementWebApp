@@ -2,6 +2,7 @@
 @using AutoMapper
 @using BusinessManagementWebApp.Data
 @using BusinessManagementWebApp.Data.Products.Entities
+@using BusinessManagementWebApp.Data.TransactionItems.CreateTransactionItem
 @using BusinessManagementWebApp.Data.TransactionItems.Entities
 @using BusinessManagementWebApp.Data.Transactions.Entities
 @using BusinessManagementWebApp.Data.Transactions.UpdateTransaction
@@ -81,20 +82,30 @@ else
                                StartIcon="@Icons.Material.Filled.Add">Add Item</MudButton>
 
                     <MudButton Color="Color.Error"
+                               OnClick="DeleteTransactionItems"
                                StartIcon="@Icons.Material.Filled.Delete">Remove Item</MudButton>
                 </div>
 
-                <MudDataGrid Items="@transactionItems"
-                             MultiSelection="true">
+                <MudDataGrid @bind-SelectedItems="selectedTransactionItems"
+                             EditMode="DataGridEditMode.Cell"
+                             EditTrigger="DataGridEditTrigger.OnRowClick"
+                             Items="@transactionItems"
+                             MultiSelection="true"
+                             ReadOnly="false"
+                             SelectOnRowClick="false">
 
                     <Columns>
-                        <PropertyColumn Property="x => x.Product.ProductCode"
+                        <SelectColumn T="TransactionItem" />
+                        <PropertyColumn Editable="false"
+                                        Property="x => x.Product.ProductCode"
                                         Title="Code" />
 
-                        <PropertyColumn Property="x => x.Product.ProductName"
+                        <PropertyColumn Editable="false"
+                                        Property="x => x.Product.ProductName"
                                         Title="Name" />
 
-                        <PropertyColumn Property="x => x.Product.ProductDescription"
+                        <PropertyColumn Editable="false"
+                                        Property="x => x.Product.ProductDescription"
                                         Title="Description" />
 
                         <PropertyColumn Editable="true"
@@ -103,22 +114,23 @@ else
 
                         <PropertyColumn Editable="true"
                                         Property="x => x.PricePerItem"
-                                        Title="Each"
-                                        Format="C" />
+                                        Format="N2"
+                                        Title="Each" />
 
                         <PropertyColumn Editable="true"
                                         Property="x => x.LineGross"
-                                        Title="Gross"
-                                        Format="C" />
+                                        Format="N2"
+                                        Title="Gross" />
 
-                        <PropertyColumn Editable="true"
+                        <PropertyColumn Editable="false"
                                         Property="x => x.LineTax"
-                                        Title="Tax"
-                                        Format="C" />
+                                        Format="N2"
+                                        Title="Tax" />
 
-                        <PropertyColumn Property="x => x.LineNet"
-                                        Title="Net"
-                                        Format="C" />
+                        <PropertyColumn Editable="false"
+                                        Property="x => x.LineNet"
+                                        Format="N2"
+                                        Title="Net" />
 
                     </Columns>
 
@@ -132,6 +144,7 @@ else
 
 @code {
     private bool isLoading = true;
+    private HashSet<TransactionItem> selectedTransactionItems = [];
     private Transaction transaction = default!;
     private List<TransactionItem> transactionItems = [];
 
@@ -150,6 +163,18 @@ else
             LineTax = product.UnitPrice,
             LineNet = product.UnitPrice,
         });
+        StateHasChanged();
+    }
+
+    private async Task DeleteTransactionItems()
+    {
+        if (!selectedTransactionItems.Any())
+            return;
+
+        foreach (var _Item in selectedTransactionItems)
+            transactionItems.Remove(_Item);
+
+        selectedTransactionItems.Clear();
         StateHasChanged();
     }
 
@@ -186,6 +211,7 @@ else
             else
             {
                 Snackbar.Add($"Error {(int)_Response.StatusCode}: Transaction could not be updated.", Severity.Error);
+                return;
             }
         }
     }
@@ -196,9 +222,11 @@ else
 
         var result = await dialog.Result;
 
-        if (dialog.Result is not null && !dialog.Result.IsCanceled && result is not null && result.Data is not null)
+        if (!dialog.Result.IsCanceled && result?.Data is not null)
         {
-            AddTransactionItem((Product)result.Data);
+            foreach (var _Product in (HashSet<Product>)result.Data)
+                AddTransactionItem(_Product);
+
             StateHasChanged();
         }
     }

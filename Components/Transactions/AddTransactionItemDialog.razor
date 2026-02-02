@@ -7,6 +7,20 @@
 @inject IMapper mapper
 @inject ISnackbar Snackbar
 
+<style>
+    .selected {
+        background-color: #1E88E5 !important;
+    }
+
+        .selected > td {
+            color: white !important;
+        }
+
+            .selected > td .mud-input {
+                color: white !important;
+            }
+</style>
+
 <MudDialog>
     <TitleContent>
         <MudText Typo="Typo.h6">
@@ -19,11 +33,12 @@
         </MudText>
     </TitleContent>
     <DialogContent>
-        <MudTable @bind-SelectedItem="selectedProduct"
-                  Filter="new Func<Product, bool>(FilterFunc)"
-                  Hover="true"
-                  Items="@products"
-                  RowClass="cursor-pointer">
+        <MudDataGrid @bind-SelectedItems="selectedProducts"
+                     Hover="true"
+                     Items="@products"
+                     MultiSelection="true"
+                     QuickFilter="new Func<Product, bool>(FilterFunc)"
+                     RowClass="cursor-pointer">
 
             <ToolBarContent>
                 <MudTextField @bind-Value="searchString"
@@ -34,28 +49,24 @@
                               Placeholder="Search" />
             </ToolBarContent>
 
-            <HeaderContent>
-                <MudTh>Code</MudTh>
-                <MudTh>Name</MudTh>
-                <MudTh>Description</MudTh>
-            </HeaderContent>
+            <Columns>
+                <SelectColumn T="Product" />
+                <PropertyColumn Property="x => x.ProductCode" Title="Code" />
+                <PropertyColumn Property="x => x.ProductName" Title="Name" />
+                <PropertyColumn Property="x => x.ProductDescription" Title="Description" />
+            </Columns>
 
-            <RowTemplate>
-                <MudTd DataLabel="Code">@context.ProductCode</MudTd>
-                <MudTd DataLabel="Name">@context.ProductName</MudTd>
-                <MudTd DataLabel="Desc.">@context.ProductDescription</MudTd>
-            </RowTemplate>
-
-        </MudTable>
+            <PagerContent>
+                <MudDataGridPager T="Product" />
+            </PagerContent>
+        </MudDataGrid>
     </DialogContent>
     <DialogActions>
         <MudButton Class="px-10"
                    Color="Color.Success"
                    OnClick="OnAdd"
                    Variant="Variant.Filled">
-
             Add
-
         </MudButton>
     </DialogActions>
 </MudDialog>
@@ -64,7 +75,7 @@
     private bool loading;
     private List<Product> products = [];
     public string searchString = string.Empty;
-    private Product selectedProduct = default!;
+    private HashSet<Product> selectedProducts = default!;
 
     [CascadingParameter]
     private IMudDialogInstance MudDialog { get; set; } = default!;
@@ -100,12 +111,12 @@
 
     private async Task OnAdd()
     {
-        if (selectedProduct is null)
+        if (selectedProducts is null)
         {
             Snackbar.Add("Please select a product.", Severity.Error);
             return;
         }
 
-        MudDialog.Close(DialogResult.Ok(selectedProduct));
+        MudDialog.Close(DialogResult.Ok(selectedProducts));
     }
 }
