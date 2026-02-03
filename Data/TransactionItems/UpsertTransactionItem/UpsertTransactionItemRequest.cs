@@ -1,7 +1,9 @@
-﻿namespace BusinessManagementWebApp.Data.TransactionItems.CreateTransactionItem;
+﻿namespace BusinessManagementWebApp.Data.TransactionItems.UpsertTransactionItem;
 
-public class CreateTransactionItemRequest
+public class UpsertTransactionItemRequest
 {
+    public long TransactionItemID { get; set; }
+
     public long TransactionID { get; set; }
 
     public long ProductID { get; set; }

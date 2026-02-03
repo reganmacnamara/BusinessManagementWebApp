@@ -3,6 +3,7 @@
 @using BusinessManagementWebApp.Data
 @using BusinessManagementWebApp.Data.Clients.CreateClient
 @using BusinessManagementWebApp.Data.Clients.Entities
+@using Newtonsoft.Json
 
 @inject ApiClient api
 @inject IDialogService DialogService
@@ -49,9 +50,7 @@
         var _Response = await api.CreateClientAsync(_Request);
         if (_Response.IsSuccessStatusCode)
         {
-            var json = await _Response.Content.ReadAsStringAsync();
-            var doc = JsonDocument.Parse(json);
-            client.ClientID = doc.RootElement.GetProperty("clientID").GetInt32();
+            client.ClientID = JsonConvert.DeserializeObject<CreateClientResponse>(await _Response.Content.ReadAsStringAsync())!.ClientID;
 
             Snackbar.Add("Client Created.", Severity.Success);
             MudDialog.Close(DialogResult.Ok(client));

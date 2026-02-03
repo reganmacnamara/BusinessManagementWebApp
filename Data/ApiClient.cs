@@ -8,10 +8,9 @@ using BusinessManagementWebApp.Data.Products.DeleteProduct;
 using BusinessManagementWebApp.Data.Products.GetProduct;
 using BusinessManagementWebApp.Data.Products.GetProducts;
 using BusinessManagementWebApp.Data.Products.UpdateProduct;
-using BusinessManagementWebApp.Data.TransactionItems.CreateTransactionItem;
 using BusinessManagementWebApp.Data.TransactionItems.DeleteTransactionItem;
 using BusinessManagementWebApp.Data.TransactionItems.GetTransactionItems;
-using BusinessManagementWebApp.Data.TransactionItems.UpdateTransactionItem;
+using BusinessManagementWebApp.Data.TransactionItems.UpsertTransactionItem;
 using BusinessManagementWebApp.Data.Transactions.CreateTransaction;
 using BusinessManagementWebApp.Data.Transactions.DeleteTransaction;
 using BusinessManagementWebApp.Data.Transactions.GetClientTransactions;
@@ -87,17 +86,14 @@ namespace BusinessManagementWebApp.Data
 
         #region TransactionItem Endpoints
 
-        public async Task<HttpResponseMessage> CreateTransactionItemAsync(CreateTransactionItemRequest request)
-            => await http.PostAsJsonAsync("/TransactionItem/Create", request);
-
         public async Task<HttpResponseMessage> DeleteTransactionItemAsync(DeleteTransactionItemRequest request)
             => await http.PostAsJsonAsync("/TransactionItem/Delete", request);
 
         public async Task<GetTransactionItemsResponse> GetTransactionItemsAsync()
             => await http.GetFromJsonAsync<GetTransactionItemsResponse>("/Transaction") ?? new GetTransactionItemsResponse();
 
-        public async Task<HttpResponseMessage> UpdateTransactionItemAsync(UpdateTransactionItemRequest request)
-            => await http.PostAsJsonAsync("/TransactionItem/Update", request);
+        public async Task<HttpResponseMessage> UpsertTransactionItemAsync(UpsertTransactionItemRequest request)
+            => await http.PostAsJsonAsync("/TransactionItem/Upsert", request);
 
         #endregion
     }

@@ -53,14 +53,14 @@
 
         var _Request = mapper.Map<CreateProductRequest>(product);
         var _Response = await api.CreateProductAsync(_Request);
-        if (_Response.IsSuccessStatusCode)
+        if (!_Response.IsSuccessStatusCode)
         {
-            Snackbar.Add("Product Created.", Severity.Success);
-            MudDialog.Close(DialogResult.Ok(true));
-        }
-        else
-        {
+
             Snackbar.Add($"Error {(int)_Response.StatusCode}: Product could not be created.", Severity.Error);
+            return;
         }
+
+        Snackbar.Add("Product Created.", Severity.Success);
+        MudDialog.Close(DialogResult.Ok(product));
     }
 }

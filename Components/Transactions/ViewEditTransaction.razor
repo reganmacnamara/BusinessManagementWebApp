@@ -2,10 +2,12 @@
 @using AutoMapper
 @using BusinessManagementWebApp.Data
 @using BusinessManagementWebApp.Data.Products.Entities
-@using BusinessManagementWebApp.Data.TransactionItems.CreateTransactionItem
 @using BusinessManagementWebApp.Data.TransactionItems.Entities
+@using BusinessManagementWebApp.Data.TransactionItems.UpsertTransactionItem
+@using BusinessManagementWebApp.Data.Transactions.CreateTransaction
 @using BusinessManagementWebApp.Data.Transactions.Entities
 @using BusinessManagementWebApp.Data.Transactions.UpdateTransaction
+@using Newtonsoft.Json
 
 @inject ApiClient api
 @inject IDialogService DialogService
@@ -198,22 +200,41 @@ else
         if (string.IsNullOrEmpty(transaction!.TransactionRef))
         {
             Snackbar.Add("Transaction must have a reference.", Severity.Error);
+            return;
         }
-        else
+        if (transactionItems.Count == 0)
         {
-            var _Request = mapper.Map<UpdateTransactionRequest>(transaction);
-            var _Response = await api.UpdateTransactionAsync(_Request);
-            if (_Response.IsSuccessStatusCode)
+            Snackbar.Add("Transaction must have at least one item.", Severity.Error);
+            return;
+        }
+        var _UpdateTransactionRequest = mapper.Map<UpdateTransactionRequest>(transaction);
+        var _UpdateTransactionResponse = await api.UpdateTransactionAsync(_UpdateTransactionRequest);
+        if (!_UpdateTransactionResponse.IsSuccessStatusCode)
+        {
+            Snackbar.Add($"Error {(int)_UpdateTransactionResponse.StatusCode}: Transaction could not be updated.", Severity.Error);
+            return;
+        }
+
+        var _ResponseData = JsonConvert.DeserializeObject<UpdateTransactionResponse>(await _UpdateTransactionResponse.Content.ReadAsStringAsync());
+
+        foreach (var _Item in transactionItems)
+        {
+            var _TransactionItemRequest = mapper.Map<UpsertTransactionItemRequest>(_Item);
+
+            if (_ResponseData is not null && _ResponseData.TransactionId != 0)
+                _TransactionItemRequest.TransactionID = _ResponseData.TransactionId;
+
+            var _TransactionItemResponse = await api.UpsertTransactionItemAsync(_TransactionItemRequest);
+
+            if (!_TransactionItemResponse.IsSuccessStatusCode)
             {
-                Snackbar.Add("Transaction Updated.", Severity.Success);
-                NavigationManager.NavigateTo("transactions");
-            }
-            else
-            {
-                Snackbar.Add($"Error {(int)_Response.StatusCode}: Transaction could not be updated.", Severity.Error);
+                Snackbar.Add($"Error {(int)_TransactionItemResponse.StatusCode}: Updating {_Item.Product.ProductCode}.", Severity.Error);
                 return;
             }
         }
+
+        Snackbar.Add("Transaction Updated.", Severity.Success);
+        NavigationManager.NavigateTo("transactions");
     }
 
     private async Task OpenCreateTransactionItemDialogAsync()

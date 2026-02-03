@@ -124,8 +124,11 @@
     {
         var dialog = await DialogService.ShowAsync<AddClientDialog>();
 
-        if (dialog.Result != null && !dialog.Result.IsCanceled)
+        var result = await dialog.Result;
+
+        if (!dialog.Result.IsCanceled && result?.Data is not null)
         {
+            clients.Add((Client)result.Data);
             await GetClients();
             StateHasChanged();
         }
