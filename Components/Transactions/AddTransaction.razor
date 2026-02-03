@@ -43,8 +43,8 @@
     <MudTextField @bind-Value="transaction.TransactionRef" Label="Transaction Reference" Variant="Variant.Outlined" Required="true" RequiredError="Transaction Reference Required" />
     <MudDatePicker @bind-Date="transaction.TransactionDate" Label="Transaction Date" />
     <MudSelect @bind-Value="transaction.TransactionType" Label="Transaction Type" Placeholder="Please Select">
-        <MudSelectItem Value="TransactionType.Invoice.ToString()">Invoice</MudSelectItem>
-        <MudSelectItem Value="TransactionType.Receipt.ToString()">Receipt</MudSelectItem>
+        <MudSelectItem Value="TransactionType.Invoice.GetCode()">Invoice</MudSelectItem>
+        <MudSelectItem Value="TransactionType.Receipt.GetCode()">Receipt</MudSelectItem>
     </MudSelect>
     <MudDatePicker @bind-Date="transaction.DueDate" Label="Transaction Due Date" Disabled="IsReciept()" />
     <div class="d-flex flex-row">
@@ -82,7 +82,7 @@
     }
 
     private bool IsReciept()
-        => transaction.TransactionType == TransactionType.Receipt.ToString();
+        => transaction.TransactionType == TransactionType.Receipt.GetCode();
 
     private void NavigateToTransactions()
         => NavigationManager.NavigateTo("transactions");

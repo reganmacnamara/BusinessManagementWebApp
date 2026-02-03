@@ -10,6 +10,6 @@
         public static readonly TransactionType Invoice = new("INV");
         public static readonly TransactionType Receipt = new("REC");
 
-        public override string ToString() => Code;
+        public string GetCode() => Code;
     }
 }
