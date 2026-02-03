@@ -2,6 +2,7 @@
 @using AutoMapper
 @using BusinessManagementWebApp.Data
 @using BusinessManagementWebApp.Data.Products.Entities
+@using BusinessManagementWebApp.Data.TransactionItems.DeleteTransactionItem
 @using BusinessManagementWebApp.Data.TransactionItems.Entities
 @using BusinessManagementWebApp.Data.TransactionItems.UpsertTransactionItem
 @using BusinessManagementWebApp.Data.Transactions.CreateTransaction
@@ -149,6 +150,7 @@ else
     private HashSet<TransactionItem> selectedTransactionItems = [];
     private Transaction transaction = default!;
     private List<TransactionItem> transactionItems = [];
+    private List<TransactionItem> transactionItemsToBeDeleted = [];
 
     [Parameter]
     public string id { get; set; } = string.Empty;
@@ -174,7 +176,10 @@ else
             return;
 
         foreach (var _Item in selectedTransactionItems)
+        {
+            transactionItemsToBeDeleted.Add(_Item);
             transactionItems.Remove(_Item);
+        }
 
         selectedTransactionItems.Clear();
         StateHasChanged();
@@ -219,16 +224,26 @@ else
 
         foreach (var _Item in transactionItems)
         {
-            var _TransactionItemRequest = mapper.Map<UpsertTransactionItemRequest>(_Item);
-
             if (_ResponseData is not null && _ResponseData.TransactionId != 0)
-                _TransactionItemRequest.TransactionID = _ResponseData.TransactionId;
+                _Item.TransactionID = _ResponseData.TransactionId;
 
+            var _TransactionItemRequest = mapper.Map<UpsertTransactionItemRequest>(_Item);
             var _TransactionItemResponse = await api.UpsertTransactionItemAsync(_TransactionItemRequest);
 
             if (!_TransactionItemResponse.IsSuccessStatusCode)
             {
                 Snackbar.Add($"Error {(int)_TransactionItemResponse.StatusCode}: Updating {_Item.Product.ProductCode}.", Severity.Error);
+                return;
+            }
+        }
+
+        foreach (var _Item in transactionItemsToBeDeleted)
+        {
+            var _Request = mapper.Map<DeleteTransactionItemRequest>(_Item);
+            var _Response = await api.DeleteTransactionItemAsync(_Request);
+            if (!_Response.IsSuccessStatusCode)
+            {
+                Snackbar.Add($"Error {(int)_Response.StatusCode}: {_Item.Product.ProductCode} could not be deleted.", Severity.Error);
                 return;
             }
         }
