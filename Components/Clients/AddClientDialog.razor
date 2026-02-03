@@ -48,14 +48,11 @@
         }
         var _Request = mapper.Map<CreateClientRequest>(client);
         var _Response = await api.CreateClientAsync(_Request);
-        if (_Response.IsSuccessStatusCode)
-        {
-            client.ClientID = JsonConvert.DeserializeObject<CreateClientResponse>(await _Response.Content.ReadAsStringAsync())!.ClientID;
-
-            Snackbar.Add("Client Created.", Severity.Success);
-            MudDialog.Close(DialogResult.Ok(client));
-        }
-        else
+        if (!_Response.IsSuccessStatusCode)
             Snackbar.Add($"Error {(int)_Response.StatusCode}: Client could not be created.", Severity.Error);
+
+        client.ClientID = JsonConvert.DeserializeObject<CreateClientResponse>(await _Response.Content.ReadAsStringAsync())!.ClientID;
+        Snackbar.Add("Client Created.", Severity.Success);
+        MudDialog.Close(DialogResult.Ok(client));
     }
 }

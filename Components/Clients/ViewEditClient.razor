@@ -123,16 +123,16 @@ else
         {
             var _Request = mapper.Map<UpdateClientRequest>(client);
             var _Response = await api.UpdateClientAsync(_Request);
-            if (_Response.IsSuccessStatusCode)
+
+            if (!_Response.IsSuccessStatusCode)
             {
-                Snackbar.Add("Client Updated.", Severity.Success);
-                NavigationManager.NavigateTo("clients");
-            }
-            else
-            {
+
                 Snackbar.Add($"Error {(int)_Response.StatusCode}: Client could not be updated.", Severity.Error);
+
             }
 
+            Snackbar.Add("Client Updated.", Severity.Success);
+            NavigationManager.NavigateTo("clients");
         }
     }
 }

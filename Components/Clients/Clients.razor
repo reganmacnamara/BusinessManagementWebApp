@@ -73,7 +73,7 @@
     </YesButton>
 </MudMessageBox>
 
-                @code {
+@code {
     private List<Client> clients = [];
     private string deleteState = string.Empty;
     private MudMessageBox deleteConfirmationMessage = default!;
@@ -102,6 +102,7 @@
     {
         if (selectedClients.Count != 0)
         {
+            int clientsDeleted = 0;
             bool? result = await deleteConfirmationMessage.ShowAsync();
             deleteState = result is null ? "Canceled" : "Deleted!";
 
@@ -110,11 +111,20 @@
                 foreach (var client in selectedClients)
                 {
                     var _Request = mapper.Map<DeleteClientRequest>(client);
-                    var _Response = api.DeleteClientAsync(_Request);
-                    // Snackbar.Add($"Client {client.ClientName} Deleted.", Severity.Error);
-                    clients.Remove(client);
+                    var _Response = await api.DeleteClientAsync(_Request);
+                    if (_Response.IsSuccessStatusCode)
+                    {
+                        clients.Remove(client);
+                        clientsDeleted++;
+                    }
+                    else
+                        Snackbar.Add($"Error {(int)_Response.StatusCode}: {client.ClientName} could not be deleted.", Severity.Error);
                 }
             }
+
+            if (clientsDeleted > 0)
+                Snackbar.Add($"{clientsDeleted} Clients Deleted.", Severity.Success);
+
             await GetClients();
             StateHasChanged();
         }
@@ -135,7 +145,5 @@
     }
 
     protected override async Task OnInitializedAsync()
-    {
-        await GetClients();
-    }
+        => await GetClients();
 }

@@ -88,25 +88,29 @@
         => NavigationManager.NavigateTo("transactions");
 
     protected override async Task OnInitializedAsync()
-    {
-        await GetClients();
-    }
+        => await GetClients();
 
     private async Task OnSave()
     {
         if (string.IsNullOrEmpty(transaction.TransactionRef))
         {
             Snackbar.Add("Transaction must have a reference.", Severity.Error);
+            return;
         }
-        else
+
+        if (transaction.Client is null)
         {
-            var _Request = mapper.Map<CreateTransactionRequest>(transaction);
-            var _Response = await api.CreateTransactionAsync(_Request);
-            if (_Response.IsSuccessStatusCode)
-                Snackbar.Add("Transaction Created.", Severity.Success);
-            else
-                Snackbar.Add($"Error {(int)_Response.StatusCode}: Transaction could not be created.", Severity.Error);
+            Snackbar.Add("Transaction must have a client.", Severity.Error);
+            return;
         }
+
+        var _Request = mapper.Map<CreateTransactionRequest>(transaction);
+        var _Response = await api.CreateTransactionAsync(_Request);
+
+        if (!_Response.IsSuccessStatusCode)
+            Snackbar.Add($"Error {(int)_Response.StatusCode}: Transaction could not be created.", Severity.Error);
+
+        Snackbar.Add("Transaction Created.", Severity.Success);
     }
 
     private async Task OpenCreateClientDialogAsync()

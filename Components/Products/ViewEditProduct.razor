@@ -99,9 +99,11 @@ else
 
         var _Request = mapper.Map<UpdateProductRequest>(product);
         var _Response = await api.UpdateProductAsync(_Request);
-        if (_Response.IsSuccessStatusCode)
-            Snackbar.Add("Product Updated.", Severity.Success);
-        else
+
+        if (!_Response.IsSuccessStatusCode)
             Snackbar.Add($"Error {(int)_Response.StatusCode}: Product could not be created.", Severity.Error);
+
+        Snackbar.Add("Product Updated.", Severity.Success);
+
     }
 }
