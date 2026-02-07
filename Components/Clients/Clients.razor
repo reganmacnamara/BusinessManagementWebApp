@@ -110,6 +110,19 @@
             {
                 foreach (var client in selectedClients)
                 {
+                    var _ClientTransactionCount = await api.GetClientTransactionsAsync(client.ClientID.ToString());
+                    if (_ClientTransactionCount is null)
+                    {
+                        Snackbar.Add($"Error checking {client.ClientName}s Transaction Count.", Severity.Error);
+                        return;
+                    }
+
+                    if (_ClientTransactionCount.Transactions.Count > 0)
+                    {
+                        Snackbar.Add($"{client.ClientName} has Transactions in the system and cannot be deleted.", Severity.Error);
+                        break;
+                    }
+
                     var _Request = mapper.Map<DeleteClientRequest>(client);
                     var _Response = await api.DeleteClientAsync(_Request);
                     if (_Response.IsSuccessStatusCode)
