@@ -90,12 +90,14 @@ else
                 </div>
 
                 <MudDataGrid @bind-SelectedItems="selectedTransactionItems"
+                             CommittedItemChanges="OnEditTransactionItem"
                              EditMode="DataGridEditMode.Cell"
                              EditTrigger="DataGridEditTrigger.OnRowClick"
                              Items="@transactionItems"
                              MultiSelection="true"
                              ReadOnly="false"
-                             SelectOnRowClick="false">
+                             SelectOnRowClick="false"
+                             T="TransactionItem">
 
                     <Columns>
                         <SelectColumn T="TransactionItem" />
@@ -120,7 +122,7 @@ else
                                         Format="N2"
                                         Title="Each" />
 
-                        <PropertyColumn Editable="true"
+                        <PropertyColumn Editable="false"
                                         Property="x => x.LineGross"
                                         Format="N2"
                                         Title="Gross" />
@@ -197,6 +199,14 @@ else
     private void NavigateToTransactions()
         => NavigationManager.NavigateTo("transactions");
 
+    private async Task OnEditTransactionItem(TransactionItem item)
+    {
+        item.LineGross = item.PricePerItem * item.Quantity;
+        item.LineTax = item.LineGross * (decimal)0.10;
+        item.LineNet = item.LineGross + item.LineTax;
+        StateHasChanged();
+    }
+
     protected override async Task OnInitializedAsync()
         => await GetTranctionData();
 
@@ -207,13 +217,17 @@ else
             Snackbar.Add("Transaction must have a reference.", Severity.Error);
             return;
         }
+
         if (transactionItems.Count == 0)
         {
             Snackbar.Add("Transaction must have at least one item.", Severity.Error);
             return;
         }
+
+        RecalculateTransactionValues();
         var _UpdateTransactionRequest = mapper.Map<UpdateTransactionRequest>(transaction);
         var _UpdateTransactionResponse = await api.UpdateTransactionAsync(_UpdateTransactionRequest);
+
         if (!_UpdateTransactionResponse.IsSuccessStatusCode)
         {
             Snackbar.Add($"Error {(int)_UpdateTransactionResponse.StatusCode}: Transaction could not be updated.", Severity.Error);
@@ -224,8 +238,8 @@ else
 
         foreach (var _Item in transactionItems)
         {
-            if (_ResponseData is not null && _ResponseData.TransactionId != 0)
-                _Item.TransactionID = _ResponseData.TransactionId;
+            if (_ResponseData is not null && _ResponseData.TransactionID != 0)
+                _Item.TransactionID = _ResponseData.TransactionID;
 
             var _TransactionItemRequest = mapper.Map<UpsertTransactionItemRequest>(_Item);
             var _TransactionItemResponse = await api.UpsertTransactionItemAsync(_TransactionItemRequest);
@@ -265,5 +279,16 @@ else
 
             StateHasChanged();
         }
+    }
+
+    private void RecalculateTransactionValues()
+    {
+        transaction.GrossValue = 0;
+        transaction.TaxValue = 0;
+        transaction.NetValue = 0;
+
+        transactionItems.ForEach(item => transaction.GrossValue += item.LineGross);
+        transactionItems.ForEach(item => transaction.TaxValue += item.LineTax);
+        transactionItems.ForEach(item => transaction.NetValue += item.LineNet);
     }
 }
