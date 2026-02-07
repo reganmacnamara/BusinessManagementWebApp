@@ -123,7 +123,7 @@
             }
 
             if (clientsDeleted > 0)
-                Snackbar.Add($"{clientsDeleted} Clients Deleted.", Severity.Success);
+                Snackbar.Add($"{clientsDeleted} Clients Deleted.", Severity.Warning);
 
             await GetClients();
             StateHasChanged();

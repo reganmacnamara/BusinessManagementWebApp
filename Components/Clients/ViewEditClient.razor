@@ -61,24 +61,46 @@ else
         </MudTabPanel>
 
         <MudTabPanel Text="Transactions">
-            <MudDataGrid @bind-SelectedItems="selectedTransactions"
-                         Breakpoint="Breakpoint.Sm"
-                         Items="transactions"
-                         Hover="true"
-                         Loading="@isLoading"
-                         LoadingProgressColor="Color.Info"
-                         MultiSelection="true"
-                         RowClass="cursor-pointer"
-                         SelectOnRowClick="false"
-                         T="Transaction">
-                <Columns>
-                    <SelectColumn T="Transaction" />
-                    <PropertyColumn Property="x => x.TransactionDate" Title="Date" />
-                    <PropertyColumn Property="x => x.TransactionRef" Title="Reference" />
-                    <PropertyColumn Property="x => x.TransactionType" Title="Type" />
-                    <PropertyColumn Property="x => x.NetValue" Title="Net Value" Format="C" />
-                </Columns>
-            </MudDataGrid>
+            <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6">
+                <MudTabPanel Text="All">
+                    <MudDataGrid Breakpoint="Breakpoint.Sm"
+                                 Items="transactions"
+                                 Hover="true"
+                                 Loading="@isLoading"
+                                 LoadingProgressColor="Color.Info"
+                                 RowClass="cursor-pointer"
+                                 RowClick="TransactionSelected"
+                                 T="Transaction">
+                        <Columns>
+                            <PropertyColumn Property="x => x.TransactionDate" Title="Date" />
+                            <PropertyColumn Property="x => x.TransactionRef" Title="Reference" />
+                            <PropertyColumn Property="x => x.TransactionType" Title="Type" />
+                            <PropertyColumn Property="x => x.NetValue" Title="Net Value" Format="C" />
+                        </Columns>
+                    </MudDataGrid>
+                </MudTabPanel>
+
+                @foreach (var _TransactionType in transactions.Select(t => t.TransactionType).Distinct())
+                {
+                    <MudTabPanel Text="@(_TransactionType.ToString())">
+                        <MudDataGrid Breakpoint="Breakpoint.Sm"
+                                     Items="transactions.Where(t => t.TransactionType == _TransactionType)"
+                                     Hover="true"
+                                     Loading="@isLoading"
+                                     LoadingProgressColor="Color.Info"
+                                     RowClass="cursor-pointer"
+                                     RowClick="TransactionSelected"
+                                     T="Transaction">
+                            <Columns>
+                                <PropertyColumn Property="x => x.TransactionDate" Title="Date" />
+                                <PropertyColumn Property="x => x.TransactionRef" Title="Reference" />
+                                <PropertyColumn Property="x => x.TransactionType" Title="Type" />
+                                <PropertyColumn Property="x => x.NetValue" Title="Net Value" Format="C" />
+                            </Columns>
+                        </MudDataGrid>
+                    </MudTabPanel>
+                }
+            </MudTabs>
         </MudTabPanel>
     </MudTabs>
 }
@@ -87,7 +109,6 @@ else
 
     private Client? client;
     private bool isLoading = true;
-    private HashSet<Transaction> selectedTransactions = [];
     private List<Transaction> transactions = [];
 
     [Parameter]
@@ -133,5 +154,13 @@ else
             Snackbar.Add("Client Updated.", Severity.Success);
             NavigationManager.NavigateTo("clients");
         }
+    }
+
+    private void TransactionSelected(DataGridRowClickEventArgs<Transaction> args)
+    {
+        var _SelectedTransaction = args.Item;
+
+        if (_SelectedTransaction is not null)
+            NavigationManager.NavigateTo($"/transactions/{_SelectedTransaction.TransactionID}");
     }
 }

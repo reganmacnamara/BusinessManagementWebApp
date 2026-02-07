@@ -8,6 +8,7 @@
 @inject ApiClient api
 @inject IMapper mapper
 @inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
 
 <div class="d-flex">
     <div class="mr-auto p-2">
@@ -26,26 +27,59 @@
     </div>
 </div>
 
-<MudDataGrid @bind-SelectedItems="selectedTransactions"
-             Breakpoint="Breakpoint.Sm"
-             Items="transactions"
-             Hover="true"
-             Loading="@loading"
-             LoadingProgressColor="Color.Info"
-             MultiSelection="true"
-             RowClass="cursor-pointer"
-             RowClick="TransactionSelected"
-             SelectOnRowClick="false"
-             T="Transaction">
-    <Columns>
-        <SelectColumn T="Transaction" />
-        <PropertyColumn Property="x => x.TransactionDate" Title="Date" />
-        <PropertyColumn Property="x => x.TransactionRef" Title="Reference" />
-        <PropertyColumn Property="x => x.TransactionType" Title="Type" />
-        <PropertyColumn Property="x => x.Client.ClientName" Title="Client" />
-        <PropertyColumn Property="x => x.NetValue" Title="Net Value" Format="C" />
-    </Columns>
-</MudDataGrid>
+<MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6">
+    <MudTabPanel Text="All">
+        <MudDataGrid @bind-SelectedItems="selectedTransactions"
+                     Breakpoint="Breakpoint.Sm"
+                     Items="transactions"
+                     Hover="true"
+                     Loading="@loading"
+                     LoadingProgressColor="Color.Info"
+                     MultiSelection="true"
+                     RowClass="cursor-pointer"
+                     RowClick="TransactionSelected"
+                     SelectOnRowClick="false"
+                     T="Transaction">
+            <Columns>
+                <SelectColumn T="Transaction" />
+                <PropertyColumn Property="x => x.TransactionDate" Title="Date" />
+                <PropertyColumn Property="x => x.TransactionRef" Title="Reference" />
+                <PropertyColumn Property="x => x.TransactionType" Title="Type" />
+                <PropertyColumn Property="x => x.Client.ClientName" Title="Client" />
+                <PropertyColumn Property="x => x.NetValue" Title="Net Value" Format="C" />
+            </Columns>
+        </MudDataGrid>
+    </MudTabPanel>
+
+    @foreach(var _TransactionType in transactions.Select(t => t.TransactionType).Distinct())
+    {
+        <MudTabPanel Text="@(_TransactionType.ToString())">
+            <MudDataGrid @bind-SelectedItems="selectedTransactions"
+                         Breakpoint="Breakpoint.Sm"
+                         Items="transactions.Where(t => t.TransactionType == _TransactionType)"
+                         Hover="true"
+                         Loading="@loading"
+                         LoadingProgressColor="Color.Info"
+                         MultiSelection="true"
+                         RowClass="cursor-pointer"
+                         RowClick="TransactionSelected"
+                         SelectOnRowClick="false"
+                         T="Transaction">
+                <Columns>
+                    <SelectColumn T="Transaction" />
+                    <PropertyColumn Property="x => x.TransactionDate" Title="Date" />
+                    <PropertyColumn Property="x => x.TransactionRef" Title="Reference" />
+                    <PropertyColumn Property="x => x.TransactionType" Title="Type" />
+                    <PropertyColumn Property="x => x.Client.ClientName" Title="Client" />
+                    <PropertyColumn Property="x => x.NetValue" Title="Net Value" Format="C" />
+                </Columns>
+            </MudDataGrid>
+        </MudTabPanel>
+    }
+
+</MudTabs>
+
+
 
 <MudMessageBox @ref="deleteConfirmationMessage"
                Title="Warning"
@@ -60,7 +94,7 @@
     </YesButton>
 </MudMessageBox>
 
-@code {
+                @code {
     private MudMessageBox deleteConfirmationMessage = default!;
     private string deleteState = string.Empty;
     private bool loading;
@@ -85,6 +119,7 @@
     {
         if (selectedTransactions.Count != 0)
         {
+            int transactionsDeleted = 0;
             bool? result = await deleteConfirmationMessage.ShowAsync();
             deleteState = result is null ? "Canceled" : "Deleted!";
 
@@ -93,13 +128,22 @@
                 foreach (var transaction in selectedTransactions)
                 {
                     var _Request = mapper.Map<DeleteTransactionRequest>(transaction);
-                    var _Response = api.DeleteTransactionAsync(_Request);
-                    transactions.Remove(transaction);
+                    var _Response = await api.DeleteTransactionAsync(_Request);
+                    if (_Response.IsSuccessStatusCode)
+                    {
+                        transactions.Remove(transaction);
+                        transactionsDeleted++;
+                    }
+                    else
+                        Snackbar.Add($"Error {(int)_Response.StatusCode}: {transaction.TransactionRef} could not be deleted.", Severity.Error);
                 }
             }
-            await GetTransactionsDataAsync();
+            if (transactionsDeleted > 0)
+                Snackbar.Add($"{transactionsDeleted} Transactions Deleted.", Severity.Warning);
+
             selectedTransactions.Clear();
-            await InvokeAsync(StateHasChanged);
+            await GetTransactionsDataAsync();
+            StateHasChanged();
         }
     }
 
