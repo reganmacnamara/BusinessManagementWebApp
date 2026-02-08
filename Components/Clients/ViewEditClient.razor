@@ -199,9 +199,8 @@ else
 
             if (!_Response.IsSuccessStatusCode)
             {
-
                 Snackbar.Add($"Error {(int)_Response.StatusCode}: {JsonSerializer.Deserialize<string>(_Response.Content.ReadAsStringAsync().Result)}", Severity.Error);
-
+                return;
             }
 
             Snackbar.Add("Client Updated.", Severity.Success);

@@ -247,7 +247,7 @@
             return;
         }
 
-        var _ResponseData = JsonSerializer.Deserialize<CreateTransactionResponse>(_Response.Content.ReadAsStringAsync().Result);
+        var _ResponseData = Newtonsoft.Json.JsonConvert.DeserializeObject<CreateTransactionResponse>(await _Response.Content.ReadAsStringAsync());
 
         foreach (var _Item in transactionItems)
         {
