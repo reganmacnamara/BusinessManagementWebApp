@@ -6,6 +6,7 @@
 @using BusinessManagementWebApp.Data.Products.Entities
 @using Microsoft.AspNetCore.Components.Web
 @using MudBlazor
+@using System.Text.Json
 @rendermode InteractiveServer
 
 @inject ApiClient api
@@ -108,7 +109,7 @@
                         productsDeleted++;
                     }
                     else
-                        Snackbar.Add($"Error {(int)_Response.StatusCode}: {product.ProductCode} could not be deleted.", Severity.Error);
+                        Snackbar.Add($"Error {(int)_Response.StatusCode}: {JsonSerializer.Deserialize<string>(_Response.Content.ReadAsStringAsync().Result)}", Severity.Error);
                 }
             }
 

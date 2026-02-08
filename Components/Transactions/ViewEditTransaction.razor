@@ -6,9 +6,10 @@
 @using BusinessManagementWebApp.Data.TransactionItems.Entities
 @using BusinessManagementWebApp.Data.TransactionItems.UpsertTransactionItem
 @using BusinessManagementWebApp.Data.Transactions.CreateTransaction
+@using BusinessManagementWebApp.Data.Transactions.DeleteTransaction
 @using BusinessManagementWebApp.Data.Transactions.Entities
 @using BusinessManagementWebApp.Data.Transactions.UpdateTransaction
-@using Newtonsoft.Json
+@using System.Text.Json
 
 @inject ApiClient api
 @inject IDialogService DialogService
@@ -41,6 +42,12 @@ else
                 <MudFab Color="Color.Default"
                         OnClick="OnSave"
                         StartIcon="@Icons.Material.Filled.Save" />
+            </MudTooltip>
+
+            <MudTooltip Delay="300" Text="Delete">
+                <MudFab Color="Color.Error"
+                        OnClick="OnDelete"
+                        StartIcon="@Icons.Material.Filled.Delete" />
             </MudTooltip>
 
             <MudTooltip Delay="300" Text="Cancel">
@@ -144,10 +151,23 @@ else
         </MudTabPanel>
     </MudTabs>
 
+    <MudMessageBox @ref="deleteConfirmationMessage"
+                   Title="Warning"
+                   CancelText="Cancel">
+        <MessageContent>
+            Are you sure you want to delete @(transaction.TransactionRef)?
+        </MessageContent>
+        <YesButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.DeleteForever">Delete!</MudButton>
+        </YesButton>
+    </MudMessageBox>
+
     <AddTransactionItemDialog />
 }
 
 @code {
+    private MudMessageBox deleteConfirmationMessage = default!;
+    private string deleteState = string.Empty;
     private bool isLoading = true;
     private HashSet<TransactionItem> selectedTransactionItems = [];
     private Transaction transaction = default!;
@@ -207,6 +227,25 @@ else
         StateHasChanged();
     }
 
+    private async Task OnDelete()
+    {
+        bool? result = await deleteConfirmationMessage.ShowAsync();
+        deleteState = result is null ? "Canceled" : "Deleted!";
+
+        if (deleteState == "Deleted!")
+        {
+            var _Request = mapper.Map<DeleteTransactionRequest>(transaction);
+            var _Response = await api.DeleteTransactionAsync(_Request);
+            if (_Response.IsSuccessStatusCode)
+            {
+                Snackbar.Add($"{transaction.TransactionRef} Deleted.", Severity.Warning);
+                NavigateToTransactions();
+            }
+            else
+                Snackbar.Add($"Error {(int)_Response.StatusCode}: {JsonSerializer.Deserialize<string>(_Response.Content.ReadAsStringAsync().Result)}", Severity.Error);
+        }
+    }
+
     protected override async Task OnInitializedAsync()
         => await GetTranctionData();
 
@@ -230,11 +269,11 @@ else
 
         if (!_UpdateTransactionResponse.IsSuccessStatusCode)
         {
-            Snackbar.Add($"Error {(int)_UpdateTransactionResponse.StatusCode}: Transaction could not be updated.", Severity.Error);
+            Snackbar.Add($"Error {(int)_UpdateTransactionResponse.StatusCode}: {JsonSerializer.Deserialize<string>(_UpdateTransactionResponse.Content.ReadAsStringAsync().Result)}", Severity.Error);
             return;
         }
 
-        var _ResponseData = JsonConvert.DeserializeObject<UpdateTransactionResponse>(await _UpdateTransactionResponse.Content.ReadAsStringAsync());
+        var _ResponseData = JsonSerializer.Deserialize<UpdateTransactionResponse>(_UpdateTransactionResponse.Content.ReadAsStringAsync().Result);
 
         foreach (var _Item in transactionItems)
         {
@@ -246,7 +285,7 @@ else
 
             if (!_TransactionItemResponse.IsSuccessStatusCode)
             {
-                Snackbar.Add($"Error {(int)_TransactionItemResponse.StatusCode}: Updating {_Item.Product.ProductCode}.", Severity.Error);
+                Snackbar.Add($"Error {(int)_TransactionItemResponse.StatusCode}: Updating {JsonSerializer.Deserialize<string>(_TransactionItemResponse.Content.ReadAsStringAsync().Result)}", Severity.Error);
                 return;
             }
         }
@@ -257,7 +296,7 @@ else
             var _Response = await api.DeleteTransactionItemAsync(_Request);
             if (!_Response.IsSuccessStatusCode)
             {
-                Snackbar.Add($"Error {(int)_Response.StatusCode}: {_Item.Product.ProductCode} could not be deleted.", Severity.Error);
+                Snackbar.Add($"Error {(int)_Response.StatusCode}: {JsonSerializer.Deserialize<string>(_Response.Content.ReadAsStringAsync().Result)}", Severity.Error);
                 return;
             }
         }

@@ -9,7 +9,7 @@
 @using BusinessManagementWebApp.Data.Transactions.CreateTransaction
 @using BusinessManagementWebApp.Data.Transactions.Entities
 @using BusinessManagementWebApp.Infrastructure.Enums
-@using Newtonsoft.Json
+@using System.Text.Json
 
 @inject ApiClient api
 @inject IMapper mapper
@@ -232,13 +232,22 @@
             return;
         }
 
+        if (transactionItems.Count == 0)
+        {
+            Snackbar.Add("Transaction must have at least one item.", Severity.Error);
+            return;
+        }
+
         var _Request = mapper.Map<CreateTransactionRequest>(transaction);
         var _Response = await api.CreateTransactionAsync(_Request);
 
         if (!_Response.IsSuccessStatusCode)
-            Snackbar.Add($"Error {(int)_Response.StatusCode}: Transaction could not be created.", Severity.Error);
+        {
+            Snackbar.Add($"Error {(int)_Response.StatusCode}: {JsonSerializer.Deserialize<string>(_Response.Content.ReadAsStringAsync().Result)}", Severity.Error);
+            return;
+        }
 
-        var _ResponseData = JsonConvert.DeserializeObject<CreateTransactionResponse>(await _Response.Content.ReadAsStringAsync());
+        var _ResponseData = JsonSerializer.Deserialize<CreateTransactionResponse>(_Response.Content.ReadAsStringAsync().Result);
 
         foreach (var _Item in transactionItems)
         {
@@ -250,7 +259,7 @@
 
             if (!_TransactionItemResponse.IsSuccessStatusCode)
             {
-                Snackbar.Add($"Error {(int)_TransactionItemResponse.StatusCode}: Adding {_Item.Product.ProductCode}.", Severity.Error);
+                Snackbar.Add($"Error {(int)_TransactionItemResponse.StatusCode}: {JsonSerializer.Deserialize<string>(_Response.Content.ReadAsStringAsync().Result)}", Severity.Error);
                 return;
             }
         }

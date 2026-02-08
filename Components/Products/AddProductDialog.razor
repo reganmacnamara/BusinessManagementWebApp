@@ -2,6 +2,7 @@
 @using BusinessManagementWebApp.Data
 @using BusinessManagementWebApp.Data.Products.CreateProduct
 @using BusinessManagementWebApp.Data.Products.Entities
+@using System.Text.Json
 
 @inject ApiClient api
 @inject IDialogService DialogService
@@ -56,7 +57,7 @@
         if (!_Response.IsSuccessStatusCode)
         {
 
-            Snackbar.Add($"Error {(int)_Response.StatusCode}: Product could not be created.", Severity.Error);
+            Snackbar.Add($"Error {(int)_Response.StatusCode}: {JsonSerializer.Deserialize<string>(_Response.Content.ReadAsStringAsync().Result)}", Severity.Error);
             return;
         }
 

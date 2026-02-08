@@ -1,9 +1,11 @@
 ﻿@page "/clients/{id}"
 @using AutoMapper
 @using BusinessManagementWebApp.Data
+@using BusinessManagementWebApp.Data.Clients.DeleteClient
 @using BusinessManagementWebApp.Data.Clients.Entities
 @using BusinessManagementWebApp.Data.Clients.UpdateClient
 @using BusinessManagementWebApp.Data.Transactions.Entities
+@using System.Text.Json
 
 @inject ApiClient api
 @inject IMapper mapper
@@ -35,6 +37,12 @@ else
                 <MudFab Color="Color.Default"
                         OnClick="OnSave"
                         StartIcon="@Icons.Material.Filled.Save" />
+            </MudTooltip>
+
+            <MudTooltip Delay="300" Text="Delete">
+                <MudFab Color="Color.Error"
+                        OnClick="OnDelete"
+                        StartIcon="@Icons.Material.Filled.Delete" />
             </MudTooltip>
 
             <MudTooltip Delay="300" Text="Cancel">
@@ -105,9 +113,22 @@ else
     </MudTabs>
 }
 
+<MudMessageBox @ref="deleteConfirmationMessage"
+               Title="Warning"
+               CancelText="Cancel">
+    <MessageContent>
+        Are you sure you want to delete @(client.ClientName)?
+    </MessageContent>
+    <YesButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.DeleteForever">Delete!</MudButton>
+    </YesButton>
+</MudMessageBox>
+
 @code {
 
-    private Client? client;
+    private Client client = default!;
+    private MudMessageBox deleteConfirmationMessage = default!;
+    private string deleteState = string.Empty;
     private bool isLoading = true;
     private List<Transaction> transactions = [];
 
@@ -125,6 +146,38 @@ else
 
     private void NavigateToClients()
         => NavigationManager.NavigateTo("clients");
+
+    private async Task OnDelete()
+    {
+        bool? result = await deleteConfirmationMessage.ShowAsync();
+        deleteState = result is null ? "Canceled" : "Deleted!";
+
+        if (deleteState == "Deleted!")
+        {
+            var _ClientTransactionCount = await api.GetClientTransactionsAsync(client.ClientID.ToString());
+            if (_ClientTransactionCount is null)
+            {
+                Snackbar.Add($"Error checking {client.ClientName}s Transaction Count.", Severity.Error);
+                return;
+            }
+
+            if (_ClientTransactionCount.Transactions.Count > 0)
+            {
+                Snackbar.Add($"{client.ClientName} has Transactions in the system and cannot be deleted.", Severity.Error);
+                return;
+            }
+
+            var _Request = mapper.Map<DeleteClientRequest>(client);
+            var _Response = await api.DeleteClientAsync(_Request);
+            if (_Response.IsSuccessStatusCode)
+            {
+                Snackbar.Add($"{client.ClientName} Deleted.", Severity.Warning);
+                NavigateToClients();
+            }
+            else
+                Snackbar.Add($"Error {(int)_Response.StatusCode}: {JsonSerializer.Deserialize<string>(_Response.Content.ReadAsStringAsync().Result)}", Severity.Error);
+        }
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -147,7 +200,7 @@ else
             if (!_Response.IsSuccessStatusCode)
             {
 
-                Snackbar.Add($"Error {(int)_Response.StatusCode}: Client could not be updated.", Severity.Error);
+                Snackbar.Add($"Error {(int)_Response.StatusCode}: {JsonSerializer.Deserialize<string>(_Response.Content.ReadAsStringAsync().Result)}", Severity.Error);
 
             }
 

@@ -4,6 +4,7 @@
 @using BusinessManagementWebApp.Data
 @using BusinessManagementWebApp.Data.Transactions.DeleteTransaction
 @using BusinessManagementWebApp.Data.Transactions.Entities
+@using System.Text.Json
 
 @inject ApiClient api
 @inject IMapper mapper
@@ -51,7 +52,7 @@
         </MudDataGrid>
     </MudTabPanel>
 
-    @foreach(var _TransactionType in transactions.Select(t => t.TransactionType).Distinct())
+    @foreach (var _TransactionType in transactions.Select(t => t.TransactionType).Distinct())
     {
         <MudTabPanel Text="@(_TransactionType.ToString())">
             <MudDataGrid @bind-SelectedItems="selectedTransactions"
@@ -94,7 +95,7 @@
     </YesButton>
 </MudMessageBox>
 
-                @code {
+@code {
     private MudMessageBox deleteConfirmationMessage = default!;
     private string deleteState = string.Empty;
     private bool loading;
@@ -135,7 +136,10 @@
                         transactionsDeleted++;
                     }
                     else
-                        Snackbar.Add($"Error {(int)_Response.StatusCode}: {transaction.TransactionRef} could not be deleted.", Severity.Error);
+                    {
+                        Snackbar.Add($"Error {(int)_Response.StatusCode}: {JsonSerializer.Deserialize<string>(_Response.Content.ReadAsStringAsync().Result)}", Severity.Error);
+                        return;
+                    }
                 }
             }
             if (transactionsDeleted > 0)

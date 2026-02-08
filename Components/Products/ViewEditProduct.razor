@@ -1,8 +1,10 @@
 ﻿@page "/products/{id}"
 @using AutoMapper
 @using BusinessManagementWebApp.Data
+@using BusinessManagementWebApp.Data.Products.DeleteProduct
 @using BusinessManagementWebApp.Data.Products.Entities
 @using BusinessManagementWebApp.Data.Products.UpdateProduct
+@using System.Text.Json
 
 @inject ApiClient api
 @inject IMapper mapper
@@ -36,9 +38,15 @@ else
                         StartIcon="@Icons.Material.Filled.Save" />
             </MudTooltip>
 
+            <MudTooltip Delay="300" Text="Delete">
+                <MudFab Color="Color.Error"
+                        OnClick="OnDelete"
+                        StartIcon="@Icons.Material.Filled.Delete" />
+            </MudTooltip>
+
             <MudTooltip Delay="300" Text="Cancel">
                 <MudFab Color="Color.Error"
-                        OnClick="NavigateToClients"
+                        OnClick="NavigateToProducts"
                         StartIcon="@Icons.Material.Filled.Cancel" />
             </MudTooltip>
         </div>
@@ -58,8 +66,20 @@ else
     </MudTabs>
 }
 
-@code {
+<MudMessageBox @ref="deleteConfirmationMessage"
+               Title="Warning"
+               CancelText="Cancel">
+    <MessageContent>
+        Are you sure you want to delete @(product.ProductCode)?
+    </MessageContent>
+    <YesButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.DeleteForever">Delete!</MudButton>
+    </YesButton>
+</MudMessageBox>
 
+@code {
+    private MudMessageBox deleteConfirmationMessage = default!;
+    private string deleteState = string.Empty;
     private Product product = default!;
     private bool isLoading = true;
 
@@ -73,8 +93,27 @@ else
         product = _Product.Product;
     }
 
-    private void NavigateToClients()
+    private void NavigateToProducts()
         => NavigationManager.NavigateTo("products");
+
+    private async Task OnDelete()
+    {
+        bool? result = await deleteConfirmationMessage.ShowAsync();
+        deleteState = result is null ? "Canceled" : "Deleted!";
+
+        if (deleteState == "Deleted!")
+        {
+            var _Request = mapper.Map<DeleteProductRequest>(product);
+            var _Response = await api.DeleteProductAsync(_Request);
+            if (_Response.IsSuccessStatusCode)
+            {
+                Snackbar.Add($"{product.ProductCode} Deleted.", Severity.Warning);
+                NavigateToProducts();
+            }
+            else
+                Snackbar.Add($"Error {(int)_Response.StatusCode}: {JsonSerializer.Deserialize<string>(_Response.Content.ReadAsStringAsync().Result)}", Severity.Error);
+        }
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -101,7 +140,7 @@ else
         var _Response = await api.UpdateProductAsync(_Request);
 
         if (!_Response.IsSuccessStatusCode)
-            Snackbar.Add($"Error {(int)_Response.StatusCode}: Product could not be created.", Severity.Error);
+            Snackbar.Add($"Error {(int)_Response.StatusCode}: {JsonSerializer.Deserialize<string>(_Response.Content.ReadAsStringAsync().Result)}", Severity.Error);
 
         Snackbar.Add("Product Updated.", Severity.Success);
 

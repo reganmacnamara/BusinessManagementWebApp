@@ -6,6 +6,7 @@
 @using BusinessManagementWebApp.Data.Clients.Entities
 @using Microsoft.AspNetCore.Components.Web
 @using MudBlazor
+@using System.Text.Json
 @rendermode InteractiveServer
 
 @inject ApiClient api
@@ -131,7 +132,7 @@
                         clientsDeleted++;
                     }
                     else
-                        Snackbar.Add($"Error {(int)_Response.StatusCode}: {client.ClientName} could not be deleted.", Severity.Error);
+                        Snackbar.Add($"Error {(int)_Response.StatusCode}: {JsonSerializer.Deserialize<string>(_Response.Content.ReadAsStringAsync().Result)}", Severity.Error);
                 }
             }
 

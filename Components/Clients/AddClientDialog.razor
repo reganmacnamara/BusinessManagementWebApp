@@ -3,7 +3,6 @@
 @using BusinessManagementWebApp.Data
 @using BusinessManagementWebApp.Data.Clients.CreateClient
 @using BusinessManagementWebApp.Data.Clients.Entities
-@using Newtonsoft.Json
 
 @inject ApiClient api
 @inject IDialogService DialogService
@@ -49,9 +48,9 @@
         var _Request = mapper.Map<CreateClientRequest>(client);
         var _Response = await api.CreateClientAsync(_Request);
         if (!_Response.IsSuccessStatusCode)
-            Snackbar.Add($"Error {(int)_Response.StatusCode}: Client could not be created.", Severity.Error);
+            Snackbar.Add($"Error {(int)_Response.StatusCode}: {JsonSerializer.Deserialize<string>(_Response.Content.ReadAsStringAsync().Result)}", Severity.Error);
 
-        client.ClientID = JsonConvert.DeserializeObject<CreateClientResponse>(await _Response.Content.ReadAsStringAsync())!.ClientID;
+        client.ClientID = JsonSerializer.Deserialize<CreateClientResponse>(_Response.Content.ReadAsStringAsync().Result)!.ClientID;
         Snackbar.Add("Client Created.", Severity.Success);
         MudDialog.Close(DialogResult.Ok(client));
     }
