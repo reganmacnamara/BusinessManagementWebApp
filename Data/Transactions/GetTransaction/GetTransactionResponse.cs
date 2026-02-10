@@ -1,5 +1,4 @@
-﻿using BusinessManagementWebApp.Data.TransactionItems.Entities;
-using BusinessManagementWebApp.Data.Transactions.Entities;
+﻿using BusinessManagementWebApp.Data.Entities;
 
 namespace BusinessManagementWebApp.Data.Transactions.GetTransaction
 {

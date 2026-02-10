@@ -1,7 +1,4 @@
-﻿using BusinessManagementWebApp.Data.Products.Entities;
-using BusinessManagementWebApp.Data.Transactions.Entities;
-
-namespace BusinessManagementWebApp.Data.TransactionItems.Entities;
+﻿namespace BusinessManagementWebApp.Data.Entities;
 
 public class TransactionItem
 {

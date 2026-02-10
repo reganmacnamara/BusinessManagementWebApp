@@ -1,11 +1,8 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-namespace BusinessManagementWebApp.Data.Clients.Entities
+﻿namespace BusinessManagementWebApp.Data.Entities
 {
 
     public class Client
     {
-        [Key]
         public long ClientID { get; set; }
 
         public string ClientName { get; set; } = string.Empty;

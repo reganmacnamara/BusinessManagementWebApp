@@ -1,8 +1,8 @@
 ﻿using AutoMapper;
 using BusinessManagementWebApp.Data.Clients.CreateClient;
 using BusinessManagementWebApp.Data.Clients.DeleteClient;
-using BusinessManagementWebApp.Data.Clients.Entities;
 using BusinessManagementWebApp.Data.Clients.UpdateClient;
+using BusinessManagementWebApp.Data.Entities;
 
 namespace BusinessManagementWebApp.Infrastructure.AutoMapper
 {

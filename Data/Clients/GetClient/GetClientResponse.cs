@@ -1,4 +1,4 @@
-﻿using BusinessManagementWebApp.Data.Clients.Entities;
+﻿using BusinessManagementWebApp.Data.Entities;
 
 namespace BusinessManagementWebApp.Data.Clients.GetClient
 {

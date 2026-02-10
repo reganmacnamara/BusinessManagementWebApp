@@ -1,15 +1,13 @@
-﻿@page "/transactions/{id}"
+﻿@page "/transactions/invoices/{id}"
+@using System.Text.Json
 @using AutoMapper
 @using BusinessManagementWebApp.Data
-@using BusinessManagementWebApp.Data.Products.Entities
+@using BusinessManagementWebApp.Data.Entities
 @using BusinessManagementWebApp.Data.TransactionItems.DeleteTransactionItem
-@using BusinessManagementWebApp.Data.TransactionItems.Entities
 @using BusinessManagementWebApp.Data.TransactionItems.UpsertTransactionItem
 @using BusinessManagementWebApp.Data.Transactions.CreateTransaction
 @using BusinessManagementWebApp.Data.Transactions.DeleteTransaction
-@using BusinessManagementWebApp.Data.Transactions.Entities
 @using BusinessManagementWebApp.Data.Transactions.UpdateTransaction
-@using System.Text.Json
 
 @inject ApiClient api
 @inject IDialogService DialogService
@@ -65,11 +63,6 @@ else
                               Disabled="true"
                               Format="dd/MM/yyyy"
                               Label="Transaction Date"
-                              Variant="Variant.Outlined" />
-
-                <MudTextField @bind-Value="transaction.TransactionType"
-                              Disabled="true"
-                              Label="Transaction Type"
                               Variant="Variant.Outlined" />
 
                 <MudTextField @bind-Value="transaction.DueDate"
@@ -162,7 +155,7 @@ else
         </YesButton>
     </MudMessageBox>
 
-    <AddTransactionItemDialog />
+    <AddInvoiceItemDialog />
 }
 
 @code {
@@ -307,7 +300,7 @@ else
 
     private async Task OpenCreateTransactionItemDialogAsync()
     {
-        var dialog = await DialogService.ShowAsync<AddTransactionItemDialog>();
+        var dialog = await DialogService.ShowAsync<AddInvoiceItemDialog>();
 
         var result = await dialog.Result;
 

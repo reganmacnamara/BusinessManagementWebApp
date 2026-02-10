@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
+using BusinessManagementWebApp.Data.Entities;
 using BusinessManagementWebApp.Data.Products.CreateProduct;
 using BusinessManagementWebApp.Data.Products.DeleteProduct;
-using BusinessManagementWebApp.Data.Products.Entities;
 using BusinessManagementWebApp.Data.Products.UpdateProduct;
 
 namespace BusinessManagementWebApp.Infrastructure.AutoMapper

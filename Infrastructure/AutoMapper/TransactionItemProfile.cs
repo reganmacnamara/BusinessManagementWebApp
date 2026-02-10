@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
+using BusinessManagementWebApp.Data.Entities;
 using BusinessManagementWebApp.Data.TransactionItems.DeleteTransactionItem;
-using BusinessManagementWebApp.Data.TransactionItems.Entities;
 using BusinessManagementWebApp.Data.TransactionItems.UpsertTransactionItem;
 
 namespace BusinessManagementWebApp.Infrastructure.AutoMapper;

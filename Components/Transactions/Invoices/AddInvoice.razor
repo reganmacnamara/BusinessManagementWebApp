@@ -1,15 +1,12 @@
-﻿@page "/transactions/create"
+﻿@page "/transactions/invoice/create"
+@using System.Text.Json
 @using AutoMapper
 @using BusinessManagementWebApp.Components.Clients
 @using BusinessManagementWebApp.Data
-@using BusinessManagementWebApp.Data.Clients.Entities
-@using BusinessManagementWebApp.Data.Products.Entities
-@using BusinessManagementWebApp.Data.TransactionItems.Entities
+@using BusinessManagementWebApp.Data.Entities
 @using BusinessManagementWebApp.Data.TransactionItems.UpsertTransactionItem
 @using BusinessManagementWebApp.Data.Transactions.CreateTransaction
-@using BusinessManagementWebApp.Data.Transactions.Entities
 @using BusinessManagementWebApp.Infrastructure.Enums
-@using System.Text.Json
 
 @inject ApiClient api
 @inject IMapper mapper
@@ -45,7 +42,6 @@
 
 <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6">
     <MudTabPanel Text="Details">
-        <MudPaper MaxWidth="30%">
             <MudTextField @bind-Value="transaction.TransactionRef"
                           Label="Transaction Reference"
                           Variant="Variant.Outlined"
@@ -58,21 +54,20 @@
                           Label="Transaction Date"
                           Variant="Variant.Outlined" />
 
-            <MudSelect @bind-Value="transaction.TransactionType"
-                       Label="Transaction Type"
-                       Placeholder="Please Select">
-
-                <MudSelectItem Value="TransactionType.Invoice.GetCode()">Invoice</MudSelectItem>
-                <MudSelectItem Value="TransactionType.Receipt.GetCode()">Receipt</MudSelectItem>
-
-            </MudSelect>
-
             <MudDatePicker @bind-Date="transaction.DueDate"
                            Label="Transaction Due Date"
-                           Disabled="IsReciept()" />
+                           Disabled="IsReciept()"
+                           Variant="Variant.Outlined" />
 
             <div class="d-flex flex-row">
-                <MudSelect @key="clients.Count" Value="transaction.Client" T="Client" Label="Client" Placeholder="Select Client" ValueChanged="OnClientChanged">
+                <MudSelect @key="clients.Count"
+                           Value="transaction.Client"
+                           T="Client"
+                           Label="Client"
+                           Placeholder="Select Client"
+                           ValueChanged="OnClientChanged"
+                           Variant="Variant.Outlined">
+
                     @foreach (var client in clients)
                     {
                         <MudSelectItem Value="client">@client.ClientName</MudSelectItem>
@@ -84,7 +79,6 @@
                         Size="Size.Small"
                         StartIcon="@Icons.Material.Filled.Add" />
             </div>
-        </MudPaper>
     </MudTabPanel>
     <MudTabPanel Text="Transaction Items">
         <MudPaper MaxWidth="70%">
@@ -155,7 +149,7 @@
 
 <AddClientDialog />
 
-<AddTransactionItemDialog />
+<AddInvoiceItemDialog />
 
 @code {
     private List<Client> clients = [];
@@ -238,6 +232,10 @@
             return;
         }
 
+        transaction.TransactionType = TransactionType.Invoice.GetCode();
+
+        RecalculateTransactionValues();
+
         var _Request = mapper.Map<CreateTransactionRequest>(transaction);
         var _Response = await api.CreateTransactionAsync(_Request);
 
@@ -290,7 +288,7 @@
 
     private async Task OpenCreateTransactionItemDialogAsync()
     {
-        var dialog = await DialogService.ShowAsync<AddTransactionItemDialog>();
+        var dialog = await DialogService.ShowAsync<AddInvoiceItemDialog>();
 
         var result = await dialog.Result;
 

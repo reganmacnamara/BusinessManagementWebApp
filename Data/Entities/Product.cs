@@ -1,10 +1,7 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-namespace BusinessManagementWebApp.Data.Products.Entities;
+﻿namespace BusinessManagementWebApp.Data.Entities;
 
 public class Product
 {
-    [Key]
     public long ProductID { get; set; }
 
     public required string ProductName { get; set; }

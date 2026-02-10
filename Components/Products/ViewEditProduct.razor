@@ -1,10 +1,10 @@
 ﻿@page "/products/{id}"
+@using System.Text.Json
 @using AutoMapper
 @using BusinessManagementWebApp.Data
+@using BusinessManagementWebApp.Data.Entities
 @using BusinessManagementWebApp.Data.Products.DeleteProduct
-@using BusinessManagementWebApp.Data.Products.Entities
 @using BusinessManagementWebApp.Data.Products.UpdateProduct
-@using System.Text.Json
 
 @inject ApiClient api
 @inject IMapper mapper

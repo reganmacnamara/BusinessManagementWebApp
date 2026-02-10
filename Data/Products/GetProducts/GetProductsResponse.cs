@@ -1,4 +1,4 @@
-﻿using BusinessManagementWebApp.Data.Products.Entities;
+﻿using BusinessManagementWebApp.Data.Entities;
 
 namespace BusinessManagementWebApp.Data.Products.GetProducts;
 

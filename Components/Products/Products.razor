@@ -1,12 +1,12 @@
 ﻿@page "/products"
+@using System.Text.Json
 @using System.Threading.Tasks
 @using AutoMapper
 @using BusinessManagementWebApp.Data
+@using BusinessManagementWebApp.Data.Entities
 @using BusinessManagementWebApp.Data.Products.DeleteProduct
-@using BusinessManagementWebApp.Data.Products.Entities
 @using Microsoft.AspNetCore.Components.Web
 @using MudBlazor
-@using System.Text.Json
 @rendermode InteractiveServer
 
 @inject ApiClient api
@@ -21,17 +21,16 @@
     <div class="mr-auto p-2">
         <h1>Products</h1>
     </div>
+</div>
 
-    <div class="p-2">
-        <MudFab Color="Color.Success"
-                OnClick="OpenCreateProductDialogAsync"
-                StartIcon="@Icons.Material.Filled.Add" />
+<div class="p-2">
+    <MudButton Color="Color.Success"
+               OnClick="OpenCreateProductDialogAsync"
+               StartIcon="@Icons.Material.Filled.Add">Add Product</MudButton>
 
-        <MudFab Color="Color.Error"
-                Disabled="selectedProducts.Count == 0"
-                OnClick="OnDelete"
-                StartIcon="@Icons.Material.Filled.Delete" />
-    </div>
+    <MudButton Color="Color.Error"
+               OnClick="OnDelete"
+               StartIcon="@Icons.Material.Filled.Delete">Remove Product(s)</MudButton>
 </div>
 
 <MudTable @bind-SelectedItems="selectedProducts"
@@ -72,7 +71,7 @@
     </YesButton>
 </MudMessageBox>
 
-                @code {
+@code {
     private string deleteState = string.Empty;
     private MudMessageBox deleteConfirmationMessage = default!;
     private bool loading;
@@ -129,7 +128,7 @@
 
     private async Task OpenCreateProductDialogAsync()
     {
-        var dialog = await  DialogService.ShowAsync<AddProductDialog>();
+        var dialog = await DialogService.ShowAsync<AddProductDialog>();
 
         var result = await dialog.Result;
 
