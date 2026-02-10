@@ -1,8 +1,8 @@
 ﻿using AutoMapper;
+using BusinessManagementWebApp.Data.Entities;
 using BusinessManagementWebApp.Data.Transactions.CreateTransaction;
 using BusinessManagementWebApp.Data.Transactions.DeleteTransaction;
 using BusinessManagementWebApp.Data.Transactions.UpdateTransaction;
-using System.Transactions;
 
 namespace BusinessManagementWebApp.Infrastructure.AutoMapper
 {

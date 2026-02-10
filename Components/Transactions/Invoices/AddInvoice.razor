@@ -42,43 +42,43 @@
 
 <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6">
     <MudTabPanel Text="Details">
-            <MudTextField @bind-Value="transaction.TransactionRef"
-                          Label="Transaction Reference"
-                          Variant="Variant.Outlined"
-                          Required="true"
-                          RequiredError="Transaction Reference Required" />
+        <MudTextField @bind-Value="transaction.TransactionRef"
+                      Label="Transaction Reference"
+                      Variant="Variant.Outlined"
+                      Required="true"
+                      RequiredError="Transaction Reference Required" />
 
-            <MudTextField @bind-Value="transaction.TransactionDate"
-                          Disabled="IsReciept()"
-                          Format="dd/MM/yyyy"
-                          Label="Transaction Date"
-                          Variant="Variant.Outlined" />
+        <MudDatePicker @bind-Value="transaction.TransactionDate"
+                       Disabled="IsReciept()"
+                       Format="dd/MM/yyyy"
+                       Label="Transaction Date"
+                       Variant="Variant.Outlined" />
 
-            <MudDatePicker @bind-Date="transaction.DueDate"
-                           Label="Transaction Due Date"
-                           Disabled="IsReciept()"
-                           Variant="Variant.Outlined" />
+        <MudDatePicker @bind-Date="transaction.DueDate"
+                       Label="Transaction Due Date"
+                       Disabled="IsReciept()"
+                       Variant="Variant.Outlined" />
 
-            <div class="d-flex flex-row">
-                <MudSelect @key="clients.Count"
-                           Value="transaction.Client"
-                           T="Client"
-                           Label="Client"
-                           Placeholder="Select Client"
-                           ValueChanged="OnClientChanged"
-                           Variant="Variant.Outlined">
+        <div class="d-flex flex-row">
+            <MudSelect @key="clients.Count"
+                       Value="transaction.Client"
+                       T="Client"
+                       Label="Client"
+                       Placeholder="Select Client"
+                       ValueChanged="OnClientChanged"
+                       Variant="Variant.Outlined">
 
-                    @foreach (var client in clients)
-                    {
-                        <MudSelectItem Value="client">@client.ClientName</MudSelectItem>
-                    }
-                </MudSelect>
-                <MudFab Color="Color.Success"
-                        IconSize="Size.Small"
-                        OnClick="OpenCreateClientDialogAsync"
-                        Size="Size.Small"
-                        StartIcon="@Icons.Material.Filled.Add" />
-            </div>
+                @foreach (var client in clients)
+                {
+                    <MudSelectItem Value="client">@client.ClientName</MudSelectItem>
+                }
+            </MudSelect>
+            <MudFab Color="Color.Success"
+                    IconSize="Size.Small"
+                    OnClick="OpenCreateClientDialogAsync"
+                    Size="Size.Small"
+                    StartIcon="@Icons.Material.Filled.Add" />
+        </div>
     </MudTabPanel>
     <MudTabPanel Text="Transaction Items">
         <MudPaper MaxWidth="70%">

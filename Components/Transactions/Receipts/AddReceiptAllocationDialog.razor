@@ -50,11 +50,13 @@
 
                 <PropertyColumn Editable="false"
                                 Property="x => x.NetValue"
-                                Title="Net" />
+                                Title="Net"
+                                Format="C" />
 
                 <PropertyColumn Editable="false"
                                 Property="x => x.OutstandingValue"
-                                Title="Outstanding" />
+                                Title="Outstanding"
+                                Format="C" />
             </Columns>
 
         </MudDataGrid>
@@ -95,7 +97,7 @@
     {
         var _Response = await api.GetClientTransactionsAsync(ClientID.ToString());
 
-        transactions = _Response.Transactions.Where(t => t.Outstanding == false).ToList() ?? [];
+        transactions = _Response.Transactions.Where(t => t.Outstanding == true).ToList() ?? [];
         StateHasChanged();
     }
 }

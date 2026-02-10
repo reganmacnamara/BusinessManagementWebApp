@@ -48,10 +48,10 @@
                       Required="true"
                       RequiredError="Transaction Reference Required" />
 
-        <MudTextField @bind-Value="transaction.TransactionDate"
-                      Format="dd/MM/yyyy"
-                      Label="Transaction Date"
-                      Variant="Variant.Outlined" />
+        <MudDatePicker @bind-Value="transaction.TransactionDate"
+                       Format="dd/MM/yyyy"
+                       Label="Transaction Date"
+                       Variant="Variant.Outlined" />
 
         <div class="d-flex flex-row">
             <MudSelect @key="clients.Count"
@@ -109,11 +109,24 @@
 
                     <PropertyColumn Editable="false"
                                     Property="x => x.NetValue"
-                                    Title="Net" />
+                                    Title="Net"
+                                    Format="C" />
 
                     <PropertyColumn Editable="false"
                                     Property="x => x.OutstandingValue"
-                                    Title="Outstanding" />
+                                    Title="Outstanding"
+                                    Format="C" />
+
+                    <TemplateColumn CellClass="d-flex justify-end"
+                                    Title="Allocation($)"
+                                    T="decimal"
+                                    Value="0">
+
+                        <CellTemplate>
+
+                        </CellTemplate>
+
+                    </TemplateColumn>
                 </Columns>
 
             </MudDataGrid>
