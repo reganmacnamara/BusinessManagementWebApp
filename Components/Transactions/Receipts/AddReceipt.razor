@@ -112,8 +112,8 @@
                                     Title="Net" />
 
                     <PropertyColumn Editable="false"
-                                    Property="x => x.Outstanding"
-                                    Title="Date" />
+                                    Property="x => x.OutstandingValue"
+                                    Title="Outstanding" />
                 </Columns>
 
             </MudDataGrid>
@@ -234,7 +234,10 @@
 
     private async Task OpenCreateTransactionItemDialogAsync()
     {
-        var dialog = await DialogService.ShowAsync<AddReceiptAllocationDialog>();
+        var dialog = await DialogService.ShowAsync<AddReceiptAllocationDialog>("", new DialogParameters<AddReceiptAllocationDialog>()
+        {
+            { x => x.ClientID, transaction.ClientID }
+        });
 
         var result = await dialog.Result;
 

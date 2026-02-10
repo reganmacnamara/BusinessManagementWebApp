@@ -111,7 +111,7 @@
 
     private async Task OnAdd()
     {
-        if (selectedProducts is null)
+        if (selectedProducts.Count() == 0)
         {
             Snackbar.Add("Please select a product.", Severity.Error);
             return;
