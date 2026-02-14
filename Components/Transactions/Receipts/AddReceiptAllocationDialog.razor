@@ -90,7 +90,19 @@
             return;
         }
 
-        MudDialog.Close(DialogResult.Ok(selectedTransactions));
+        List<TransactionAllocation> transactionAllocations = [];
+        foreach (var _Transaction in selectedTransactions)
+        {
+            transactionAllocations.Add(new TransactionAllocation()
+            {
+                AllocatingID = 0,
+                RecievingID = _Transaction.TransactionID,
+                AllocationValue = 0,
+                AllocationDate = DateTime.Now
+            });
+        }
+
+        MudDialog.Close(DialogResult.Ok(transactionAllocations));
     }
 
     protected override async Task OnInitializedAsync()
