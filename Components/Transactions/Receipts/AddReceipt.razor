@@ -74,7 +74,7 @@
                     StartIcon="@Icons.Material.Filled.Add" />
         </div>
     </MudTabPanel>
-    <MudTabPanel Text="Transaction Items"
+    <MudTabPanel Text="Allocations"
                  Disabled="transaction.Client is null">
 
         <MudPaper MaxWidth="70%">
@@ -89,9 +89,6 @@
             </div>
 
             <MudDataGrid @bind-SelectedItems="selectedTransactionAllocations"
-                         CommittedItemChanges="OnEditTransactionItem"
-                         EditMode="DataGridEditMode.Cell"
-                         EditTrigger="DataGridEditTrigger.OnRowClick"
                          Items="transactionAllocations"
                          MultiSelection="true"
                          ReadOnly="false"
@@ -118,14 +115,10 @@
                                     Format="C" />
 
                     <TemplateColumn CellClass="d-flex justify-end"
-                                    Title="Allocation($)"
-                                    T="decimal"
-                                    Value="0">
-
-                        <CellTemplate>
-
-                        </CellTemplate>
-
+                                    Title="Allocated">
+                        <EditTemplate>
+                            <MudNumericField Format="C" Value="context.Item.OffsetValue" ValueChanged="OnAllocationUpdated(context.Item)" T="decimal"></MudNumericField>
+                        </EditTemplate>
                     </TemplateColumn>
                 </Columns>
 
@@ -183,9 +176,11 @@
     protected override async Task OnInitializedAsync()
         => await GetClients();
 
-    private async Task OnEditTransactionItem(Transaction item)
+    private async Task OnAllocationUpdated(Transaction item)
     {
+        item.OutstandingValue = item.NetValue - item.OffsetValue;
 
+        StateHasChanged();
     }
 
     private async Task OnSave()
