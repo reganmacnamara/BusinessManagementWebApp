@@ -100,20 +100,20 @@
 
                 <Columns>
                     <PropertyColumn Editable="false"
-                                    Property="x => x.TransactionRef"
+                                    Property="x => x.RecievingTransaction.TransactionRef"
                                     Title="Ref" />
 
                     <PropertyColumn Editable="false"
-                                    Property="x => x.TransactionDate"
+                                    Property="x => x.RecievingTransaction.TransactionDate"
                                     Title="Date" />
 
                     <PropertyColumn Editable="false"
-                                    Property="x => x.NetValue"
+                                    Property="x => x.RecievingTransaction.NetValue"
                                     Title="Net"
                                     Format="C" />
 
                     <PropertyColumn Editable="false"
-                                    Property="x => x.OutstandingValue"
+                                    Property="x => x.RecievingTransaction.OutstandingValue"
                                     Title="Outstanding"
                                     Format="C" />
 
@@ -123,8 +123,8 @@
 
                         <EditTemplate>
                             <MudNumericField Format="C"
-                                             Value="context.Item.OffsetValue"
-                                             ValueChanged="(value) => OnAllocationUpdated(value, context.Item)"
+                                             Value="context.Item.RecievingTransaction.OffsetValue"
+                                             ValueChanged="(value) => OnAllocationUpdated(value, context.Item.RecievingTransaction)"
                                              T="decimal" />
                         </EditTemplate>
 
@@ -144,7 +144,7 @@
 @code {
     private List<Client> clients = [];
     private List<Transaction> clientTransactions = [];
-    private HashSet<Transaction> selectedTransactionAllocations = [];
+    private HashSet<TransactionAllocation> selectedTransactionAllocations = [];
     private Transaction transaction = new();
     private List<TransactionAllocation> transactionAllocations = [];
 
@@ -224,27 +224,6 @@
         {
             Snackbar.Add($"Error {(int)_Response.StatusCode}: {JsonSerializer.Deserialize<string>(_Response.Content.ReadAsStringAsync().Result)}", Severity.Error);
             return;
-        }
-
-        var _ResponseData = Newtonsoft.Json.JsonConvert.DeserializeObject<CreateTransactionResponse>(await _Response.Content.ReadAsStringAsync());
-
-        foreach (var _AllocatedItem in transactionAllocations)
-        {
-            var _TransactionAllocation = new TransactionAllocation()
-            {
-                AllocatingID = _ResponseData.TransactionID,
-                RecievingID =_AllocatedItem.TransactionID,
-                AllocationValue = 0,
-                AllocationDate = DateTime.Now
-            };
-
-            var _AllocationResponse = await api.UpdateTransactionAsync(mapper.Map<UpdateTransactionRequest>(transaction));
-
-            if (!_Response.IsSuccessStatusCode)
-            {
-                Snackbar.Add($"Error {(int)_Response.StatusCode}: {JsonSerializer.Deserialize<string>(_Response.Content.ReadAsStringAsync().Result)}", Severity.Error);
-                return;
-            }
         }
 
         Snackbar.Add("Receipt Created.", Severity.Success);
