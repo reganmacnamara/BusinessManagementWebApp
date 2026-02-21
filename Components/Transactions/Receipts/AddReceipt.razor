@@ -4,6 +4,7 @@
 @using BusinessManagementWebApp.Components.Clients
 @using BusinessManagementWebApp.Data
 @using BusinessManagementWebApp.Data.Entities
+@using BusinessManagementWebApp.Data.TransactionAllocations.UpsertTransactionAllocation
 @using BusinessManagementWebApp.Data.TransactionItems.UpsertTransactionItem
 @using BusinessManagementWebApp.Data.Transactions.CreateTransaction
 @using BusinessManagementWebApp.Data.Transactions.UpdateTransaction
@@ -122,10 +123,12 @@
                                     Title="Allocated">
 
                         <EditTemplate>
-                            <MudNumericField Format="C"
-                                             Value="context.Item.AllocationValue"
-                                             ValueChanged="(value) => OnAllocationUpdated(value, context.Item)"
-                                             T="decimal" />
+                            <MudStack Row="true">
+                                <MudNumericField Format="C"
+                                                 Value="context.Item.AllocationValue"
+                                                 ValueChanged="(value) => OnAllocationUpdated(value, context.Item)"
+                                                 T="decimal" />
+                            </MudStack>
                         </EditTemplate>
 
                     </TemplateColumn>
@@ -150,10 +153,6 @@
 
     [CascadingParameter]
     private IMudDialogInstance MudDialog { get; set; }
-
-    private bool CanAllocateToTransaction(decimal allocationAmount, TransactionAllocation allocation)
-        => allocation.RecievingTransaction.Outstanding == true
-            && (allocation.RecievingTransaction.OffsetValue + allocationAmount) <= allocation.RecievingTransaction.NetValue;
 
     private async Task DeleteTransactionAllocations()
     {
@@ -191,7 +190,7 @@
 
     private async Task OnAllocationUpdated(decimal value, TransactionAllocation item)
     {
-        if (CanAllocateToTransaction(value, item))
+        if (value <= item.RecievingTransaction.NetValue)
         {
             item.AllocationValue = value;
             item.RecievingTransaction.OffsetValue = item.AllocationValue;
@@ -199,6 +198,8 @@
 
             if (item.RecievingTransaction.OutstandingValue == 0)
                 item.RecievingTransaction.Outstanding = false;
+            else
+                item.RecievingTransaction.Outstanding = true;
         }
     }
 
@@ -222,6 +223,10 @@
             return;
         }
 
+        transaction.GrossValue = transactionAllocations.Sum(a => a.AllocationValue);
+        transaction.TaxValue = transaction.GrossValue * 0.1m;
+        transaction.NetValue = transaction.GrossValue + transaction.TaxValue;
+        transaction.OffsetingValue = transaction.NetValue;
         transaction.TransactionType = TransactionType.Receipt.GetCode();
 
         var _Response = await api.CreateTransactionAsync(mapper.Map<CreateTransactionRequest>(transaction));
@@ -230,6 +235,22 @@
         {
             Snackbar.Add($"Error {(int)_Response.StatusCode}: {JsonSerializer.Deserialize<string>(_Response.Content.ReadAsStringAsync().Result)}", Severity.Error);
             return;
+        }
+
+        var _ResponseData = Newtonsoft.Json.JsonConvert.DeserializeObject<CreateTransactionResponse>(await _Response.Content.ReadAsStringAsync());
+
+        foreach (var _Allocation in transactionAllocations)
+        {
+            var _UpsertRequest = mapper.Map<UpsertTransactionAllocationRequest>(_Allocation);
+            _UpsertRequest.AllocatingID = _ResponseData.TransactionID;
+            _UpsertRequest.RecievingID = _Allocation.RecievingTransaction.TransactionID;
+
+            var _UpsertResponse = await api.UpsertTransactionAllocationAsync(_UpsertRequest);
+            if (!_UpsertResponse.IsSuccessStatusCode)
+            {
+                Snackbar.Add($"Error {(int)_UpsertResponse.StatusCode}: {JsonSerializer.Deserialize<string>(_UpsertResponse.Content.ReadAsStringAsync().Result)}", Severity.Error);
+                return;
+            }
         }
 
         Snackbar.Add("Receipt Created.", Severity.Success);

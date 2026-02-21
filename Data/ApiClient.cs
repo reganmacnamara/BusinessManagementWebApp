@@ -8,6 +8,7 @@ using BusinessManagementWebApp.Data.Products.DeleteProduct;
 using BusinessManagementWebApp.Data.Products.GetProduct;
 using BusinessManagementWebApp.Data.Products.GetProducts;
 using BusinessManagementWebApp.Data.Products.UpdateProduct;
+using BusinessManagementWebApp.Data.TransactionAllocations.UpsertTransactionAllocation;
 using BusinessManagementWebApp.Data.TransactionItems.DeleteTransactionItem;
 using BusinessManagementWebApp.Data.TransactionItems.GetTransactionItems;
 using BusinessManagementWebApp.Data.TransactionItems.UpsertTransactionItem;
@@ -81,6 +82,13 @@ namespace BusinessManagementWebApp.Data
 
         public async Task<HttpResponseMessage> UpdateTransactionAsync(UpdateTransactionRequest request)
             => await http.PostAsJsonAsync("/Transaction/Update", request);
+
+        #endregion
+
+        #region TransactionAllocation Endpoints
+
+        public async Task<HttpResponseMessage> UpsertTransactionAllocationAsync(UpsertTransactionAllocationRequest request)
+            => await http.PostAsJsonAsync("/TransactionAllocation/Upsert", request);
 
         #endregion
 
