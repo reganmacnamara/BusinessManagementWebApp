@@ -1,8 +1,11 @@
-﻿namespace BusinessManagementWebApp.Data.Entities
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace BusinessManagementWebApp.Data.Entities
 {
 
     public class Client
     {
+        [Key]
         public long ClientID { get; set; }
 
         public string ClientName { get; set; } = string.Empty;
@@ -22,6 +25,11 @@
         public string State { get; set; } = string.Empty;
 
         public string Country { get; set; } = string.Empty;
+
+        //Navigation Properties
+
+        public List<Invoice> Invoices { get; set; }
+        public List<Receipt> Receipts { get; set; }
     }
 
 }

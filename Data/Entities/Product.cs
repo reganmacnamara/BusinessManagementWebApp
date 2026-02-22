@@ -1,7 +1,10 @@
-﻿namespace BusinessManagementWebApp.Data.Entities;
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace BusinessManagementWebApp.Data.Entities;
 
 public class Product
 {
+    [Key]
     public long ProductID { get; set; }
 
     public required string ProductName { get; set; }
@@ -15,4 +18,8 @@ public class Product
     public decimal UnitPrice { get; set; }
 
     public long QuantityOnHand { get; set; }
+
+    //Navigation Properties
+
+    public List<InvoiceItem> InvoiceItems { get; set; }
 }

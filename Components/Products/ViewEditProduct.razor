@@ -1,4 +1,4 @@
-﻿@page "/products/{id}"
+﻿@page "/products/{id:long}"
 @using System.Text.Json
 @using AutoMapper
 @using BusinessManagementWebApp.Data
@@ -84,7 +84,7 @@ else
     private bool isLoading = true;
 
     [Parameter]
-    public string id { get; set; } = string.Empty;
+    public long id { get; set; }
 
     private async Task GetProductData()
     {
@@ -103,8 +103,7 @@ else
 
         if (deleteState == "Deleted!")
         {
-            var _Request = mapper.Map<DeleteProductRequest>(product);
-            var _Response = await api.DeleteProductAsync(_Request);
+            var _Response = await api.DeleteProductAsync(product.ProductID);
             if (_Response.IsSuccessStatusCode)
             {
                 Snackbar.Add($"{product.ProductCode} Deleted.", Severity.Warning);

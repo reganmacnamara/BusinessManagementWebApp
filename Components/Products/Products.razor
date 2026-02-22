@@ -100,8 +100,7 @@
             {
                 foreach (var product in selectedProducts)
                 {
-                    var _Request = mapper.Map<DeleteProductRequest>(product);
-                    var _Response = await api.DeleteProductAsync(_Request);
+                    var _Response = await api.DeleteProductAsync(product.ProductID);
                     if (_Response.IsSuccessStatusCode)
                     {
                         products.Remove(product);

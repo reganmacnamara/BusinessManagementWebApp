@@ -1,0 +1,162 @@
+﻿@page "/invoices"
+@using System.Text.Json
+@using System.Threading.Tasks
+@using AutoMapper
+@using BusinessManagementWebApp.Data
+@using BusinessManagementWebApp.Data.Entities
+@using BusinessManagementWebApp.Data.Transactions.DeleteTransaction
+@using BusinessManagementWebApp.Infrastructure.Enums
+
+@inject ApiClient api
+@inject IMapper mapper
+@inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
+
+<div class="d-flex">
+    <div class="mr-auto p-2">
+        <h1>Invoices</h1>
+    </div>
+</div>
+
+<div class="d-flex justify-content-start">
+    <MudButton Color="Color.Success"
+               OnClick="NavigateToCreateInvoice"
+               StartIcon="@Icons.Material.Filled.Add">Add Invoice</MudButton>
+
+    <MudButton Color="Color.Error"
+               OnClick="OnDelete"
+               StartIcon="@Icons.Material.Filled.Delete">Remove Invoice(s)</MudButton>
+</div>
+
+<MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6">
+    <MudTabPanel Text="All">
+        <MudDataGrid @bind-SelectedItems="selectedInvoices"
+                     Breakpoint="Breakpoint.Sm"
+                     Items="invoices"
+                     Hover="true"
+                     Loading="@loading"
+                     LoadingProgressColor="Color.Info"
+                     MultiSelection="true"
+                     RowClass="cursor-pointer"
+                     RowClick="TransactionSelected"
+                     SelectOnRowClick="false"
+                     T="Transaction">
+            <Columns>
+                <SelectColumn T="Transaction" />
+                <PropertyColumn Property="x => x.TransactionDate" Title="Date" />
+                <PropertyColumn Property="x => x.TransactionRef" Title="Reference" />
+                <PropertyColumn Property="x => x.TransactionType" Title="Type" />
+                <PropertyColumn Property="x => x.Client.ClientName" Title="Client" />
+                <PropertyColumn Property="x => x.NetValue" Title="Net Value" Format="C" />
+            </Columns>
+        </MudDataGrid>
+    </MudTabPanel>
+
+    @foreach (var _TransactionType in invoices.Select(t => t.TransactionType).Distinct())
+    {
+        <MudTabPanel Text="@(_TransactionType.ToString())">
+            <MudDataGrid @bind-SelectedItems="selectedInvoices"
+                         Breakpoint="Breakpoint.Sm"
+                         Items="invoices.Where(t => t.TransactionType == _TransactionType)"
+                         Hover="true"
+                         Loading="@loading"
+                         LoadingProgressColor="Color.Info"
+                         MultiSelection="true"
+                         RowClass="cursor-pointer"
+                         RowClick="TransactionSelected"
+                         SelectOnRowClick="false"
+                         T="Transaction">
+                <Columns>
+                    <SelectColumn T="Transaction" />
+                    <PropertyColumn Property="x => x.TransactionDate" Title="Date" />
+                    <PropertyColumn Property="x => x.TransactionRef" Title="Reference" />
+                    <PropertyColumn Property="x => x.TransactionType" Title="Type" />
+                    <PropertyColumn Property="x => x.Client.ClientName" Title="Client" />
+                    <PropertyColumn Property="x => x.NetValue" Title="Net Value" Format="C" />
+                </Columns>
+            </MudDataGrid>
+        </MudTabPanel>
+    }
+
+</MudTabs>
+
+<MudMessageBox @ref="deleteConfirmationMessage"
+               Title="Warning"
+               CancelText="Cancel">
+    <MessageContent>
+        Are you sure you want to delete @(selectedInvoices.Count > 1
+                ? $"{selectedInvoices.Count} Invoices"
+                : $"{selectedInvoices.First().TransactionRef}")?
+    </MessageContent>
+    <YesButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.DeleteForever">Delete!</MudButton>
+    </YesButton>
+</MudMessageBox>
+
+@code {
+    private MudMessageBox deleteConfirmationMessage = default!;
+    private string deleteState = string.Empty;
+    private bool loading;
+    HashSet<Transaction> selectedInvoices = [];
+    List<Transaction> invoices = [];
+
+    private async Task GetTransactionsDataAsync()
+    {
+        loading = true;
+
+        var _Response = await api.GetInvoicesAsync();
+        invoices = _Response.Transactions ?? [];
+
+        loading = false;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private void NavigateToCreateInvoice()
+        => NavigationManager.NavigateTo($"/invoices/create");
+
+    private async Task OnDelete()
+    {
+        if (selectedInvoices.Count != 0)
+        {
+            int transactionsDeleted = 0;
+            bool? result = await deleteConfirmationMessage.ShowAsync();
+            deleteState = result is null ? "Canceled" : "Deleted!";
+
+            if (deleteState == "Deleted!")
+            {
+                foreach (var transaction in selectedInvoices)
+                {
+                    var _Request = mapper.Map<DeleteTransactionRequest>(transaction);
+                    var _Response = await api.DeleteTransactionAsync(_Request);
+                    if (_Response.IsSuccessStatusCode)
+                    {
+                        invoices.Remove(transaction);
+                        transactionsDeleted++;
+                    }
+                    else
+                    {
+                        Snackbar.Add($"Error {(int)_Response.StatusCode}: {JsonSerializer.Deserialize<string>(_Response.Content.ReadAsStringAsync().Result)}", Severity.Error);
+                        return;
+                    }
+                }
+            }
+            if (transactionsDeleted > 0)
+                Snackbar.Add($"{transactionsDeleted} Invoices Deleted.", Severity.Warning);
+
+            selectedInvoices.Clear();
+            await GetTransactionsDataAsync();
+            StateHasChanged();
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+        => await GetTransactionsDataAsync();
+
+    private void TransactionSelected(DataGridRowClickEventArgs<Transaction> args)
+    {
+        var _SelectedTransaction = args.Item;
+
+        if (_SelectedTransaction is not null && _SelectedTransaction.TransactionType == TransactionType.Invoice.GetCode())
+            NavigationManager.NavigateTo($"/invoices/{_SelectedTransaction.TransactionID}");
+    }
+}

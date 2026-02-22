@@ -1,0 +1,123 @@
+﻿@using BusinessManagementWebApp.Data
+@using BusinessManagementWebApp.Data.Entities
+@using BusinessManagementWebApp.Infrastructure.Enums
+
+@inject ApiClient api
+@inject ISnackbar Snackbar
+
+<style>
+    .selected {
+        background-color: #1E88E5 !important;
+    }
+
+        .selected > td {
+            color: white !important;
+        }
+
+            .selected > td .mud-input {
+                color: white !important;
+            }
+</style>
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.Edit"
+                     Class="mr-3">
+
+                Add Allocation
+
+            </MudIcon>
+        </MudText>
+    </TitleContent>
+
+    <DialogContent>
+        <MudDataGrid @bind-SelectedItems="selectedTransactions"
+                     Items="transactions"
+                     MultiSelection="true"
+                     ReadOnly="false"
+                     SelectOnRowClick="false"
+                     T="Transaction">
+
+            <Columns>
+                <SelectColumn T="Transaction" />
+                <PropertyColumn Editable="false"
+                                Property="x => x.TransactionRef"
+                                Title="Ref" />
+
+                <PropertyColumn Editable="false"
+                                Property="x => x.TransactionDate"
+                                Title="Date" />
+
+                <PropertyColumn Editable="false"
+                                Property="x => x.NetValue"
+                                Title="Net"
+                                Format="C" />
+
+                <PropertyColumn Editable="false"
+                                Property="x => x.OutstandingValue"
+                                Title="Outstanding"
+                                Format="C" />
+            </Columns>
+
+        </MudDataGrid>
+    </DialogContent>
+
+    <DialogActions>
+        <MudButton Class="px-10"
+                   Color="Color.Success"
+                   OnClick="OnAdd"
+                   Variant="Variant.Filled">
+            Add
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private HashSet<Transaction> selectedTransactions = [];
+    private List<Transaction> transactions = [];
+
+    [Parameter]
+    public long ClientID { get; set; }
+
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = default!;
+
+    private async Task OnAdd()
+    {
+        if (selectedTransactions.Count() == 0)
+        {
+            Snackbar.Add("Please select a Transaction.", Severity.Error);
+            return;
+        }
+
+        HashSet<TransactionAllocation> transactionAllocations = [];
+        foreach (var _Transaction in selectedTransactions)
+        {
+            transactionAllocations.Add(new TransactionAllocation()
+            {
+                AllocatingID = 0,
+                RecievingID = _Transaction.TransactionID,
+                RecievingTransaction = _Transaction,
+                AllocationValue = 0,
+                AllocationDate = DateTime.Now
+            });
+        }
+
+        MudDialog.Close(DialogResult.Ok(transactionAllocations));
+    }
+
+
+    // Tech Debt: This should not be returning Receipts, only invoices thus highly inefficient call to API
+    // Should be call to recieve paginated Invoices
+    protected override async Task OnInitializedAsync()
+    {
+        var _Response = await api.GetClientTransactionsAsync(ClientID.ToString());
+
+        transactions = _Response.Transactions
+            .Where(t => t.Outstanding == true && t.TransactionType == TransactionType.Invoice.GetCode())
+            .ToList() ?? [];
+
+        StateHasChanged();
+    }
+}

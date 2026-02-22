@@ -123,8 +123,7 @@
                         break;
                     }
 
-                    var _Request = mapper.Map<DeleteClientRequest>(client);
-                    var _Response = await api.DeleteClientAsync(_Request);
+                    var _Response = await api.DeleteClientAsync(client.ClientID);
                     if (_Response.IsSuccessStatusCode)
                     {
                         clients.Remove(client);

@@ -1,23 +1,20 @@
 ﻿using BusinessManagementWebApp.Data.Clients.CreateClient;
-using BusinessManagementWebApp.Data.Clients.DeleteClient;
 using BusinessManagementWebApp.Data.Clients.GetClient;
 using BusinessManagementWebApp.Data.Clients.GetClients;
 using BusinessManagementWebApp.Data.Clients.UpdateClient;
+using BusinessManagementWebApp.Data.Invoices.CreateInvoice;
+using BusinessManagementWebApp.Data.Invoices.GetClientInvoices;
+using BusinessManagementWebApp.Data.Invoices.GetInvoice;
+using BusinessManagementWebApp.Data.Invoices.GetInvoices;
+using BusinessManagementWebApp.Data.Invoices.UpdateInvoice;
 using BusinessManagementWebApp.Data.Products.CreateProduct;
-using BusinessManagementWebApp.Data.Products.DeleteProduct;
 using BusinessManagementWebApp.Data.Products.GetProduct;
 using BusinessManagementWebApp.Data.Products.GetProducts;
 using BusinessManagementWebApp.Data.Products.UpdateProduct;
-using BusinessManagementWebApp.Data.TransactionAllocations.UpsertTransactionAllocation;
-using BusinessManagementWebApp.Data.TransactionItems.DeleteTransactionItem;
-using BusinessManagementWebApp.Data.TransactionItems.GetTransactionItems;
-using BusinessManagementWebApp.Data.TransactionItems.UpsertTransactionItem;
-using BusinessManagementWebApp.Data.Transactions.CreateTransaction;
-using BusinessManagementWebApp.Data.Transactions.DeleteTransaction;
-using BusinessManagementWebApp.Data.Transactions.GetClientTransactions;
-using BusinessManagementWebApp.Data.Transactions.GetTransaction;
-using BusinessManagementWebApp.Data.Transactions.GetTransactions;
-using BusinessManagementWebApp.Data.Transactions.UpdateTransaction;
+using BusinessManagementWebApp.Data.Receipts.GetClientReceipts;
+using BusinessManagementWebApp.Data.Receipts.GetReceipt;
+using BusinessManagementWebApp.Data.Receipts.GetReceipts;
+using BusinessManagementWebApp.Data.Receipts.UpdateReceipt;
 
 namespace BusinessManagementWebApp.Data
 {
@@ -28,80 +25,82 @@ namespace BusinessManagementWebApp.Data
         #region Client Endpoints
 
         public async Task<HttpResponseMessage> CreateClientAsync(CreateClientRequest request)
-            => await http.PostAsJsonAsync("/Client/Create", request);
+            => await http.PostAsJsonAsync("/Client", request);
 
-        public async Task<HttpResponseMessage> DeleteClientAsync(DeleteClientRequest request)
-            => await http.PostAsJsonAsync("/Client/Delete", request);
+        public async Task<HttpResponseMessage> DeleteClientAsync(long clientID)
+            => await http.DeleteAsync($"/Client/{clientID}");
 
-        public async Task<GetClientResponse> GetClientAsync(string clientID)
+        public async Task<GetClientResponse> GetClientAsync(long clientID)
             => await http.GetFromJsonAsync<GetClientResponse>($"/Client/{clientID}") ?? new GetClientResponse();
 
         public async Task<GetClientsResponse> GetClientsAsync()
             => await http.GetFromJsonAsync<GetClientsResponse>("/Client") ?? new GetClientsResponse();
 
         public async Task<HttpResponseMessage> UpdateClientAsync(UpdateClientRequest request)
-            => await http.PostAsJsonAsync("/Client/Update", request);
+            => await http.PatchAsJsonAsync("/Client", request);
+
+        #endregion
+
+        #region Invoice Endpoints
+
+        public async Task<HttpResponseMessage> CreateInvoiceAsync(CreateInvoiceRequest request)
+            => await http.PostAsJsonAsync("/Invoice", request);
+
+        public async Task<HttpResponseMessage> DeleteInvoiceAsync(long invoiceID)
+            => await http.DeleteAsync($"/Invoice/{invoiceID}");
+
+        public async Task<GetClientInvoicesResponse> GetClientInvoicesAsync(long clientID)
+            => await http.GetFromJsonAsync<GetClientInvoicesResponse>($"/Invoice/Client/{clientID}") ?? new GetClientInvoicesResponse();
+
+        public async Task<GetInvoiceResponse> GetInvoiceAsync(long invoiceID)
+            => await http.GetFromJsonAsync<GetInvoiceResponse>($"/Invoice/{invoiceID}") ?? new GetInvoiceResponse();
+
+        public async Task<GetInvoicesResponse> GetInvoicesAsync()
+            => await http.GetFromJsonAsync<GetInvoicesResponse>("/Invoice") ?? new GetInvoicesResponse();
+
+        public async Task<HttpResponseMessage> UpdateInvoiceAsync(UpdateInvoiceRequest request)
+            => await http.PatchAsJsonAsync("/Invoice", request);
 
         #endregion
 
         #region Product Endpoints
 
         public async Task<HttpResponseMessage> CreateProductAsync(CreateProductRequest request)
-            => await http.PostAsJsonAsync("/Product/Create", request);
+            => await http.PostAsJsonAsync("/Product", request);
 
-        public async Task<HttpResponseMessage> DeleteProductAsync(DeleteProductRequest request)
-            => await http.PostAsJsonAsync("/Product/Delete", request);
+        public async Task<HttpResponseMessage> DeleteProductAsync(long productID)
+            => await http.DeleteAsync($"/Product/{productID}");
 
-        public async Task<GetProductResponse> GetProductAsync(string productID)
+        public async Task<GetProductResponse> GetProductAsync(long productID)
             => await http.GetFromJsonAsync<GetProductResponse>($"/Product/{productID}") ?? new GetProductResponse();
 
         public async Task<GetProductsResponse> GetProductsAsync()
             => await http.GetFromJsonAsync<GetProductsResponse>("/Product") ?? new GetProductsResponse();
 
         public async Task<HttpResponseMessage> UpdateProductAsync(UpdateProductRequest request)
-            => await http.PostAsJsonAsync("/Product/Update", request);
+            => await http.PatchAsJsonAsync("/Product", request);
 
         #endregion
 
-        #region Transaction Endpoints
+        #region Receipt Endpoints
 
-        public async Task<HttpResponseMessage> CreateTransactionAsync(CreateTransactionRequest request)
-            => await http.PostAsJsonAsync("/Transaction/Create", request);
+        public async Task<HttpResponseMessage> CreateReceiptAsync(CreateInvoiceRequest request)
+            => await http.PostAsJsonAsync("/Receipt", request);
 
-        public async Task<HttpResponseMessage> DeleteTransactionAsync(DeleteTransactionRequest request)
-            => await http.PostAsJsonAsync("/Transaction/Delete", request);
+        public async Task<HttpResponseMessage> DeleteReceiptAsync(long receiptID)
+            => await http.DeleteAsync($"/Receipt/{receiptID}");
 
-        public async Task<GetClientTransactionsResponse> GetClientTransactionsAsync(string clientID)
-            => await http.GetFromJsonAsync<GetClientTransactionsResponse>($"/Transaction/Client/{clientID}") ?? new GetClientTransactionsResponse();
+        public async Task<GetClientReceiptsResponse> GetClientReceiptsAsync(long clientID)
+            => await http.GetFromJsonAsync<GetClientReceiptsResponse>($"/Receipt/Client/{clientID}") ?? new GetClientReceiptsResponse();
 
-        public async Task<GetTransactionResponse> GetTransactionAsync(string transactionID)
-            => await http.GetFromJsonAsync<GetTransactionResponse>($"/Transaction/{transactionID}") ?? new GetTransactionResponse();
+        public async Task<GetReceiptResponse> GetReceiptAsync(long receiptID)
+            => await http.GetFromJsonAsync<GetReceiptResponse>($"/Receipt/{receiptID}") ?? new GetReceiptResponse();
 
-        public async Task<GetTransactionsResponse> GetTransactionsAsync()
-            => await http.GetFromJsonAsync<GetTransactionsResponse>("/Transaction") ?? new GetTransactionsResponse();
+        public async Task<GetReceiptsResponse> GetReceiptsAsync()
+            => await http.GetFromJsonAsync<GetReceiptsResponse>("/Receipt") ?? new GetReceiptsResponse();
 
-        public async Task<HttpResponseMessage> UpdateTransactionAsync(UpdateTransactionRequest request)
-            => await http.PostAsJsonAsync("/Transaction/Update", request);
-
-        #endregion
-
-        #region TransactionAllocation Endpoints
-
-        public async Task<HttpResponseMessage> UpsertTransactionAllocationAsync(UpsertTransactionAllocationRequest request)
-            => await http.PostAsJsonAsync("/TransactionAllocation/Upsert", request);
-
-        #endregion
-
-        #region TransactionItem Endpoints
-
-        public async Task<HttpResponseMessage> DeleteTransactionItemAsync(DeleteTransactionItemRequest request)
-            => await http.PostAsJsonAsync("/TransactionItem/Delete", request);
-
-        public async Task<GetTransactionItemsResponse> GetTransactionItemsAsync()
-            => await http.GetFromJsonAsync<GetTransactionItemsResponse>("/Transaction") ?? new GetTransactionItemsResponse();
-
-        public async Task<HttpResponseMessage> UpsertTransactionItemAsync(UpsertTransactionItemRequest request)
-            => await http.PostAsJsonAsync("/TransactionItem/Upsert", request);
+        public async Task<HttpResponseMessage> UpdateReceiptAsync(UpdateReceiptRequest request)
+            => await http.PatchAsJsonAsync("/Receipt", request);
 
         #endregion
     }

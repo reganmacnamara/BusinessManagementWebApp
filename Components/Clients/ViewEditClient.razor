@@ -1,11 +1,10 @@
-﻿@page "/clients/{id}"
+﻿@page "/clients/{id:long}"
 @using System.Text.Json
 @using AutoMapper
 @using BusinessManagementWebApp.Data
 @using BusinessManagementWebApp.Data.Clients.DeleteClient
 @using BusinessManagementWebApp.Data.Clients.UpdateClient
 @using BusinessManagementWebApp.Data.Entities
-@using BusinessManagementWebApp.Infrastructure.Enums
 
 @inject ApiClient api
 @inject IMapper mapper
@@ -133,12 +132,12 @@ else
     private List<Transaction> transactions = [];
 
     [Parameter]
-    public string id { get; set; } = string.Empty;
+    public long id { get; set; }
 
     private async Task GetClientData()
     {
         var _Client = await api.GetClientAsync(id);
-        var _ClientTransactions = await api.GetClientTransactionsAsync(id);
+        var _ClientTransactions = await api.GetClientInvoicesAsync(id);
 
         client = _Client.Client;
         transactions = _ClientTransactions.Transactions;
@@ -167,8 +166,7 @@ else
                 return;
             }
 
-            var _Request = mapper.Map<DeleteClientRequest>(client);
-            var _Response = await api.DeleteClientAsync(_Request);
+            var _Response = await api.DeleteClientAsync(client.ClientID);
             if (_Response.IsSuccessStatusCode)
             {
                 Snackbar.Add($"{client.ClientName} Deleted.", Severity.Warning);
