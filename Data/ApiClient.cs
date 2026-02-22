@@ -7,6 +7,7 @@ using BusinessManagementWebApp.Data.Invoices.GetClientInvoices;
 using BusinessManagementWebApp.Data.Invoices.GetInvoice;
 using BusinessManagementWebApp.Data.Invoices.GetInvoices;
 using BusinessManagementWebApp.Data.Invoices.UpdateInvoice;
+using BusinessManagementWebApp.Data.Invoices.UpsertInvoiceItem;
 using BusinessManagementWebApp.Data.Products.CreateProduct;
 using BusinessManagementWebApp.Data.Products.GetProduct;
 using BusinessManagementWebApp.Data.Products.GetProducts;
@@ -16,6 +17,7 @@ using BusinessManagementWebApp.Data.Receipts.GetClientReceipts;
 using BusinessManagementWebApp.Data.Receipts.GetReceipt;
 using BusinessManagementWebApp.Data.Receipts.GetReceipts;
 using BusinessManagementWebApp.Data.Receipts.UpdateReceipt;
+using BusinessManagementWebApp.Data.Receipts.UpsertReceiptItem;
 
 namespace BusinessManagementWebApp.Data
 {
@@ -50,6 +52,9 @@ namespace BusinessManagementWebApp.Data
         public async Task<HttpResponseMessage> DeleteInvoiceAsync(long invoiceID)
             => await http.DeleteAsync($"/Invoice/{invoiceID}");
 
+        public async Task<HttpResponseMessage> DeleteInvoiceItemAsync(long invoiceItemID)
+            => await http.DeleteAsync($"/Invoice/Item/{invoiceItemID}");
+
         public async Task<GetClientInvoicesResponse> GetClientInvoicesAsync(long clientID)
             => await http.GetFromJsonAsync<GetClientInvoicesResponse>($"/Invoice/Client/{clientID}") ?? new GetClientInvoicesResponse();
 
@@ -61,6 +66,9 @@ namespace BusinessManagementWebApp.Data
 
         public async Task<HttpResponseMessage> UpdateInvoiceAsync(UpdateInvoiceRequest request)
             => await http.PatchAsJsonAsync("/Invoice", request);
+
+        public async Task<HttpResponseMessage> UpsertInvoiceAsync(UpsertInvoiceItemRequest request)
+            => await http.PutAsJsonAsync("/Invoice/Item", request);
 
         #endregion
 
@@ -91,6 +99,9 @@ namespace BusinessManagementWebApp.Data
         public async Task<HttpResponseMessage> DeleteReceiptAsync(long receiptID)
             => await http.DeleteAsync($"/Receipt/{receiptID}");
 
+        public async Task<HttpResponseMessage> DeleteReceiptItemAsync(long receiptItemID)
+            => await http.DeleteAsync($"/Receipt/Item/{receiptItemID}");
+
         public async Task<GetClientReceiptsResponse> GetClientReceiptsAsync(long clientID)
             => await http.GetFromJsonAsync<GetClientReceiptsResponse>($"/Receipt/Client/{clientID}") ?? new GetClientReceiptsResponse();
 
@@ -102,6 +113,9 @@ namespace BusinessManagementWebApp.Data
 
         public async Task<HttpResponseMessage> UpdateReceiptAsync(UpdateReceiptRequest request)
             => await http.PatchAsJsonAsync("/Receipt", request);
+
+        public async Task<HttpResponseMessage> UpsertReceiptItemAsync(UpsertReceiptItemRequest request)
+            => await http.PutAsJsonAsync("/Receipt/Item", request);
 
         #endregion
     }
