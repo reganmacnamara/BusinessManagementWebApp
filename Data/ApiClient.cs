@@ -11,6 +11,7 @@ using BusinessManagementWebApp.Data.Products.CreateProduct;
 using BusinessManagementWebApp.Data.Products.GetProduct;
 using BusinessManagementWebApp.Data.Products.GetProducts;
 using BusinessManagementWebApp.Data.Products.UpdateProduct;
+using BusinessManagementWebApp.Data.Receipts.CreateReceipt;
 using BusinessManagementWebApp.Data.Receipts.GetClientReceipts;
 using BusinessManagementWebApp.Data.Receipts.GetReceipt;
 using BusinessManagementWebApp.Data.Receipts.GetReceipts;
@@ -84,7 +85,7 @@ namespace BusinessManagementWebApp.Data
 
         #region Receipt Endpoints
 
-        public async Task<HttpResponseMessage> CreateReceiptAsync(CreateInvoiceRequest request)
+        public async Task<HttpResponseMessage> CreateReceiptAsync(CreateReceiptRequest request)
             => await http.PostAsJsonAsync("/Receipt", request);
 
         public async Task<HttpResponseMessage> DeleteReceiptAsync(long receiptID)

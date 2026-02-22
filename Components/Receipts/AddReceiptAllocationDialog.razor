@@ -1,6 +1,5 @@
 ﻿@using BusinessManagementWebApp.Data
 @using BusinessManagementWebApp.Data.Entities
-@using BusinessManagementWebApp.Infrastructure.Enums
 
 @inject ApiClient api
 @inject ISnackbar Snackbar
@@ -32,21 +31,21 @@
     </TitleContent>
 
     <DialogContent>
-        <MudDataGrid @bind-SelectedItems="selectedTransactions"
-                     Items="transactions"
+        <MudDataGrid @bind-SelectedItems="selectedInvoices"
+                     Items="invoices"
                      MultiSelection="true"
                      ReadOnly="false"
                      SelectOnRowClick="false"
-                     T="Transaction">
+                     T="Invoice">
 
             <Columns>
-                <SelectColumn T="Transaction" />
+                <SelectColumn T="Invoice" />
                 <PropertyColumn Editable="false"
-                                Property="x => x.TransactionRef"
+                                Property="x => x.InvoiceRef"
                                 Title="Ref" />
 
                 <PropertyColumn Editable="false"
-                                Property="x => x.TransactionDate"
+                                Property="x => x.InvoiceDate"
                                 Title="Date" />
 
                 <PropertyColumn Editable="false"
@@ -55,7 +54,7 @@
                                 Format="C" />
 
                 <PropertyColumn Editable="false"
-                                Property="x => x.OutstandingValue"
+                                Property="x => x.OffsetValue"
                                 Title="Outstanding"
                                 Format="C" />
             </Columns>
@@ -74,8 +73,8 @@
 </MudDialog>
 
 @code {
-    private HashSet<Transaction> selectedTransactions = [];
-    private List<Transaction> transactions = [];
+    private HashSet<Invoice> selectedInvoices = [];
+    private List<Invoice> invoices = [];
 
     [Parameter]
     public long ClientID { get; set; }
@@ -85,22 +84,19 @@
 
     private async Task OnAdd()
     {
-        if (selectedTransactions.Count() == 0)
+        if (selectedInvoices.Count() == 0)
         {
             Snackbar.Add("Please select a Transaction.", Severity.Error);
             return;
         }
 
-        HashSet<TransactionAllocation> transactionAllocations = [];
-        foreach (var _Transaction in selectedTransactions)
+        HashSet<ReceiptItem> transactionAllocations = [];
+        foreach (var _Transaction in selectedInvoices)
         {
-            transactionAllocations.Add(new TransactionAllocation()
+            transactionAllocations.Add(new ReceiptItem()
             {
-                AllocatingID = 0,
-                RecievingID = _Transaction.TransactionID,
-                RecievingTransaction = _Transaction,
-                AllocationValue = 0,
-                AllocationDate = DateTime.Now
+                InvoiceID = _Transaction.InvoiceID,
+                Invoice = _Transaction
             });
         }
 
@@ -110,12 +106,13 @@
 
     // Tech Debt: This should not be returning Receipts, only invoices thus highly inefficient call to API
     // Should be call to recieve paginated Invoices
+    // Also should be filtering for only outstanding invoices in API call, not client side
     protected override async Task OnInitializedAsync()
     {
-        var _Response = await api.GetClientTransactionsAsync(ClientID.ToString());
+        var _Response = await api.GetClientInvoicesAsync(ClientID);
 
-        transactions = _Response.Transactions
-            .Where(t => t.Outstanding == true && t.TransactionType == TransactionType.Invoice.GetCode())
+        invoices = _Response.Invoices
+            .Where(t => t.Outstanding == true)
             .ToList() ?? [];
 
         StateHasChanged();

@@ -4,9 +4,7 @@
 @using BusinessManagementWebApp.Components.Clients
 @using BusinessManagementWebApp.Data
 @using BusinessManagementWebApp.Data.Entities
-@using BusinessManagementWebApp.Data.TransactionItems.UpsertTransactionItem
-@using BusinessManagementWebApp.Data.Transactions.CreateTransaction
-@using BusinessManagementWebApp.Infrastructure.Enums
+@using BusinessManagementWebApp.Data.Invoices.CreateInvoice
 
 @inject ApiClient api
 @inject IMapper mapper
@@ -42,26 +40,23 @@
 
 <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6">
     <MudTabPanel Text="Details">
-        <MudTextField @bind-Value="transaction.TransactionRef"
+        <MudTextField @bind-Value="invoice.InvoiceRef"
                       Label="Transaction Reference"
                       Variant="Variant.Outlined"
                       Required="true"
                       RequiredError="Transaction Reference Required" />
 
-        <MudDatePicker @bind-Value="transaction.TransactionDate"
-                       Disabled="IsReciept()"
-                       Format="dd/MM/yyyy"
+        <MudDatePicker @bind-Value="invoice.InvoiceDate"
                        Label="Transaction Date"
                        Variant="Variant.Outlined" />
 
-        <MudDatePicker @bind-Date="transaction.DueDate"
+        <MudDatePicker @bind-Date="invoice.DueDate"
                        Label="Transaction Due Date"
-                       Disabled="IsReciept()"
                        Variant="Variant.Outlined" />
 
         <div class="d-flex flex-row">
             <MudSelect @key="clients.Count"
-                       Value="transaction.Client"
+                       Value="invoice.Client"
                        T="Client"
                        Label="Client"
                        Placeholder="Select Client"
@@ -92,18 +87,18 @@
                            StartIcon="@Icons.Material.Filled.Delete">Remove Item</MudButton>
             </div>
 
-            <MudDataGrid @bind-SelectedItems="selectedTransactionItems"
-                         CommittedItemChanges="OnEditTransactionItem"
+            <MudDataGrid @bind-SelectedItems="selectedInvoiceItems"
+                         CommittedItemChanges="OnEditInvoiceItem"
                          EditMode="DataGridEditMode.Cell"
                          EditTrigger="DataGridEditTrigger.OnRowClick"
-                         Items="@transactionItems"
+                         Items="@invoiceItems"
                          MultiSelection="true"
                          ReadOnly="false"
                          SelectOnRowClick="false"
-                         T="TransactionItem">
+                         T="InvoiceItem">
 
                 <Columns>
-                    <SelectColumn T="TransactionItem" />
+                    <SelectColumn T="InvoiceItem" />
                     <PropertyColumn Editable="false"
                                     Property="x => x.Product.ProductCode"
                                     Title="Code" />
@@ -121,22 +116,22 @@
                                     Title="Quantity" />
 
                     <PropertyColumn Editable="true"
-                                    Property="x => x.PricePerItem"
+                                    Property="x => x.PricePerUnit"
                                     Format="N2"
                                     Title="Each" />
 
                     <PropertyColumn Editable="false"
-                                    Property="x => x.LineGross"
+                                    Property="x => x.GrossValue"
                                     Format="N2"
                                     Title="Gross" />
 
                     <PropertyColumn Editable="false"
-                                    Property="x => x.LineTax"
+                                    Property="x => x.TaxValue"
                                     Format="N2"
                                     Title="Tax" />
 
                     <PropertyColumn Editable="false"
-                                    Property="x => x.LineNet"
+                                    Property="x => x.NetValue"
                                     Format="N2"
                                     Title="Net" />
 
@@ -153,37 +148,37 @@
 
 @code {
     private List<Client> clients = [];
-    private HashSet<TransactionItem> selectedTransactionItems = [];
-    private Transaction transaction = new();
-    private List<TransactionItem> transactionItems = [];
+    private HashSet<InvoiceItem> selectedInvoiceItems = [];
+    private Invoice invoice = new();
+    private List<InvoiceItem> invoiceItems = [];
 
     [CascadingParameter]
     private IMudDialogInstance MudDialog { get; set; }
 
     private void AddTransactionItem(Product product)
     {
-        transactionItems.Add(new()
+        invoiceItems.Add(new()
         {
             Product = product,
             ProductID = product.ProductID,
-            PricePerItem = product.UnitPrice,
+            PricePerUnit = product.UnitPrice,
             Quantity = 1,
-            LineGross = product.UnitPrice,
-            LineTax = product.UnitPrice,
-            LineNet = product.UnitPrice,
+            GrossValue = product.UnitPrice,
+            TaxValue = product.UnitPrice,
+            NetValue = product.UnitPrice,
         });
         StateHasChanged();
     }
 
     private async Task DeleteTransactionItems()
     {
-        if (!selectedTransactionItems.Any())
+        if (!selectedInvoiceItems.Any())
             return;
 
-        foreach (var _Item in selectedTransactionItems)
-            transactionItems.Remove(_Item);
+        foreach (var _Item in selectedInvoiceItems)
+            invoiceItems.Remove(_Item);
 
-        selectedTransactionItems.Clear();
+        selectedInvoiceItems.Clear();
         StateHasChanged();
     }
 
@@ -195,17 +190,14 @@
         this.StateHasChanged();
     }
 
-    private bool IsReciept()
-        => transaction.TransactionType == TransactionType.Receipt.GetCode();
-
     private void NavigateToTransactions()
         => NavigationManager.NavigateTo("transactions");
 
-    private async Task OnEditTransactionItem(TransactionItem item)
+    private async Task OnEditInvoiceItem(InvoiceItem item)
     {
-        item.LineGross = item.PricePerItem * item.Quantity;
-        item.LineTax = item.LineGross * (decimal)0.10;
-        item.LineNet = item.LineGross + item.LineTax;
+        item.GrossValue = item.PricePerUnit * item.Quantity;
+        item.TaxValue = item.GrossValue * (decimal)0.10;
+        item.NetValue = item.GrossValue + item.TaxValue;
         StateHasChanged();
     }
 
@@ -214,30 +206,28 @@
 
     private async Task OnSave()
     {
-        if (string.IsNullOrEmpty(transaction.TransactionRef))
+        if (string.IsNullOrEmpty(invoice.InvoiceRef))
         {
             Snackbar.Add("Transaction must have a reference.", Severity.Error);
             return;
         }
 
-        if (transaction.Client is null)
+        if (invoice.Client is null)
         {
             Snackbar.Add("Transaction must have a client.", Severity.Error);
             return;
         }
 
-        if (transactionItems.Count == 0)
+        if (invoiceItems.Count == 0)
         {
             Snackbar.Add("Transaction must have at least one item.", Severity.Error);
             return;
         }
 
-        transaction.TransactionType = TransactionType.Invoice.GetCode();
-
         RecalculateTransactionValues();
 
-        var _Request = mapper.Map<CreateTransactionRequest>(transaction);
-        var _Response = await api.CreateTransactionAsync(_Request);
+        var _Request = mapper.Map<CreateInvoiceRequest>(invoice);
+        var _Response = await api.CreateInvoiceAsync(_Request);
 
         if (!_Response.IsSuccessStatusCode)
         {
@@ -245,22 +235,22 @@
             return;
         }
 
-        var _ResponseData = Newtonsoft.Json.JsonConvert.DeserializeObject<CreateTransactionResponse>(await _Response.Content.ReadAsStringAsync());
+        var _ResponseData = Newtonsoft.Json.JsonConvert.DeserializeObject<CreateInvoiceResponse>(await _Response.Content.ReadAsStringAsync());
 
-        foreach (var _Item in transactionItems)
-        {
-            if (_ResponseData is not null && _ResponseData.TransactionID != 0)
-                _Item.TransactionID = _ResponseData.TransactionID;
+        // foreach (var _Item in invoiceItems)
+        // {
+        //     if (_ResponseData is not null && _ResponseData.InvoiceID != 0)
+        //         _Item.InvoiceID = _ResponseData.InvoiceID;
 
-            var _TransactionItemRequest = mapper.Map<UpsertTransactionItemRequest>(_Item);
-            var _TransactionItemResponse = await api.UpsertTransactionItemAsync(_TransactionItemRequest);
+        //     var _TransactionItemRequest = mapper.Map<UpsertInvoiceItemRequest>(_Item);
+        //     var _TransactionItemResponse = await api.UpsertInvoiceItemAsync(_TransactionItemRequest);
 
-            if (!_TransactionItemResponse.IsSuccessStatusCode)
-            {
-                Snackbar.Add($"Error {(int)_TransactionItemResponse.StatusCode}: {JsonSerializer.Deserialize<string>(_Response.Content.ReadAsStringAsync().Result)}", Severity.Error);
-                return;
-            }
-        }
+        //     if (!_TransactionItemResponse.IsSuccessStatusCode)
+        //     {
+        //         Snackbar.Add($"Error {(int)_TransactionItemResponse.StatusCode}: {JsonSerializer.Deserialize<string>(_Response.Content.ReadAsStringAsync().Result)}", Severity.Error);
+        //         return;
+        //     }
+        // }
 
         Snackbar.Add("Transaction Created.", Severity.Success);
         NavigateToTransactions();
@@ -282,8 +272,8 @@
 
     private async Task OnClientChanged(Client client)
     {
-        transaction.Client = client;
-        transaction.ClientID = client.ClientID;
+        invoice.Client = client;
+        invoice.ClientID = client.ClientID;
     }
 
     private async Task OpenCreateTransactionItemDialogAsync()
@@ -303,20 +293,20 @@
 
     private void RecalculateTransactionValues()
     {
-        transaction.GrossValue = 0;
-        transaction.TaxValue = 0;
-        transaction.NetValue = 0;
+        invoice.GrossValue = 0;
+        invoice.TaxValue = 0;
+        invoice.NetValue = 0;
 
-        transactionItems.ForEach(item => transaction.GrossValue += item.LineGross);
-        transactionItems.ForEach(item => transaction.TaxValue += item.LineTax);
-        transactionItems.ForEach(item => transaction.NetValue += item.LineNet);
+        invoiceItems.ForEach(item => invoice.GrossValue += item.GrossValue);
+        invoiceItems.ForEach(item => invoice.TaxValue += item.TaxValue);
+        invoiceItems.ForEach(item => invoice.NetValue += item.NetValue);
     }
 
     private void SelectCreatedClient(Client client)
     {
         clients.Add(client);
-        transaction.Client = client;
-        transaction.ClientID = client.ClientID;
+        invoice.Client = client;
+        invoice.ClientID = client.ClientID;
         StateHasChanged();
     }
 }

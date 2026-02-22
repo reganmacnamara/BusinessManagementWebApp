@@ -67,46 +67,47 @@ else
             </MudPaper>
         </MudTabPanel>
 
-        <MudTabPanel Text="Transactions">
+        <MudTabPanel Text="Invoices">
             <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6">
                 <MudTabPanel Text="All">
                     <MudDataGrid Breakpoint="Breakpoint.Sm"
-                                 Items="transactions"
+                                 Items="invoices"
                                  Hover="true"
                                  Loading="@isLoading"
                                  LoadingProgressColor="Color.Info"
                                  RowClass="cursor-pointer"
-                                 RowClick="TransactionSelected"
-                                 T="Transaction">
+                                 RowClick="InvoiceSelected"
+                                 T="Invoice">
                         <Columns>
-                            <PropertyColumn Property="x => x.TransactionDate" Title="Date" />
-                            <PropertyColumn Property="x => x.TransactionRef" Title="Reference" />
-                            <PropertyColumn Property="x => x.TransactionType" Title="Type" />
+                            <PropertyColumn Property="x => x.InvoiceDate" Title="Date" />
+                            <PropertyColumn Property="x => x.InvoiceRef" Title="Reference" />
                             <PropertyColumn Property="x => x.NetValue" Title="Net Value" Format="C" />
+                            <PropertyColumn Property="x => x.Outstanding" Title="Outstanding" Format="C" />
                         </Columns>
                     </MudDataGrid>
                 </MudTabPanel>
+            </MudTabs>
+        </MudTabPanel>
 
-                @foreach (var _TransactionType in transactions.Select(t => t.TransactionType).Distinct())
-                {
-                    <MudTabPanel Text="@(_TransactionType.ToString())">
-                        <MudDataGrid Breakpoint="Breakpoint.Sm"
-                                     Items="transactions.Where(t => t.TransactionType == _TransactionType)"
-                                     Hover="true"
-                                     Loading="@isLoading"
-                                     LoadingProgressColor="Color.Info"
-                                     RowClass="cursor-pointer"
-                                     RowClick="TransactionSelected"
-                                     T="Transaction">
-                            <Columns>
-                                <PropertyColumn Property="x => x.TransactionDate" Title="Date" />
-                                <PropertyColumn Property="x => x.TransactionRef" Title="Reference" />
-                                <PropertyColumn Property="x => x.TransactionType" Title="Type" />
-                                <PropertyColumn Property="x => x.NetValue" Title="Net Value" Format="C" />
-                            </Columns>
-                        </MudDataGrid>
-                    </MudTabPanel>
-                }
+        <MudTabPanel Text="Receipts">
+            <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6">
+                <MudTabPanel Text="All">
+                    <MudDataGrid Breakpoint="Breakpoint.Sm"
+                                 Items="receipts"
+                                 Hover="true"
+                                 Loading="@isLoading"
+                                 LoadingProgressColor="Color.Info"
+                                 RowClass="cursor-pointer"
+                                 RowClick="ReceiptSelected"
+                                 T="Receipt">
+                        <Columns>
+                            <PropertyColumn Property="x => x.ReceiptDate" Title="Date" />
+                            <PropertyColumn Property="x => x.ReceiptRef" Title="Reference" />
+                            <PropertyColumn Property="x => x.NetValue" Title="Net Value" Format="C" />
+                            <PropertyColumn Property="x => x.Outstanding" Title="Outstanding" Format="C" />
+                        </Columns>
+                    </MudDataGrid>
+                </MudTabPanel>
             </MudTabs>
         </MudTabPanel>
     </MudTabs>
@@ -128,8 +129,9 @@ else
     private Client client = default!;
     private MudMessageBox deleteConfirmationMessage = default!;
     private string deleteState = string.Empty;
+    private List<Invoice> invoices = [];
     private bool isLoading = true;
-    private List<Transaction> transactions = [];
+    private List<Receipt> receipts = [];
 
     [Parameter]
     public long id { get; set; }
@@ -137,10 +139,20 @@ else
     private async Task GetClientData()
     {
         var _Client = await api.GetClientAsync(id);
-        var _ClientTransactions = await api.GetClientInvoicesAsync(id);
+        var _ClientInvoices = await api.GetClientInvoicesAsync(id);
+        var _ClientReceipts = await api.GetClientReceiptsAsync(id);
 
         client = _Client.Client;
-        transactions = _ClientTransactions.Transactions;
+        invoices = _ClientInvoices.Invoices;
+        receipts = _ClientReceipts.Receipts;
+    }
+
+    private void InvoiceSelected(DataGridRowClickEventArgs<Invoice> args)
+    {
+        var _SelectedTransaction = args.Item;
+
+        if (_SelectedTransaction is not null)
+            NavigationManager.NavigateTo($"/invoices/{_SelectedTransaction.InvoiceID}");
     }
 
     private void NavigateToClients()
@@ -153,19 +165,6 @@ else
 
         if (deleteState == "Deleted!")
         {
-            var _ClientTransactionCount = await api.GetClientTransactionsAsync(client.ClientID.ToString());
-            if (_ClientTransactionCount is null)
-            {
-                Snackbar.Add($"Error checking {client.ClientName}s Transaction Count.", Severity.Error);
-                return;
-            }
-
-            if (_ClientTransactionCount.Transactions.Count > 0)
-            {
-                Snackbar.Add($"{client.ClientName} has Transactions in the system and cannot be deleted.", Severity.Error);
-                return;
-            }
-
             var _Response = await api.DeleteClientAsync(client.ClientID);
             if (_Response.IsSuccessStatusCode)
             {
@@ -206,14 +205,11 @@ else
         }
     }
 
-    private void TransactionSelected(DataGridRowClickEventArgs<Transaction> args)
+    private void ReceiptSelected(DataGridRowClickEventArgs<Receipt> args)
     {
         var _SelectedTransaction = args.Item;
 
-        if (_SelectedTransaction is not null && _SelectedTransaction.TransactionType == TransactionType.Invoice.GetCode())
-            NavigationManager.NavigateTo($"/transactions/invoices/{_SelectedTransaction.TransactionID}");
-
-        if (_SelectedTransaction is not null && _SelectedTransaction.TransactionType == TransactionType.Receipt.GetCode())
-            NavigationManager.NavigateTo($"/transactions/receipts/{_SelectedTransaction.TransactionID}");
+        if (_SelectedTransaction is not null)
+            NavigationManager.NavigateTo($"/receipts/{_SelectedTransaction.ReceiptID}");
     }
 }

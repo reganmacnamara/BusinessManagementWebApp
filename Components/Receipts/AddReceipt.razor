@@ -4,11 +4,7 @@
 @using BusinessManagementWebApp.Components.Clients
 @using BusinessManagementWebApp.Data
 @using BusinessManagementWebApp.Data.Entities
-@using BusinessManagementWebApp.Data.TransactionAllocations.UpsertTransactionAllocation
-@using BusinessManagementWebApp.Data.TransactionItems.UpsertTransactionItem
-@using BusinessManagementWebApp.Data.Transactions.CreateTransaction
-@using BusinessManagementWebApp.Data.Transactions.UpdateTransaction
-@using BusinessManagementWebApp.Infrastructure.Enums
+@using BusinessManagementWebApp.Data.Receipts.CreateReceipt
 
 @inject ApiClient api
 @inject IMapper mapper
@@ -35,7 +31,7 @@
                     Text="Cancel">
 
             <MudFab Color="Color.Error"
-                    OnClick="NavigateToTransactions"
+                    OnClick="NavigateToReceipts"
                     StartIcon="@Icons.Material.Filled.Cancel" />
 
         </MudTooltip>
@@ -44,20 +40,20 @@
 
 <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6">
     <MudTabPanel Text="Details">
-        <MudTextField @bind-Value="transaction.TransactionRef"
+        <MudTextField @bind-Value="receipt.ReceiptRef"
                       Label="Transaction Reference"
                       Variant="Variant.Outlined"
                       Required="true"
                       RequiredError="Transaction Reference Required" />
 
-        <MudDatePicker @bind-Value="transaction.TransactionDate"
+        <MudDatePicker @bind-Value="receipt.ReceiptDate"
                        Format="dd/MM/yyyy"
                        Label="Transaction Date"
                        Variant="Variant.Outlined" />
 
         <div class="d-flex flex-row">
             <MudSelect @key="clients.Count"
-                       Value="transaction.Client"
+                       Value="receipt.Client"
                        T="Client"
                        Label="Client"
                        Placeholder="Select Client"
@@ -77,44 +73,44 @@
         </div>
     </MudTabPanel>
     <MudTabPanel Text="Allocations"
-                 Disabled="transaction.Client is null">
+                 Disabled="receipt.Client is null">
 
         <MudPaper MaxWidth="70%">
             <div class="d-flex justify-content-start">
                 <MudButton Color="Color.Success"
-                           OnClick="OpenCreateTransactionItemDialogAsync"
+                           OnClick="OpenCreateReceiptItemDialogAsync"
                            StartIcon="@Icons.Material.Filled.Add">Add Item</MudButton>
 
                 <MudButton Color="Color.Error"
-                           OnClick="DeleteTransactionAllocations"
+                           OnClick="DeleteReceiptItems"
                            StartIcon="@Icons.Material.Filled.Delete">Remove Item</MudButton>
             </div>
 
-            <MudDataGrid @bind-SelectedItems="selectedTransactionAllocations"
-                         Items="transactionAllocations"
+            <MudDataGrid @bind-SelectedItems="selectedReceiptItems"
+                         Items="receiptItems"
                          EditMode="DataGridEditMode.Cell"
                          EditTrigger="DataGridEditTrigger.OnRowClick"
                          MultiSelection="true"
                          ReadOnly="false"
                          SelectOnRowClick="false"
-                         T="TransactionAllocation">
+                         T="ReceiptItem">
 
                 <Columns>
                     <PropertyColumn Editable="false"
-                                    Property="x => x.RecievingTransaction.TransactionRef"
+                                    Property="x => x.Invoice.InvoiceRef"
                                     Title="Ref" />
 
                     <PropertyColumn Editable="false"
-                                    Property="x => x.RecievingTransaction.TransactionDate"
+                                    Property="x => x.Invoice.InvoiceDate"
                                     Title="Date" />
 
                     <PropertyColumn Editable="false"
-                                    Property="x => x.RecievingTransaction.NetValue"
+                                    Property="x => x.Invoice.NetValue"
                                     Title="Net"
                                     Format="C" />
 
                     <PropertyColumn Editable="false"
-                                    Property="x => x.RecievingTransaction.OutstandingValue"
+                                    Property="x => x.Invoice.Outstanding"
                                     Title="Outstanding"
                                     Format="C" />
 
@@ -123,7 +119,7 @@
 
                         <EditTemplate>
                             <MudNumericField Format="C"
-                                             Value="context.Item.AllocationValue"
+                                             Value="context.Item.GrossValue"
                                              ValueChanged="(value) => OnAllocationUpdated(value, context.Item)"
                                              T="decimal" />
                         </EditTemplate>
@@ -154,38 +150,32 @@
 
 @code {
     private List<Client> clients = [];
-    private List<Transaction> clientTransactions = [];
-    private HashSet<TransactionAllocation> selectedTransactionAllocations = [];
-    private Transaction transaction = new();
-    private List<TransactionAllocation> transactionAllocations = [];
+    private List<Invoice> clientInvoices = [];
+    private HashSet<ReceiptItem> selectedReceiptItems = [];
+    private Receipt receipt = new();
+    private List<ReceiptItem> receiptItems = [];
 
     [CascadingParameter]
     private IMudDialogInstance MudDialog { get; set; }
 
-    private async Task ClearAllocation(TransactionAllocation allocation)
+    private async Task ClearAllocation(ReceiptItem allocation)
     {
-        allocation.RecievingTransaction.OffsetValue = allocation.RecievingTransaction.OffsetValue - allocation.AllocationValue;
-        allocation.RecievingTransaction.OutstandingValue = allocation.RecievingTransaction.NetValue - allocation.RecievingTransaction.OffsetValue;
-        allocation.AllocatingTransaction.OffsetingValue = allocation.AllocatingTransaction.OffsetingValue - allocation.AllocationValue;
-        allocation.AllocationValue = 0;
-
-        if (allocation.RecievingTransaction.OutstandingValue == 0)
-            allocation.RecievingTransaction.Outstanding = false;
-        else
-            allocation.RecievingTransaction.Outstanding = true;
+        allocation.NetValue = 0;
+        allocation.Invoice.OffsetValue = allocation.NetValue;
+        allocation.Invoice.Outstanding = (allocation.Invoice.OffsetValue == allocation.Invoice.NetValue);
 
         StateHasChanged();
     }
 
-    private async Task DeleteTransactionAllocations()
+    private async Task DeleteReceiptItems()
     {
-        if (!selectedTransactionAllocations.Any())
+        if (!selectedReceiptItems.Any())
             return;
 
-        foreach (var _Item in selectedTransactionAllocations)
-            transactionAllocations.Remove(_Item);
+        foreach (var _Item in selectedReceiptItems)
+            receiptItems.Remove(_Item);
 
-        selectedTransactionAllocations.Clear();
+        selectedReceiptItems.Clear();
         StateHasChanged();
     }
 
@@ -197,62 +187,55 @@
         this.StateHasChanged();
     }
 
-    private async Task GetClientTransactions()
+    private async Task GetClientInvoices()
     {
-        var _Response = await api.GetClientTransactionsAsync(transaction.Client.ClientID.ToString());
+        var _Response = await api.GetClientInvoicesAsync(receipt.Client.ClientID);
 
-        clientTransactions = _Response.Transactions.Where(t => t.Outstanding = true).ToList() ?? [];
+        clientInvoices = _Response.Invoices.Where(t => t.Outstanding = true).ToList() ?? [];
         StateHasChanged();
     }
 
-    private void NavigateToTransactions()
-        => NavigationManager.NavigateTo("transactions");
+    private void NavigateToReceipts()
+        => NavigationManager.NavigateTo("receipts");
 
     protected override async Task OnInitializedAsync()
         => await GetClients();
 
-    private async Task OnAllocationUpdated(decimal value, TransactionAllocation item)
+    private async Task OnAllocationUpdated(decimal value, ReceiptItem item)
     {
-        if (value <= item.RecievingTransaction.NetValue)
+        if (value <= item.Invoice.NetValue)
         {
-            item.AllocationValue = value;
-            item.RecievingTransaction.OffsetValue = item.AllocationValue;
-            item.RecievingTransaction.OutstandingValue = item.RecievingTransaction.NetValue - item.RecievingTransaction.OffsetValue;
-
-            if (item.RecievingTransaction.OutstandingValue == 0)
-                item.RecievingTransaction.Outstanding = false;
-            else
-                item.RecievingTransaction.Outstanding = true;
+            item.NetValue = value;
+            item.Invoice.OffsetValue += item.NetValue;
+            item.Invoice.Outstanding = (item.Invoice.OffsetValue == item.NetValue);
         }
     }
 
     private async Task OnSave()
     {
-        if (string.IsNullOrEmpty(transaction.TransactionRef))
+        if (string.IsNullOrEmpty(receipt.ReceiptRef))
         {
             Snackbar.Add("Receipt must have a reference.", Severity.Error);
             return;
         }
 
-        if (transaction.Client is null)
+        if (receipt.Client is null)
         {
             Snackbar.Add("Receipt must have a client.", Severity.Error);
             return;
         }
 
-        if (transactionAllocations.Count == 0)
+        if (receiptItems.Count == 0)
         {
             Snackbar.Add("Receipt must have at least one item.", Severity.Error);
             return;
         }
 
-        transaction.GrossValue = transactionAllocations.Sum(a => a.AllocationValue);
-        transaction.TaxValue = transaction.GrossValue * 0.1m;
-        transaction.NetValue = transaction.GrossValue + transaction.TaxValue;
-        transaction.OffsetingValue = transaction.NetValue;
-        transaction.TransactionType = TransactionType.Receipt.GetCode();
+        receipt.GrossValue = receiptItems.Sum(a => a.GrossValue);
+        receipt.TaxValue = receipt.GrossValue * 0.1m;
+        receipt.NetValue = receipt.GrossValue + receipt.TaxValue;
 
-        var _Response = await api.CreateTransactionAsync(mapper.Map<CreateTransactionRequest>(transaction));
+        var _Response = await api.CreateReceiptAsync(mapper.Map<CreateReceiptRequest>(receipt));
 
         if (!_Response.IsSuccessStatusCode)
         {
@@ -260,24 +243,24 @@
             return;
         }
 
-        var _ResponseData = Newtonsoft.Json.JsonConvert.DeserializeObject<CreateTransactionResponse>(await _Response.Content.ReadAsStringAsync());
+        var _ResponseData = Newtonsoft.Json.JsonConvert.DeserializeObject<CreateReceiptResponse>(await _Response.Content.ReadAsStringAsync());
 
-        foreach (var _Allocation in transactionAllocations)
-        {
-            var _UpsertRequest = mapper.Map<UpsertTransactionAllocationRequest>(_Allocation);
-            _UpsertRequest.AllocatingID = _ResponseData.TransactionID;
-            _UpsertRequest.RecievingID = _Allocation.RecievingTransaction.TransactionID;
+        // foreach (var _Allocation in transactionAllocations)
+        // {
+        //     var _UpsertRequest = mapper.Map<UpsertTransactionAllocationRequest>(_Allocation);
+        //     _UpsertRequest.AllocatingID = _ResponseData.TransactionID;
+        //     _UpsertRequest.RecievingID = _Allocation.RecievingTransaction.TransactionID;
 
-            var _UpsertResponse = await api.UpsertTransactionAllocationAsync(_UpsertRequest);
-            if (!_UpsertResponse.IsSuccessStatusCode)
-            {
-                Snackbar.Add($"Error {(int)_UpsertResponse.StatusCode}: {JsonSerializer.Deserialize<string>(_UpsertResponse.Content.ReadAsStringAsync().Result)}", Severity.Error);
-                return;
-            }
-        }
+        //     var _UpsertResponse = await api.UpsertTransactionAllocationAsync(_UpsertRequest);
+        //     if (!_UpsertResponse.IsSuccessStatusCode)
+        //     {
+        //         Snackbar.Add($"Error {(int)_UpsertResponse.StatusCode}: {JsonSerializer.Deserialize<string>(_UpsertResponse.Content.ReadAsStringAsync().Result)}", Severity.Error);
+        //         return;
+        //     }
+        // }
 
         Snackbar.Add("Receipt Created.", Severity.Success);
-        NavigateToTransactions();
+        NavigateToReceipts();
     }
 
     private async Task OpenCreateClientDialogAsync()
@@ -296,25 +279,25 @@
 
     private async Task OnClientChanged(Client client)
     {
-        transaction.Client = client;
-        transaction.ClientID = client.ClientID;
+        receipt.Client = client;
+        receipt.ClientID = client.ClientID;
 
-        await GetClientTransactions();
+        await GetClientInvoices();
     }
 
-    private async Task OpenCreateTransactionItemDialogAsync()
+    private async Task OpenCreateReceiptItemDialogAsync()
     {
         var dialog = await DialogService.ShowAsync<AddReceiptAllocationDialog>("", new DialogParameters<AddReceiptAllocationDialog>()
         {
-            { x => x.ClientID, transaction.ClientID }
+            { x => x.ClientID, receipt.ClientID }
         });
 
         var result = await dialog.Result;
 
         if (!dialog.Result.IsCanceled && result?.Data is not null)
         {
-            foreach (var _Allocation in (HashSet<TransactionAllocation>)result.Data)
-                transactionAllocations.Add(_Allocation);
+            foreach (var _Allocation in (HashSet<ReceiptItem>)result.Data)
+                receiptItems.Add(_Allocation);
 
             StateHasChanged();
         }
@@ -323,8 +306,8 @@
     private void SelectCreatedClient(Client client)
     {
         clients.Add(client);
-        transaction.Client = client;
-        transaction.ClientID = client.ClientID;
+        receipt.Client = client;
+        receipt.ClientID = client.ClientID;
         StateHasChanged();
     }
 }
