@@ -67,7 +67,7 @@ namespace BusinessManagementWebApp.Data
         public async Task<HttpResponseMessage> UpdateInvoiceAsync(UpdateInvoiceRequest request)
             => await http.PatchAsJsonAsync("/Invoice", request);
 
-        public async Task<HttpResponseMessage> UpsertInvoiceAsync(UpsertInvoiceItemRequest request)
+        public async Task<HttpResponseMessage> UpsertInvoiceItemAsync(UpsertInvoiceItemRequest request)
             => await http.PutAsJsonAsync("/Invoice/Item", request);
 
         #endregion

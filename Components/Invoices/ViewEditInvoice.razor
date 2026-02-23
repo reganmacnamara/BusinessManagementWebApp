@@ -3,7 +3,9 @@
 @using AutoMapper
 @using BusinessManagementWebApp.Data
 @using BusinessManagementWebApp.Data.Entities
+@using BusinessManagementWebApp.Data.Invoices.DeleteInvoiceItem
 @using BusinessManagementWebApp.Data.Invoices.UpdateInvoice
+@using BusinessManagementWebApp.Data.Invoices.UpsertInvoiceItem
 
 @inject ApiClient api
 @inject IDialogService DialogService
@@ -159,7 +161,7 @@ else
     private string deleteState = string.Empty;
     private bool isLoading = true;
     private HashSet<InvoiceItem> selectedInvoiceItems = [];
-    private Invoice invoice = default!;
+    private Invoice invoice = new();
     private List<InvoiceItem> invoiceItems = [];
     private List<InvoiceItem> invoiceItemsToBeDeleted = [];
 
@@ -202,6 +204,7 @@ else
 
         invoice = _Response.Invoice;
         invoiceItems = _Response.InvoiceItems;
+
         isLoading = false;
     }
 
@@ -234,7 +237,7 @@ else
         }
     }
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnParametersSetAsync()
         => await GetTranctionData();
 
     private async Task OnSave()
@@ -257,37 +260,36 @@ else
 
         if (!_UpdateTransactionResponse.IsSuccessStatusCode)
         {
-            Snackbar.Add($"Error {(int)_UpdateTransactionResponse.StatusCode}: {JsonSerializer.Deserialize<string>(_UpdateTransactionResponse.Content.ReadAsStringAsync().Result)}", Severity.Error);
+            Snackbar.Add($"Error {(int)_UpdateTransactionResponse.StatusCode}: {_UpdateTransactionResponse.ReasonPhrase}", Severity.Error);
             return;
         }
 
         var _ResponseData = Newtonsoft.Json.JsonConvert.DeserializeObject<UpdateInvoiceResponse>(await _UpdateTransactionResponse.Content.ReadAsStringAsync());
 
-        // foreach (var _Item in invoiceItems)
-        // {
-        //     if (_ResponseData is not null && _ResponseData.InvoiceID != 0)
-        //         _Item.InvoiceID = _ResponseData.InvoiceID;
+        foreach (var _Item in invoiceItems)
+        {
+            if (_ResponseData is not null && _ResponseData.InvoiceID != 0)
+                _Item.InvoiceID = _ResponseData.InvoiceID;
 
-        //     var _TransactionItemRequest = mapper.Map<UpsertTransactionItemRequest>(_Item);
-        //     var _TransactionItemResponse = await api.UpsertTransactionItemAsync(_TransactionItemRequest);
+            var _TransactionItemRequest = mapper.Map<UpsertInvoiceItemRequest>(_Item);
+            var _TransactionItemResponse = await api.UpsertInvoiceItemAsync(_TransactionItemRequest);
 
-        //     if (!_TransactionItemResponse.IsSuccessStatusCode)
-        //     {
-        //         Snackbar.Add($"Error {(int)_TransactionItemResponse.StatusCode}: Updating {JsonSerializer.Deserialize<string>(_TransactionItemResponse.Content.ReadAsStringAsync().Result)}", Severity.Error);
-        //         return;
-        //     }
-        // }
+            if (!_TransactionItemResponse.IsSuccessStatusCode)
+            {
+                Snackbar.Add($"Error {(int)_TransactionItemResponse.StatusCode}: Updating {JsonSerializer.Deserialize<string>(_TransactionItemResponse.Content.ReadAsStringAsync().Result)}", Severity.Error);
+                return;
+            }
+        }
 
-        // foreach (var _Item in transactionItemsToBeDeleted)
-        // {
-        //     var _Request = mapper.Map<DeleteTransactionItemRequest>(_Item);
-        //     var _Response = await api.DeleteTransactionItemAsync(_Request);
-        //     if (!_Response.IsSuccessStatusCode)
-        //     {
-        //         Snackbar.Add($"Error {(int)_Response.StatusCode}: {JsonSerializer.Deserialize<string>(_Response.Content.ReadAsStringAsync().Result)}", Severity.Error);
-        //         return;
-        //     }
-        // }
+        foreach (var _Item in invoiceItemsToBeDeleted)
+        {
+            var _Response = await api.DeleteInvoiceItemAsync(_Item.InvoiceItemID);
+            if (!_Response.IsSuccessStatusCode)
+            {
+                Snackbar.Add($"Error {(int)_Response.StatusCode}: {JsonSerializer.Deserialize<string>(_Response.Content.ReadAsStringAsync().Result)}", Severity.Error);
+                return;
+            }
+        }
 
         Snackbar.Add("Invoice Updated.", Severity.Success);
         NavigationManager.NavigateTo("invoices");

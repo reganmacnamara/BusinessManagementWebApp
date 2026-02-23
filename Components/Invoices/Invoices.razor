@@ -46,7 +46,7 @@
                 <PropertyColumn Property="x => x.InvoiceRef" Title="Reference" />
                 <PropertyColumn Property="x => x.Client.ClientName" Title="Client" />
                 <PropertyColumn Property="x => x.NetValue" Title="Net Value" Format="C" />
-                <PropertyColumn Property="x => x.Outstanding" Title="Outstanding" Format="C" />
+                <PropertyColumn Property="x => x.NetValue - x.OffsetValue" Title="Outstanding Amt." Format="C" />
             </Columns>
         </MudDataGrid>
     </MudTabPanel>

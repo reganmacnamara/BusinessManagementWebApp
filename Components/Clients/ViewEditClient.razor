@@ -82,7 +82,7 @@ else
                             <PropertyColumn Property="x => x.InvoiceDate" Title="Date" />
                             <PropertyColumn Property="x => x.InvoiceRef" Title="Reference" />
                             <PropertyColumn Property="x => x.NetValue" Title="Net Value" Format="C" />
-                            <PropertyColumn Property="x => x.Outstanding" Title="Outstanding" Format="C" />
+                            <PropertyColumn Property="x => x.NetValue - x.OffsetValue" Title="Outstanding Amt." Format="C" />
                         </Columns>
                     </MudDataGrid>
                 </MudTabPanel>
@@ -104,7 +104,7 @@ else
                             <PropertyColumn Property="x => x.ReceiptDate" Title="Date" />
                             <PropertyColumn Property="x => x.ReceiptRef" Title="Reference" />
                             <PropertyColumn Property="x => x.NetValue" Title="Net Value" Format="C" />
-                            <PropertyColumn Property="x => x.Outstanding" Title="Outstanding" Format="C" />
+                            <PropertyColumn Property="x => x.NetValue - x.OffsetValue" Title="Outstanding Amt." Format="C" />
                         </Columns>
                     </MudDataGrid>
                 </MudTabPanel>

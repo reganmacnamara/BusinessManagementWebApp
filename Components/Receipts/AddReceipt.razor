@@ -110,8 +110,8 @@
                                     Format="C" />
 
                     <PropertyColumn Editable="false"
-                                    Property="x => x.Invoice.Outstanding"
-                                    Title="Outstanding"
+                                    Property="x => x.Invoice.NetValue - x.Invoice.OffsetValue"
+                                    Title="Outstanding Amt."
                                     Format="C" />
 
                     <TemplateColumn Editable="true"
@@ -119,7 +119,7 @@
 
                         <EditTemplate>
                             <MudNumericField Format="C"
-                                             Value="context.Item.GrossValue"
+                                             Value="context.Item.NetValue"
                                              ValueChanged="(value) => OnAllocationUpdated(value, context.Item)"
                                              T="decimal" />
                         </EditTemplate>
@@ -206,7 +206,7 @@
         if (value <= item.Invoice.NetValue)
         {
             item.NetValue = value;
-            item.Invoice.OffsetValue += item.NetValue;
+            item.Invoice.OffsetValue = item.Invoice.OffsetValue + item.NetValue;
             item.Invoice.Outstanding = (item.Invoice.OffsetValue == item.NetValue);
         }
     }

@@ -5,6 +5,7 @@
 @using BusinessManagementWebApp.Data
 @using BusinessManagementWebApp.Data.Entities
 @using BusinessManagementWebApp.Data.Invoices.CreateInvoice
+@using BusinessManagementWebApp.Data.Invoices.UpsertInvoiceItem
 
 @inject ApiClient api
 @inject IMapper mapper
@@ -237,20 +238,20 @@
 
         var _ResponseData = Newtonsoft.Json.JsonConvert.DeserializeObject<CreateInvoiceResponse>(await _Response.Content.ReadAsStringAsync());
 
-        // foreach (var _Item in invoiceItems)
-        // {
-        //     if (_ResponseData is not null && _ResponseData.InvoiceID != 0)
-        //         _Item.InvoiceID = _ResponseData.InvoiceID;
+        foreach (var _Item in invoiceItems)
+        {
+            if (_ResponseData is not null && _ResponseData.InvoiceID != 0)
+                _Item.InvoiceID = _ResponseData.InvoiceID;
 
-        //     var _TransactionItemRequest = mapper.Map<UpsertInvoiceItemRequest>(_Item);
-        //     var _TransactionItemResponse = await api.UpsertInvoiceItemAsync(_TransactionItemRequest);
+            var _TransactionItemRequest = mapper.Map<UpsertInvoiceItemRequest>(_Item);
+            var _TransactionItemResponse = await api.UpsertInvoiceItemAsync(_TransactionItemRequest);
 
-        //     if (!_TransactionItemResponse.IsSuccessStatusCode)
-        //     {
-        //         Snackbar.Add($"Error {(int)_TransactionItemResponse.StatusCode}: {JsonSerializer.Deserialize<string>(_Response.Content.ReadAsStringAsync().Result)}", Severity.Error);
-        //         return;
-        //     }
-        // }
+            if (!_TransactionItemResponse.IsSuccessStatusCode)
+            {
+                Snackbar.Add($"Error {(int)_TransactionItemResponse.StatusCode}: {JsonSerializer.Deserialize<string>(_Response.Content.ReadAsStringAsync().Result)}", Severity.Error);
+                return;
+            }
+        }
 
         Snackbar.Add("Transaction Created.", Severity.Success);
         NavigateToTransactions();
