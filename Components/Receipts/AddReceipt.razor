@@ -5,6 +5,7 @@
 @using BusinessManagementWebApp.Data
 @using BusinessManagementWebApp.Data.Entities
 @using BusinessManagementWebApp.Data.Receipts.CreateReceipt
+@using BusinessManagementWebApp.Data.Receipts.UpsertReceiptItem
 
 @inject ApiClient api
 @inject IMapper mapper
@@ -71,6 +72,21 @@
                     Size="Size.Small"
                     StartIcon="@Icons.Material.Filled.Add" />
         </div>
+
+        <MudNumericField @bind-Value="receipt.GrossValue"
+                         Format="C"
+                         Label="Gross Value"
+                         Variant="Variant.Outlined" />
+
+        <MudNumericField @bind-Value="receipt.TaxValue"
+                         Format="C"
+                         Label="Tax Value"
+                         Variant="Variant.Outlined" />
+
+        <MudNumericField @bind-Value="receipt.NetValue"
+                         Format="C"
+                         Label="Net Value"
+                         Variant="Variant.Outlined" />
     </MudTabPanel>
     <MudTabPanel Text="Allocations"
                  Disabled="receipt.Client is null">
@@ -110,7 +126,7 @@
                                     Format="C" />
 
                     <PropertyColumn Editable="false"
-                                    Property="x => x.Invoice.NetValue - x.Invoice.OffsetValue"
+                                    Property="x => (x.Invoice.NetValue - x.Invoice.OffsetValue) - x.NetValue"
                                     Title="Outstanding Amt."
                                     Format="C" />
 
@@ -206,8 +222,6 @@
         if (value <= item.Invoice.NetValue)
         {
             item.NetValue = value;
-            item.Invoice.OffsetValue = item.Invoice.OffsetValue + item.NetValue;
-            item.Invoice.Outstanding = (item.Invoice.OffsetValue == item.NetValue);
         }
     }
 
@@ -231,33 +245,38 @@
             return;
         }
 
-        receipt.GrossValue = receiptItems.Sum(a => a.GrossValue);
+        receipt.NetValue = receiptItems.Sum(a => a.NetValue);
+        receipt.GrossValue = receipt.GrossValue / 1.1m;
         receipt.TaxValue = receipt.GrossValue * 0.1m;
-        receipt.NetValue = receipt.GrossValue + receipt.TaxValue;
+        receipt.OffsetValue = receipt.NetValue;
+
+        if (receipt.NetValue == receipt.OffsetValue)
+            receipt.Outstanding = false;
+        else
+            receipt.Outstanding = true;
 
         var _Response = await api.CreateReceiptAsync(mapper.Map<CreateReceiptRequest>(receipt));
 
         if (!_Response.IsSuccessStatusCode)
         {
-            Snackbar.Add($"Error {(int)_Response.StatusCode}: {JsonSerializer.Deserialize<string>(_Response.Content.ReadAsStringAsync().Result)}", Severity.Error);
+            Snackbar.Add($"Error {(int)_Response.StatusCode}: {_Response.ReasonPhrase}", Severity.Error);
             return;
         }
 
         var _ResponseData = Newtonsoft.Json.JsonConvert.DeserializeObject<CreateReceiptResponse>(await _Response.Content.ReadAsStringAsync());
 
-        // foreach (var _Allocation in transactionAllocations)
-        // {
-        //     var _UpsertRequest = mapper.Map<UpsertTransactionAllocationRequest>(_Allocation);
-        //     _UpsertRequest.AllocatingID = _ResponseData.TransactionID;
-        //     _UpsertRequest.RecievingID = _Allocation.RecievingTransaction.TransactionID;
+        foreach (var _Allocation in receiptItems)
+        {
+            var _UpsertRequest = mapper.Map<UpsertReceiptItemRequest>(_Allocation);
+            _UpsertRequest.ReceiptID = _ResponseData!.ReceiptID;
 
-        //     var _UpsertResponse = await api.UpsertTransactionAllocationAsync(_UpsertRequest);
-        //     if (!_UpsertResponse.IsSuccessStatusCode)
-        //     {
-        //         Snackbar.Add($"Error {(int)_UpsertResponse.StatusCode}: {JsonSerializer.Deserialize<string>(_UpsertResponse.Content.ReadAsStringAsync().Result)}", Severity.Error);
-        //         return;
-        //     }
-        // }
+            var _UpsertResponse = await api.UpsertReceiptItemAsync(_UpsertRequest);
+            if (!_UpsertResponse.IsSuccessStatusCode)
+            {
+                Snackbar.Add($"Error {(int)_UpsertResponse.StatusCode}: {JsonSerializer.Deserialize<string>(_UpsertResponse.Content.ReadAsStringAsync().Result)}", Severity.Error);
+                return;
+            }
+        }
 
         Snackbar.Add("Receipt Created.", Severity.Success);
         NavigateToReceipts();
