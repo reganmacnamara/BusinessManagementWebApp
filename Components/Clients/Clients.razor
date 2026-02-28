@@ -117,7 +117,7 @@
                         clientsDeleted++;
                     }
                     else
-                        Snackbar.Add($"Error {(int)_Response.StatusCode}: {JsonSerializer.Deserialize<string>(_Response.Content.ReadAsStringAsync().Result)}", Severity.Error);
+                        Snackbar.Add($"Error {(int)_Response.StatusCode}: {_Response.ReasonPhrase}", Severity.Error);
                 }
             }
 

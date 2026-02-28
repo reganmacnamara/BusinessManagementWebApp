@@ -48,7 +48,7 @@
         var _Request = mapper.Map<CreateClientRequest>(client);
         var _Response = await api.CreateClientAsync(_Request);
         if (!_Response.IsSuccessStatusCode)
-            Snackbar.Add($"Error {(int)_Response.StatusCode}: {JsonSerializer.Deserialize<string>(_Response.Content.ReadAsStringAsync().Result)}", Severity.Error);
+            Snackbar.Add($"Error {(int)_Response.StatusCode}: {_Response.ReasonPhrase}", Severity.Error);
 
         client.ClientID = Newtonsoft.Json.JsonConvert.DeserializeObject<CreateClientResponse>(await _Response.Content.ReadAsStringAsync())!.ClientID;
         Snackbar.Add("Client Created.", Severity.Success);

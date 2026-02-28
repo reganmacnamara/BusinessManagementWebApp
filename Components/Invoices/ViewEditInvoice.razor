@@ -233,7 +233,7 @@ else
                 NavigateToInvoices();
             }
             else
-                Snackbar.Add($"Error {(int)_Response.StatusCode}: {JsonSerializer.Deserialize<string>(_Response.Content.ReadAsStringAsync().Result)}", Severity.Error);
+                Snackbar.Add($"Error {(int)_Response.StatusCode}: {_Response.ReasonPhrase}", Severity.Error);
         }
     }
 
@@ -276,7 +276,7 @@ else
 
             if (!_TransactionItemResponse.IsSuccessStatusCode)
             {
-                Snackbar.Add($"Error {(int)_TransactionItemResponse.StatusCode}: Updating {JsonSerializer.Deserialize<string>(_TransactionItemResponse.Content.ReadAsStringAsync().Result)}", Severity.Error);
+                Snackbar.Add($"Error {(int)_TransactionItemResponse.StatusCode}: {_TransactionItemResponse.ReasonPhrase}", Severity.Error);
                 return;
             }
         }
@@ -286,7 +286,7 @@ else
             var _Response = await api.DeleteInvoiceItemAsync(_Item.InvoiceItemID);
             if (!_Response.IsSuccessStatusCode)
             {
-                Snackbar.Add($"Error {(int)_Response.StatusCode}: {JsonSerializer.Deserialize<string>(_Response.Content.ReadAsStringAsync().Result)}", Severity.Error);
+                Snackbar.Add($"Error {(int)_Response.StatusCode}: {_Response.ReasonPhrase}", Severity.Error);
                 return;
             }
         }

@@ -141,7 +141,7 @@
                                     Format="C" />
 
                     <PropertyColumn Editable="false"
-                                    Property="x => (x.Invoice.NetValue - x.Invoice.OffsetValue) - x.NetValue"
+                                    Property="x => (x.Invoice.NetValue - x.Invoice.OffsetValue) - (x.Invoice.Outstanding ? x.NetValue : 0)"
                                     Title="Outstanding Amt."
                                     Format="C" />
 
@@ -159,12 +159,21 @@
 
                     <TemplateColumn Editable="true">
                         <EditTemplate>
-                            <MudButton Color="Color.Warning"
-                                       OnClick="() => ClearAllocation(context.Item)"
-                                       Size="Size.Small"
-                                       Variant="Variant.Filled">
-                                De-Allocate
-                            </MudButton>
+                            <MudStack Row="true">
+                                <MudButton Color="Color.Success"
+                                           OnClick="() => CompleteAllocation(context.Item)"
+                                           Size="Size.Small"
+                                           Variant="Variant.Filled">
+                                    Allocate
+                                </MudButton>
+
+                                <MudButton Color="Color.Warning"
+                                           OnClick="() => ClearAllocation(context.Item)"
+                                           Size="Size.Small"
+                                           Variant="Variant.Filled">
+                                    De-Allocate
+                                </MudButton>
+                            </MudStack>
                         </EditTemplate>
                     </TemplateColumn>
                 </Columns>
@@ -196,6 +205,18 @@
         allocation.Invoice.Outstanding = (allocation.Invoice.OffsetValue == allocation.Invoice.NetValue);
         RecalculateOffsets();
         StateHasChanged();
+    }
+
+    private async Task CompleteAllocation(ReceiptItem allocation)
+    {
+        if ((receipt.NetValue - receipt.OffsetValue) >= (allocation.Invoice.NetValue - allocation.Invoice.OffsetValue))
+        {
+            allocation.NetValue = allocation.Invoice.NetValue - allocation.Invoice.OffsetValue;
+            allocation.Invoice.OffsetValue = allocation.Invoice.NetValue;
+            allocation.Invoice.Outstanding = (allocation.Invoice.OffsetValue == allocation.Invoice.NetValue);
+            RecalculateOffsets();
+            StateHasChanged();
+        }
     }
 
     private async Task DeleteReceiptItems()
@@ -238,6 +259,7 @@
         if (value <= item.Invoice.NetValue && value >= 0)
         {
             item.NetValue = value;
+            item.Invoice.Outstanding = (item.Invoice.OffsetValue == item.Invoice.NetValue);
             RecalculateOffsets();
         }
     }
@@ -283,7 +305,7 @@
             var _UpsertResponse = await api.UpsertReceiptItemAsync(_UpsertRequest);
             if (!_UpsertResponse.IsSuccessStatusCode)
             {
-                Snackbar.Add($"Error {(int)_UpsertResponse.StatusCode}: {JsonSerializer.Deserialize<string>(_UpsertResponse.Content.ReadAsStringAsync().Result)}", Severity.Error);
+                Snackbar.Add($"Error {(int)_UpsertResponse.StatusCode}: {_UpsertResponse.ReasonPhrase}", Severity.Error);
                 return;
             }
         }
