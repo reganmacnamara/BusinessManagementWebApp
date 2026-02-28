@@ -209,7 +209,7 @@ else
     }
 
     private void NavigateToInvoices()
-        => NavigationManager.NavigateTo("transactions");
+        => NavigationManager.NavigateTo("invoices");
 
     private async Task OnEditInvoiceItem(InvoiceItem item)
     {
@@ -292,7 +292,7 @@ else
         }
 
         Snackbar.Add("Invoice Updated.", Severity.Success);
-        NavigationManager.NavigateTo("invoices");
+        NavigateToInvoices();
     }
 
     private async Task OpenCreateInvoiceItemDialogAsync()

@@ -32,7 +32,7 @@
                     Text="Cancel">
 
             <MudFab Color="Color.Error"
-                    OnClick="NavigateToTransactions"
+                    OnClick="NavigateToInvoices"
                     StartIcon="@Icons.Material.Filled.Cancel" />
 
         </MudTooltip>
@@ -191,8 +191,8 @@
         this.StateHasChanged();
     }
 
-    private void NavigateToTransactions()
-        => NavigationManager.NavigateTo("transactions");
+    private void NavigateToInvoices()
+        => NavigationManager.NavigateTo("invoices");
 
     private async Task OnEditInvoiceItem(InvoiceItem item)
     {
@@ -254,7 +254,7 @@
         }
 
         Snackbar.Add("Transaction Created.", Severity.Success);
-        NavigateToTransactions();
+        NavigateToInvoices();
     }
 
     private async Task OpenCreateClientDialogAsync()

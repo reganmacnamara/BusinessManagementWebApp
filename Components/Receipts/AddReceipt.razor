@@ -73,33 +73,47 @@
                     StartIcon="@Icons.Material.Filled.Add" />
         </div>
 
-        <MudNumericField @bind-Value="receipt.GrossValue"
-                         Format="C"
+        <MudNumericField Format="C"
                          Label="Gross Value"
+                         T="decimal"
+                         Value="receipt.GrossValue"
+                         ValueChanged="OnGrossValueChanged"
                          Variant="Variant.Outlined" />
 
-        <MudNumericField @bind-Value="receipt.TaxValue"
-                         Format="C"
+        <MudNumericField Format="C"
                          Label="Tax Value"
+                         T="decimal"
+                         Value="receipt.TaxValue"
+                         ValueChanged="OnTaxValueChanged"
                          Variant="Variant.Outlined" />
 
-        <MudNumericField @bind-Value="receipt.NetValue"
-                         Format="C"
+        <MudNumericField Format="C"
                          Label="Net Value"
+                         T="decimal"
+                         Value="receipt.NetValue"
+                         ValueChanged="OnNetValueChanged"
                          Variant="Variant.Outlined" />
     </MudTabPanel>
     <MudTabPanel Text="Allocations"
                  Disabled="receipt.Client is null">
 
         <MudPaper MaxWidth="70%">
-            <div class="d-flex justify-content-start">
-                <MudButton Color="Color.Success"
-                           OnClick="OpenCreateReceiptItemDialogAsync"
-                           StartIcon="@Icons.Material.Filled.Add">Add Item</MudButton>
+            <div class="d-flex">
+                <div class="mr-auto">
+                    <MudButton Color="Color.Success"
+                               OnClick="OpenCreateReceiptItemDialogAsync"
+                               StartIcon="@Icons.Material.Filled.Add">Add Item</MudButton>
 
-                <MudButton Color="Color.Error"
-                           OnClick="DeleteReceiptItems"
-                           StartIcon="@Icons.Material.Filled.Delete">Remove Item</MudButton>
+                    <MudButton Color="Color.Error"
+                               OnClick="DeleteReceiptItems"
+                               StartIcon="@Icons.Material.Filled.Delete">Remove Item</MudButton>
+                </div>
+
+                <div class="">
+                    <MudInputLabel Variant="Variant.Text">
+                        Un-Allocated Amt: $@(receipt.NetValue - receipt.OffsetValue)
+                    </MudInputLabel>
+                </div>
             </div>
 
             <MudDataGrid @bind-SelectedItems="selectedReceiptItems"
@@ -112,6 +126,7 @@
                          T="ReceiptItem">
 
                 <Columns>
+                    <SelectColumn T="ReceiptItem" />
                     <PropertyColumn Editable="false"
                                     Property="x => x.Invoice.InvoiceRef"
                                     Title="Ref" />
@@ -172,14 +187,14 @@
     private List<ReceiptItem> receiptItems = [];
 
     [CascadingParameter]
-    private IMudDialogInstance MudDialog { get; set; }
+    private IMudDialogInstance MudDialog { get; set; } = default!;
 
     private async Task ClearAllocation(ReceiptItem allocation)
     {
         allocation.NetValue = 0;
         allocation.Invoice.OffsetValue = allocation.NetValue;
         allocation.Invoice.Outstanding = (allocation.Invoice.OffsetValue == allocation.Invoice.NetValue);
-
+        RecalculateOffsets();
         StateHasChanged();
     }
 
@@ -192,6 +207,7 @@
             receiptItems.Remove(_Item);
 
         selectedReceiptItems.Clear();
+        RecalculateOffsets();
         StateHasChanged();
     }
 
@@ -219,9 +235,10 @@
 
     private async Task OnAllocationUpdated(decimal value, ReceiptItem item)
     {
-        if (value <= item.Invoice.NetValue)
+        if (value <= item.Invoice.NetValue && value >= 0)
         {
             item.NetValue = value;
+            RecalculateOffsets();
         }
     }
 
@@ -245,15 +262,8 @@
             return;
         }
 
-        receipt.NetValue = receiptItems.Sum(a => a.NetValue);
-        receipt.GrossValue = receipt.GrossValue / 1.1m;
-        receipt.TaxValue = receipt.GrossValue * 0.1m;
-        receipt.OffsetValue = receipt.NetValue;
-
-        if (receipt.NetValue == receipt.OffsetValue)
-            receipt.Outstanding = false;
-        else
-            receipt.Outstanding = true;
+        RecalculateOffsets();
+        receipt.Outstanding = receipt.NetValue == receipt.OffsetValue;
 
         var _Response = await api.CreateReceiptAsync(mapper.Map<CreateReceiptRequest>(receipt));
 
@@ -304,6 +314,27 @@
         await GetClientInvoices();
     }
 
+    private async Task OnGrossValueChanged(decimal value)
+    {
+        receipt.GrossValue = value;
+        receipt.TaxValue = value * 0.1m;
+        receipt.NetValue = receipt.GrossValue + receipt.TaxValue;
+    }
+
+    private async Task OnNetValueChanged(decimal value)
+    {
+        receipt.NetValue = value;
+        receipt.GrossValue = receipt.NetValue / 1.1m;
+        receipt.TaxValue = receipt.GrossValue * 0.1m;
+    }
+
+    private async Task OnTaxValueChanged(decimal value)
+    {
+        receipt.TaxValue = value;
+        receipt.GrossValue = receipt.TaxValue * 10;
+        receipt.NetValue = receipt.GrossValue + receipt.TaxValue;
+    }
+
     private async Task OpenCreateReceiptItemDialogAsync()
     {
         var dialog = await DialogService.ShowAsync<AddReceiptAllocationDialog>("", new DialogParameters<AddReceiptAllocationDialog>()
@@ -321,6 +352,9 @@
             StateHasChanged();
         }
     }
+
+    private void RecalculateOffsets()
+        => receipt.OffsetValue = receiptItems.Sum(a => a.NetValue);
 
     private void SelectCreatedClient(Client client)
     {
