@@ -9,6 +9,7 @@
 
 @inject ApiClient api
 @inject IDialogService DialogService
+@inject IJSRuntime JS
 @inject IMapper mapper
 @inject NavigationManager NavigationManager
 @inject ISnackbar Snackbar
@@ -34,6 +35,12 @@ else
         </div>
 
         <div class="p-2">
+            <MudTooltip Delay="300" Text="Export PDF">
+                <MudFab Color="Color.Info"
+                        OnClick="ExportPdf"
+                        StartIcon="@Icons.Material.Filled.PictureAsPdf" />
+            </MudTooltip>
+
             <MudTooltip Delay="300" Text="Save">
                 <MudFab Color="Color.Default"
                         OnClick="OnSave"
@@ -208,6 +215,19 @@ else
         isLoading = false;
     }
 
+    private async Task ExportPdf()
+    {
+        var _Response = await api.ExportInvoicePdfAsync(invoice.InvoiceID);
+        if (!_Response.IsSuccessStatusCode)
+        {
+            Snackbar.Add($"Error {(int)_Response.StatusCode}: {await _Response.GetErrorBodyAsync()}", Severity.Error);
+            return;
+        }
+
+        var bytes = await _Response.Content.ReadAsByteArrayAsync();
+        await JS.InvokeVoidAsync("downloadPdf", $"Invoice_{invoice.InvoiceRef}.pdf", bytes);
+    }
+
     private void NavigateToInvoices()
         => NavigationManager.NavigateTo("invoices");
 
@@ -233,7 +253,7 @@ else
                 NavigateToInvoices();
             }
             else
-                Snackbar.Add($"Error {(int)_Response.StatusCode}: {_Response.ReasonPhrase}", Severity.Error);
+                Snackbar.Add($"Error {(int)_Response.StatusCode}: {await _Response.GetErrorBodyAsync()}", Severity.Error);
         }
     }
 
@@ -260,7 +280,7 @@ else
 
         if (!_UpdateTransactionResponse.IsSuccessStatusCode)
         {
-            Snackbar.Add($"Error {(int)_UpdateTransactionResponse.StatusCode}: {_UpdateTransactionResponse.ReasonPhrase}", Severity.Error);
+            Snackbar.Add($"Error {(int)_UpdateTransactionResponse.StatusCode}: {await _UpdateTransactionResponse.GetErrorBodyAsync()}", Severity.Error);
             return;
         }
 
@@ -276,7 +296,7 @@ else
 
             if (!_TransactionItemResponse.IsSuccessStatusCode)
             {
-                Snackbar.Add($"Error {(int)_TransactionItemResponse.StatusCode}: {_TransactionItemResponse.ReasonPhrase}", Severity.Error);
+                Snackbar.Add($"Error {(int)_TransactionItemResponse.StatusCode}: {await _TransactionItemResponse.GetErrorBodyAsync()}", Severity.Error);
                 return;
             }
         }
@@ -286,7 +306,7 @@ else
             var _Response = await api.DeleteInvoiceItemAsync(_Item.InvoiceItemID);
             if (!_Response.IsSuccessStatusCode)
             {
-                Snackbar.Add($"Error {(int)_Response.StatusCode}: {_Response.ReasonPhrase}", Severity.Error);
+                Snackbar.Add($"Error {(int)_Response.StatusCode}: {await _Response.GetErrorBodyAsync()}", Severity.Error);
                 return;
             }
         }

@@ -6,6 +6,7 @@
 @using BusinessManagementWebApp.Data.Entities
 
 @inject ApiClient api
+@inject IJSRuntime JS
 @inject IMapper mapper
 @inject NavigationManager NavigationManager
 @inject ISnackbar Snackbar
@@ -24,6 +25,11 @@
     <MudButton Color="Color.Error"
                OnClick="OnDelete"
                StartIcon="@Icons.Material.Filled.Delete">Remove Receipts(s)</MudButton>
+
+    <MudButton Color="Color.Info"
+               Disabled="@(!selectedReceipts.Any())"
+               OnClick="ExportSelectedPdfs"
+               StartIcon="@Icons.Material.Filled.PictureAsPdf">Export PDF</MudButton>
 </div>
 
 <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6">
@@ -85,6 +91,22 @@
         await InvokeAsync(StateHasChanged);
     }
 
+    private async Task ExportSelectedPdfs()
+    {
+        foreach (var receipt in selectedReceipts)
+        {
+            var _Response = await api.ExportReceiptPdfAsync(receipt.ReceiptID);
+            if (!_Response.IsSuccessStatusCode)
+            {
+                Snackbar.Add($"Error exporting {receipt.ReceiptRef}: {await _Response.GetErrorBodyAsync()}", Severity.Error);
+                continue;
+            }
+
+            var bytes = await _Response.Content.ReadAsByteArrayAsync();
+            await JS.InvokeVoidAsync("downloadPdf", $"Receipt_{receipt.ReceiptRef}.pdf", bytes);
+        }
+    }
+
     private void NavigateToCreateReceipt()
         => NavigationManager.NavigateTo($"/receipts/create");
 
@@ -107,7 +129,7 @@
                         transactionsDeleted++;
                     }
                     else
-                        Snackbar.Add($"Error {(int)_Response.StatusCode}: {_Response.ReasonPhrase}", Severity.Error);
+                        Snackbar.Add($"Error {(int)_Response.StatusCode}: {await _Response.GetErrorBodyAsync()}", Severity.Error);
                 }
             }
             if (transactionsDeleted > 0)

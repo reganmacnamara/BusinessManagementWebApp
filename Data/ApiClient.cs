@@ -91,6 +91,16 @@ namespace BusinessManagementWebApp.Data
 
         #endregion
 
+        #region PDF Export Endpoints
+
+        public async Task<HttpResponseMessage> ExportInvoicePdfAsync(long invoiceID)
+            => await http.GetAsync($"/Invoice/{invoiceID}/pdf");
+
+        public async Task<HttpResponseMessage> ExportReceiptPdfAsync(long receiptID)
+            => await http.GetAsync($"/Receipt/{receiptID}/pdf");
+
+        #endregion
+
         #region Receipt Endpoints
 
         public async Task<HttpResponseMessage> CreateReceiptAsync(CreateReceiptRequest request)

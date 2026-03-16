@@ -48,7 +48,7 @@
         var _Response = await api.CreateClientAsync(_Request);
         if (!_Response.IsSuccessStatusCode)
         {
-            Snackbar.Add($"Error {(int)_Response.StatusCode}: {_Response.ReasonPhrase}", Severity.Error);
+            Snackbar.Add($"Error {(int)_Response.StatusCode}: {await _Response.GetErrorBodyAsync()}", Severity.Error);
             return;
         }
 

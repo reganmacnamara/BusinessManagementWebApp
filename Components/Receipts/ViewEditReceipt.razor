@@ -8,6 +8,7 @@
 
 @inject ApiClient api
 @inject IDialogService DialogService
+@inject IJSRuntime JS
 @inject IMapper mapper
 @inject NavigationManager NavigationManager
 @inject ISnackbar Snackbar
@@ -29,6 +30,12 @@ else
         </div>
 
         <div class="p-2">
+            <MudTooltip Delay="300" Text="Export PDF">
+                <MudFab Color="Color.Info"
+                        OnClick="ExportPdf"
+                        StartIcon="@Icons.Material.Filled.PictureAsPdf" />
+            </MudTooltip>
+
             <MudTooltip Delay="300" Text="Save">
                 <MudFab Color="Color.Default"
                         OnClick="OnSave"
@@ -142,6 +149,9 @@ else
 
                         <TemplateColumn Editable="true"
                                         Title="Allocated">
+                            <CellTemplate>
+                                @context.Item.NetValue.ToString("C")
+                            </CellTemplate>
                             <EditTemplate>
                                 <MudNumericField Format="C"
                                                  Value="context.Item.NetValue"
@@ -150,8 +160,8 @@ else
                             </EditTemplate>
                         </TemplateColumn>
 
-                        <TemplateColumn Editable="true">
-                            <EditTemplate>
+                        <TemplateColumn>
+                            <CellTemplate>
                                 <MudStack Row="true">
                                     <MudButton Color="Color.Success"
                                                OnClick="() => CompleteAllocation(context.Item)"
@@ -167,7 +177,7 @@ else
                                         De-Allocate
                                     </MudButton>
                                 </MudStack>
-                            </EditTemplate>
+                            </CellTemplate>
                         </TemplateColumn>
                     </Columns>
 
@@ -210,6 +220,19 @@ else
         receipt = _Response.Receipt;
         receiptItems = _Response.ReceiptItems;
         isLoading = false;
+    }
+
+    private async Task ExportPdf()
+    {
+        var _Response = await api.ExportReceiptPdfAsync(receipt.ReceiptID);
+        if (!_Response.IsSuccessStatusCode)
+        {
+            Snackbar.Add($"Error {(int)_Response.StatusCode}: {await _Response.GetErrorBodyAsync()}", Severity.Error);
+            return;
+        }
+
+        var bytes = await _Response.Content.ReadAsByteArrayAsync();
+        await JS.InvokeVoidAsync("downloadPdf", $"Receipt_{receipt.ReceiptRef}.pdf", bytes);
     }
 
     private void NavigateToReceipts()
@@ -314,7 +337,7 @@ else
             NavigateToReceipts();
         }
         else
-            Snackbar.Add($"Error {(int)_Response.StatusCode}: {_Response.ReasonPhrase}", Severity.Error);
+            Snackbar.Add($"Error {(int)_Response.StatusCode}: {await _Response.GetErrorBodyAsync()}", Severity.Error);
     }
 
     private async Task OnSave()
@@ -331,7 +354,7 @@ else
         var _UpdateResponse = await api.UpdateReceiptAsync(mapper.Map<UpdateReceiptRequest>(receipt));
         if (!_UpdateResponse.IsSuccessStatusCode)
         {
-            Snackbar.Add($"Error {(int)_UpdateResponse.StatusCode}: {_UpdateResponse.ReasonPhrase}", Severity.Error);
+            Snackbar.Add($"Error {(int)_UpdateResponse.StatusCode}: {await _UpdateResponse.GetErrorBodyAsync()}", Severity.Error);
             return;
         }
 
@@ -343,7 +366,7 @@ else
             var _UpsertResponse = await api.UpsertReceiptItemAsync(_UpsertRequest);
             if (!_UpsertResponse.IsSuccessStatusCode)
             {
-                Snackbar.Add($"Error {(int)_UpsertResponse.StatusCode}: {_UpsertResponse.ReasonPhrase}", Severity.Error);
+                Snackbar.Add($"Error {(int)_UpsertResponse.StatusCode}: {await _UpsertResponse.GetErrorBodyAsync()}", Severity.Error);
                 return;
             }
         }
@@ -353,7 +376,7 @@ else
             var _DeleteResponse = await api.DeleteReceiptItemAsync(item.ReceiptItemID);
             if (!_DeleteResponse.IsSuccessStatusCode)
             {
-                Snackbar.Add($"Error {(int)_DeleteResponse.StatusCode}: {_DeleteResponse.ReasonPhrase}", Severity.Error);
+                Snackbar.Add($"Error {(int)_DeleteResponse.StatusCode}: {await _DeleteResponse.GetErrorBodyAsync()}", Severity.Error);
                 return;
             }
         }

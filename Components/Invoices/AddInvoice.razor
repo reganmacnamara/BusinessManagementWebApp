@@ -231,7 +231,7 @@
 
         if (!_Response.IsSuccessStatusCode)
         {
-            Snackbar.Add($"Error {(int)_Response.StatusCode}: {_Response.ReasonPhrase}", Severity.Error);
+            Snackbar.Add($"Error {(int)_Response.StatusCode}: {await _Response.GetErrorBodyAsync()}", Severity.Error);
             return;
         }
 
@@ -247,7 +247,7 @@
 
             if (!_TransactionItemResponse.IsSuccessStatusCode)
             {
-                Snackbar.Add($"Error {(int)_TransactionItemResponse.StatusCode}: {_TransactionItemResponse.ReasonPhrase}", Severity.Error);
+                Snackbar.Add($"Error {(int)_TransactionItemResponse.StatusCode}: {await _TransactionItemResponse.GetErrorBodyAsync()}", Severity.Error);
                 return;
             }
         }

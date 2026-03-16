@@ -107,7 +107,7 @@
                         productsDeleted++;
                     }
                     else
-                        Snackbar.Add($"Error {(int)_Response.StatusCode}: {_Response.ReasonPhrase}", Severity.Error);
+                        Snackbar.Add($"Error {(int)_Response.StatusCode}: {await _Response.GetErrorBodyAsync()}", Severity.Error);
                 }
             }
 
