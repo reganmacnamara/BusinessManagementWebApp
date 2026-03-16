@@ -1,4 +1,4 @@
-﻿@page "/products/{id:long}"
+@page "/products/{id:long}"
 @using System.Text.Json
 @using AutoMapper
 @using BusinessManagementWebApp.Data
@@ -13,57 +13,93 @@
 
 @if (isLoading)
 {
-    <h1>Fetching Data...</h1>
-    <MudSkeleton Width="70%" Height="50px" />
-    <MudSkeleton Width="70%" Height="50px" />
-    <MudSkeleton Width="70%" Height="50px" />
-    <MudSkeleton Width="70%" Height="50px" />
-    <MudSkeleton Width="70%" Height="50px" />
-    <MudSkeleton Width="70%" Height="50px" />
-    <MudSkeleton Width="70%" Height="50px" />
-    <MudSkeleton Width="70%" Height="50px" />
-    <MudSkeleton Width="70%" Height="50px" />
+    <MudContainer MaxWidth="MaxWidth.Large" Class="pa-6">
+        <MudSkeleton Height="48px" Class="mb-2" Style="border-radius: 8px;" />
+        <MudSkeleton Height="20px" Width="40%" Class="mb-6" Style="border-radius: 8px;" />
+        <MudSkeleton Height="300px" Style="border-radius: 12px;" />
+    </MudContainer>
 }
 else
 {
-    <div class="d-flex">
-        <div class="mr-auto p-2">
-            <h1>@product.ProductCode - @product.ProductName</h1>
-        </div>
-
-        <div class="p-2">
-            <MudTooltip Delay="300" Text="Save">
-                <MudFab Color="Color.Default"
-                        OnClick="OnSave"
-                        StartIcon="@Icons.Material.Filled.Save" />
-            </MudTooltip>
-
-            <MudTooltip Delay="300" Text="Delete">
-                <MudFab Color="Color.Error"
-                        OnClick="OnDelete"
-                        StartIcon="@Icons.Material.Filled.Delete" />
-            </MudTooltip>
-
-            <MudTooltip Delay="300" Text="Cancel">
-                <MudFab Color="Color.Error"
-                        OnClick="NavigateToProducts"
-                        StartIcon="@Icons.Material.Filled.Cancel" />
-            </MudTooltip>
+    <div class="page-header">
+        <div class="d-flex align-center">
+            <MudButton Variant="Variant.Text"
+                       Color="Color.Default"
+                       StartIcon="@Icons.Material.Filled.ArrowBack"
+                       OnClick="NavigateToProducts"
+                       Class="mr-2"
+                       Style="min-width: 0;">Back</MudButton>
+            <MudDivider Vertical="true" FlexItem="true" Class="mx-2" Style="height: 32px; align-self: center;" />
+            <div>
+                <MudText Typo="Typo.h6" Style="font-weight: 700; line-height: 1.2;">@product.ProductCode — @product.ProductName</MudText>
+                <MudText Typo="Typo.caption" Color="Color.Secondary">Product Details</MudText>
+            </div>
+            <MudSpacer />
+            <MudStack Row="true" Spacing="2">
+                <MudButton Color="Color.Primary"
+                           OnClick="OnSave"
+                           StartIcon="@Icons.Material.Filled.Save"
+                           Variant="Variant.Filled">Save</MudButton>
+                <MudButton Color="Color.Error"
+                           OnClick="OnDelete"
+                           StartIcon="@Icons.Material.Filled.Delete"
+                           Variant="Variant.Outlined">Delete</MudButton>
+            </MudStack>
         </div>
     </div>
 
-    <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6">
-        <MudTabPanel Text="Details">
-            <MudPaper MaxWidth="70%">
-                <MudTextField @bind-Value="product.ProductCode" Label="Code" Variant="Variant.Outlined" Required="true" RequiredError="Product Code Required"></MudTextField>
-                <MudTextField @bind-Value="product.ProductName" Label="Name" Variant="Variant.Outlined" Required="true" RequiredError="Product Name Required"></MudTextField>
-                <MudTextField @bind-Value="product.ProductDescription" Label="Description" Lines="3" Variant="Variant.Outlined"></MudTextField>
-                <MudNumericField @bind-Value="product.UnitCost" Label="Unit Cost" Format="N2" T="decimal" Variant="Variant.Outlined"></MudNumericField>
-                <MudNumericField @bind-Value="product.UnitPrice" Label="Unit Price" Format="N2" T="decimal" Variant="Variant.Outlined"></MudNumericField>
-                <MudNumericField @bind-Value="product.QuantityOnHand" Label="Quantity on Hand" T="long" Variant="Variant.Outlined"></MudNumericField>
-            </MudPaper>
-        </MudTabPanel>
-    </MudTabs>
+    <MudContainer MaxWidth="MaxWidth.Large" Class="pa-6">
+        <MudTabs Elevation="0" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pt-4">
+
+            <MudTabPanel Text="Details" Icon="@Icons.Material.Filled.Inventory2">
+                <MudPaper Elevation="0" Class="table-card pa-6">
+                    <MudGrid Spacing="3">
+                        <MudItem xs="12" sm="6">
+                            <MudTextField @bind-Value="product.ProductCode"
+                                          Label="Code"
+                                          Variant="Variant.Outlined"
+                                          Required="true"
+                                          RequiredError="Product Code Required" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField @bind-Value="product.ProductName"
+                                          Label="Name"
+                                          Variant="Variant.Outlined"
+                                          Required="true"
+                                          RequiredError="Product Name Required" />
+                        </MudItem>
+                        <MudItem xs="12">
+                            <MudTextField @bind-Value="product.ProductDescription"
+                                          Label="Description"
+                                          Lines="3"
+                                          Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" sm="4">
+                            <MudNumericField @bind-Value="product.UnitCost"
+                                             Label="Unit Cost"
+                                             Format="N2"
+                                             T="decimal"
+                                             Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" sm="4">
+                            <MudNumericField @bind-Value="product.UnitPrice"
+                                             Label="Unit Price"
+                                             Format="N2"
+                                             T="decimal"
+                                             Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" sm="4">
+                            <MudNumericField @bind-Value="product.QuantityOnHand"
+                                             Label="Quantity on Hand"
+                                             T="long"
+                                             Variant="Variant.Outlined" />
+                        </MudItem>
+                    </MudGrid>
+                </MudPaper>
+            </MudTabPanel>
+
+        </MudTabs>
+    </MudContainer>
 }
 
 <MudMessageBox @ref="deleteConfirmationMessage"
@@ -89,7 +125,6 @@ else
     private async Task GetProductData()
     {
         var _Product = await api.GetProductAsync(id);
-
         product = _Product.Product;
     }
 

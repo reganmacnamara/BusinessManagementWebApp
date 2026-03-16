@@ -1,4 +1,4 @@
-﻿@page "/invoices"
+@page "/invoices"
 @using System.Text.Json
 @using System.Threading.Tasks
 @using AutoMapper
@@ -12,35 +12,86 @@
 @inject NavigationManager NavigationManager
 @inject ISnackbar Snackbar
 
-<div class="d-flex">
-    <div class="mr-auto p-2">
-        <h1>Invoices</h1>
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pa-6">
+
+    <div class="d-flex align-center mb-6">
+        <div>
+            <MudText Typo="Typo.h5" Style="font-weight: 700; color: #0F172A;">Invoices</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">Manage and track all client invoices</MudText>
+        </div>
+        <MudSpacer />
+        <MudStack Row="true" Spacing="2">
+            <MudButton Color="Color.Info"
+                       Disabled="@(!selectedInvoices.Any())"
+                       OnClick="ExportSelectedPdfs"
+                       StartIcon="@Icons.Material.Filled.PictureAsPdf"
+                       Variant="Variant.Outlined">Export PDF</MudButton>
+            <MudButton Color="Color.Error"
+                       Disabled="@(!selectedInvoices.Any())"
+                       OnClick="OnDelete"
+                       StartIcon="@Icons.Material.Filled.Delete"
+                       Variant="Variant.Outlined">Delete</MudButton>
+            <MudButton Color="Color.Primary"
+                       OnClick="NavigateToCreateInvoice"
+                       StartIcon="@Icons.Material.Filled.Add"
+                       Variant="Variant.Filled">New Invoice</MudButton>
+        </MudStack>
     </div>
-</div>
 
-<div class="d-flex justify-content-start">
-    <MudButton Color="Color.Success"
-               OnClick="NavigateToCreateInvoice"
-               StartIcon="@Icons.Material.Filled.Add">Add Invoice</MudButton>
+    <MudGrid Spacing="3" Class="mb-5">
+        <MudItem xs="12" sm="6" md="3">
+            <div class="stat-card">
+                <div class="d-flex align-center justify-space-between mb-3">
+                    <MudText Typo="Typo.caption" Style="font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #64748B;">Total Invoices</MudText>
+                    <div class="stat-icon-wrap" style="background: #EFF6FF;">
+                        <MudIcon Icon="@Icons.Material.Filled.Description" Style="color: #3B82F6; font-size: 1.2rem;" />
+                    </div>
+                </div>
+                <MudText Typo="Typo.h4" Style="font-weight: 700; color: #0F172A; line-height: 1;">@invoices.Count</MudText>
+            </div>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="3">
+            <div class="stat-card">
+                <div class="d-flex align-center justify-space-between mb-3">
+                    <MudText Typo="Typo.caption" Style="font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #64748B;">Unpaid</MudText>
+                    <div class="stat-icon-wrap" style="background: #FFFBEB;">
+                        <MudIcon Icon="@Icons.Material.Filled.Pending" Style="color: #F59E0B; font-size: 1.2rem;" />
+                    </div>
+                </div>
+                <MudText Typo="Typo.h4" Style="font-weight: 700; color: #0F172A; line-height: 1;">@invoices.Count(x => x.Outstanding)</MudText>
+            </div>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="3">
+            <div class="stat-card">
+                <div class="d-flex align-center justify-space-between mb-3">
+                    <MudText Typo="Typo.caption" Style="font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #64748B;">Total Value</MudText>
+                    <div class="stat-icon-wrap" style="background: #ECFDF5;">
+                        <MudIcon Icon="@Icons.Material.Filled.AttachMoney" Style="color: #10B981; font-size: 1.2rem;" />
+                    </div>
+                </div>
+                <MudText Typo="Typo.h5" Style="font-weight: 700; color: #0F172A; line-height: 1;">@invoices.Sum(x => x.NetValue).ToString("C")</MudText>
+            </div>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="3">
+            <div class="stat-card">
+                <div class="d-flex align-center justify-space-between mb-3">
+                    <MudText Typo="Typo.caption" Style="font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #64748B;">Outstanding Amt.</MudText>
+                    <div class="stat-icon-wrap" style="background: #FEF2F2;">
+                        <MudIcon Icon="@Icons.Material.Filled.TrendingDown" Style="color: #EF4444; font-size: 1.2rem;" />
+                    </div>
+                </div>
+                <MudText Typo="Typo.h5" Style="font-weight: 700; color: #0F172A; line-height: 1;">@invoices.Sum(x => Math.Max(0m, x.NetValue - x.OffsetValue)).ToString("C")</MudText>
+            </div>
+        </MudItem>
+    </MudGrid>
 
-    <MudButton Color="Color.Error"
-               OnClick="OnDelete"
-               StartIcon="@Icons.Material.Filled.Delete">Remove Invoice(s)</MudButton>
-
-    <MudButton Color="Color.Info"
-               Disabled="@(!selectedInvoices.Any())"
-               OnClick="ExportSelectedPdfs"
-               StartIcon="@Icons.Material.Filled.PictureAsPdf">Export PDF</MudButton>
-</div>
-
-<MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6">
-    <MudTabPanel Text="All">
+    <MudPaper Elevation="0" Class="table-card">
         <MudDataGrid @bind-SelectedItems="selectedInvoices"
                      Breakpoint="Breakpoint.Sm"
                      Items="invoices"
                      Hover="true"
                      Loading="@loading"
-                     LoadingProgressColor="Color.Info"
+                     LoadingProgressColor="Color.Primary"
                      MultiSelection="true"
                      RowClass="cursor-pointer"
                      RowClick="InvoiceSelected"
@@ -52,11 +103,21 @@
                 <PropertyColumn Property="x => x.InvoiceRef" Title="Reference" />
                 <PropertyColumn Property="x => x.Client.ClientName" Title="Client" />
                 <PropertyColumn Property="x => x.NetValue" Title="Net Value" Format="C" />
+                <TemplateColumn Title="Status">
+                    <CellTemplate>
+                        <MudChip T="string" Size="Size.Small"
+                                 Color="@(context.Item.Outstanding ? Color.Warning : Color.Success)"
+                                 Variant="Variant.Filled">
+                            @(context.Item.Outstanding ? "Outstanding" : "Paid")
+                        </MudChip>
+                    </CellTemplate>
+                </TemplateColumn>
                 <PropertyColumn Property="x => Math.Max(0m, x.NetValue - x.OffsetValue)" Title="Outstanding Amt." Format="C" />
             </Columns>
         </MudDataGrid>
-    </MudTabPanel>
-</MudTabs>
+    </MudPaper>
+
+</MudContainer>
 
 <MudMessageBox @ref="deleteConfirmationMessage"
                Title="Warning"
@@ -81,10 +142,8 @@
     private async Task GetTransactionsDataAsync()
     {
         loading = true;
-
         var _Response = await api.GetInvoicesAsync();
         invoices = _Response.Invoices ?? [];
-
         loading = false;
         await InvokeAsync(StateHasChanged);
     }
@@ -99,7 +158,6 @@
                 Snackbar.Add($"Error exporting {invoice.InvoiceRef}: {await _Response.GetErrorBodyAsync()}", Severity.Error);
                 continue;
             }
-
             var bytes = await _Response.Content.ReadAsByteArrayAsync();
             await JS.InvokeVoidAsync("downloadPdf", $"Invoice_{invoice.InvoiceRef}.pdf", bytes);
         }
@@ -144,9 +202,7 @@
 
     private void InvoiceSelected(DataGridRowClickEventArgs<Invoice> args)
     {
-        var _SelectedTransaction = args.Item;
-
-        if (_SelectedTransaction is not null)
-            NavigationManager.NavigateTo($"/invoices/{_SelectedTransaction.InvoiceID}");
+        if (args.Item is not null)
+            NavigationManager.NavigateTo($"/invoices/{args.Item.InvoiceID}");
     }
 }

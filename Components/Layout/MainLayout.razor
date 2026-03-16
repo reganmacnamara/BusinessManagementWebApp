@@ -1,28 +1,32 @@
-﻿@inherits LayoutComponentBase
+@inherits LayoutComponentBase
 
-<MudThemeProvider />
+<MudThemeProvider Theme="_theme" />
 
 <MudDialogProvider FullWidth="true"
-                   MaxWidth="MaxWidth.Small"
+                   MaxWidth="MaxWidth.Medium"
                    CloseButton="true"
                    Position="DialogPosition.Center"
                    CloseOnEscapeKey="true" />
 
 <MudSnackbarProvider />
-
 <MudPopoverProvider />
 
 <MudLayout>
-    <MudAppBar Elevation="1">
-        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="DrawerToggle" />
-        <MudText Typo="Typo.h5" Class="ml-3">Mac's Business Manager</MudText>
+    <MudAppBar Elevation="0" Dense="false">
+        <MudIconButton Icon="@Icons.Material.Filled.Menu"
+                       Color="Color.Inherit"
+                       Edge="Edge.Start"
+                       OnClick="DrawerToggle" />
+        <MudText Typo="Typo.h6" Class="ml-2" Style="font-weight: 700; letter-spacing: -0.3px;">
+            Mac's Business Manager
+        </MudText>
         <MudSpacer />
-        <MudIconButton Icon="@Icons.Material.Filled.MoreVert" Color="Color.Inherit" Edge="Edge.End" />
     </MudAppBar>
 
     <MudDrawer @bind-Open="_drawerOpen"
                ClipMode="DrawerClipMode.Always"
-               Elevation="2">
+               Elevation="0"
+               Variant="DrawerVariant.Persistent">
         <NavMenu />
     </MudDrawer>
 
@@ -34,6 +38,49 @@
 @code {
     private bool _drawerOpen = true;
 
-    private void DrawerToggle()
-        => _drawerOpen = !_drawerOpen;
+    private readonly MudTheme _theme = new()
+    {
+        PaletteLight = new PaletteLight
+        {
+            Primary = "#3B82F6",
+            PrimaryContrastText = "#FFFFFF",
+            PrimaryDarken = "#1D4ED8",
+            PrimaryLighten = "#93C5FD",
+            Secondary = "#8B5CF6",
+            SecondaryContrastText = "#FFFFFF",
+            AppbarBackground = "#0F172A",
+            AppbarText = "#F1F5F9",
+            DrawerBackground = "#0F172A",
+            DrawerText = "#94A3B8",
+            DrawerIcon = "#94A3B8",
+            Background = "#F1F5F9",
+            Surface = "#FFFFFF",
+            Success = "#10B981",
+            SuccessContrastText = "#FFFFFF",
+            Warning = "#F59E0B",
+            WarningContrastText = "#FFFFFF",
+            Error = "#EF4444",
+            ErrorContrastText = "#FFFFFF",
+            Info = "#06B6D4",
+            InfoContrastText = "#FFFFFF",
+            TextPrimary = "#0F172A",
+            TextSecondary = "#64748B",
+            TextDisabled = "#94A3B8",
+            ActionDefault = "#64748B",
+            Divider = "#E2E8F0",
+            TableLines = "#E2E8F0",
+            TableHover = "#F8FAFC",
+            LinesDefault = "#E2E8F0",
+            LinesInputs = "#CBD5E1",
+            OverlayDark = "rgba(0,0,0,0.5)",
+        },
+        LayoutProperties = new LayoutProperties
+        {
+            DefaultBorderRadius = "8px",
+            DrawerWidthLeft = "256px",
+            AppbarHeight = "64px",
+        }
+    };
+
+    private void DrawerToggle() => _drawerOpen = !_drawerOpen;
 }

@@ -15,177 +15,178 @@
 
 @if (isLoading)
 {
-    <h1>Fetching Data...</h1>
-    <MudSkeleton Width="70%" Height="50px" />
-    <MudSkeleton Width="70%" Height="50px" />
-    <MudSkeleton Width="70%" Height="50px" />
-    <MudSkeleton Width="70%" Height="50px" />
-    <MudSkeleton Width="70%" Height="50px" />
+    <MudContainer MaxWidth="MaxWidth.Large" Class="pa-6">
+        <MudSkeleton Height="48px" Class="mb-2" Style="border-radius: 8px;" />
+        <MudSkeleton Height="20px" Width="40%" Class="mb-6" Style="border-radius: 8px;" />
+        <MudSkeleton Height="300px" Style="border-radius: 12px;" />
+    </MudContainer>
 }
 else
 {
-    <div class="d-flex">
-        <div class="mr-auto p-2">
-            <h1>@receipt!.ReceiptRef</h1>
-        </div>
-
-        <div class="p-2">
-            <MudTooltip Delay="300" Text="Export PDF">
-                <MudFab Color="Color.Info"
-                        OnClick="ExportPdf"
-                        StartIcon="@Icons.Material.Filled.PictureAsPdf" />
-            </MudTooltip>
-
-            <MudTooltip Delay="300" Text="Save">
-                <MudFab Color="Color.Default"
-                        OnClick="OnSave"
-                        StartIcon="@Icons.Material.Filled.Save" />
-            </MudTooltip>
-
-            <MudTooltip Delay="300" Text="Delete">
-                <MudFab Color="Color.Error"
-                        OnClick="OnDelete"
-                        StartIcon="@Icons.Material.Filled.Delete" />
-            </MudTooltip>
-
-            <MudTooltip Delay="300" Text="Cancel">
-                <MudFab Color="Color.Error"
-                        OnClick="NavigateToReceipts"
-                        StartIcon="@Icons.Material.Filled.Cancel" />
-            </MudTooltip>
+    <div class="page-header">
+        <div class="d-flex align-center">
+            <MudButton Variant="Variant.Text"
+                       Color="Color.Default"
+                       StartIcon="@Icons.Material.Filled.ArrowBack"
+                       OnClick="NavigateToReceipts"
+                       Class="mr-2"
+                       Style="min-width: 0;">Back</MudButton>
+            <MudDivider Vertical="true" FlexItem="true" Class="mx-2" Style="height: 32px; align-self: center;" />
+            <div>
+                <MudText Typo="Typo.h6" Style="font-weight: 700; line-height: 1.2;">@receipt!.ReceiptRef</MudText>
+                <MudText Typo="Typo.caption" Color="Color.Secondary">@receipt.Client?.ClientName</MudText>
+            </div>
+            <MudSpacer />
+            <MudStack Row="true" Spacing="2">
+                <MudButton Color="Color.Info"
+                           OnClick="ExportPdf"
+                           StartIcon="@Icons.Material.Filled.PictureAsPdf"
+                           Variant="Variant.Outlined">Export PDF</MudButton>
+                <MudButton Color="Color.Primary"
+                           OnClick="OnSave"
+                           StartIcon="@Icons.Material.Filled.Save"
+                           Variant="Variant.Filled">Save</MudButton>
+                <MudButton Color="Color.Error"
+                           OnClick="OnDelete"
+                           StartIcon="@Icons.Material.Filled.Delete"
+                           Variant="Variant.Outlined">Delete</MudButton>
+            </MudStack>
         </div>
     </div>
 
-    <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6">
-        <MudTabPanel Text="Details">
-            <MudPaper MaxWidth="70%">
-                <MudTextField @bind-Value="receipt.ReceiptRef"
-                              Label="Receipt Reference"
-                              Variant="Variant.Outlined"
-                              Required="true"
-                              RequiredError="Receipt Reference Required" />
+    <MudContainer MaxWidth="MaxWidth.Large" Class="pa-6">
+        <MudTabs Elevation="0" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pt-4">
 
-                <MudDatePicker @bind-Value="receipt.ReceiptDate"
-                               Format="dd/MM/yyyy"
-                               Label="Receipt Date"
-                               Variant="Variant.Outlined" />
+            <MudTabPanel Text="Details" Icon="@Icons.Material.Filled.Info">
+                <MudPaper Elevation="0" Class="table-card pa-6">
+                    <MudGrid Spacing="3">
+                        <MudItem xs="12" sm="6">
+                            <MudTextField @bind-Value="receipt.ReceiptRef"
+                                          Label="Receipt Reference"
+                                          Variant="Variant.Outlined"
+                                          Required="true"
+                                          RequiredError="Receipt Reference Required" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudDatePicker @bind-Date="receipt.ReceiptDate"
+                                           Format="dd/MM/yyyy"
+                                           Label="Receipt Date"
+                                           Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12">
+                            <MudTextField Value="receipt.Client?.ClientName"
+                                          Disabled="true"
+                                          Label="Client"
+                                          Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" sm="4">
+                            <MudNumericField Format="C"
+                                             Label="Gross Value"
+                                             T="decimal"
+                                             Value="receipt.GrossValue"
+                                             ValueChanged="OnGrossValueChanged"
+                                             Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" sm="4">
+                            <MudNumericField Format="C"
+                                             Label="Tax Value"
+                                             T="decimal"
+                                             Value="receipt.TaxValue"
+                                             ValueChanged="OnTaxValueChanged"
+                                             Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" sm="4">
+                            <MudNumericField Format="C"
+                                             Label="Net Value"
+                                             T="decimal"
+                                             Value="receipt.NetValue"
+                                             ValueChanged="OnNetValueChanged"
+                                             Variant="Variant.Outlined" />
+                        </MudItem>
+                    </MudGrid>
+                </MudPaper>
+            </MudTabPanel>
 
-                <MudTextField Value="receipt.Client?.ClientName"
-                              Disabled="true"
-                              Label="Client"
-                              Variant="Variant.Outlined" />
-
-                <MudNumericField Format="C"
-                                 Label="Gross Value"
-                                 T="decimal"
-                                 Value="receipt.GrossValue"
-                                 ValueChanged="OnGrossValueChanged"
-                                 Variant="Variant.Outlined" />
-
-                <MudNumericField Format="C"
-                                 Label="Tax Value"
-                                 T="decimal"
-                                 Value="receipt.TaxValue"
-                                 ValueChanged="OnTaxValueChanged"
-                                 Variant="Variant.Outlined" />
-
-                <MudNumericField Format="C"
-                                 Label="Net Value"
-                                 T="decimal"
-                                 Value="receipt.NetValue"
-                                 ValueChanged="OnNetValueChanged"
-                                 Variant="Variant.Outlined" />
-            </MudPaper>
-        </MudTabPanel>
-
-        <MudTabPanel Text="Allocations">
-            <MudPaper MaxWidth="70%">
-                <div class="d-flex">
-                    <div class="mr-auto">
-                        <MudButton Color="Color.Success"
+            <MudTabPanel Text="Allocations" Icon="@Icons.Material.Filled.AccountBalanceWallet">
+                <MudPaper Elevation="0" Class="table-card">
+                    <div class="d-flex align-center pa-3" style="border-bottom: 1px solid #E2E8F0;">
+                        <MudButton Color="Color.Primary"
                                    OnClick="OpenAddAllocationDialogAsync"
-                                   StartIcon="@Icons.Material.Filled.Add">Add Item</MudButton>
-
+                                   StartIcon="@Icons.Material.Filled.Add"
+                                   Variant="Variant.Filled"
+                                   Size="Size.Small">Add Item</MudButton>
                         <MudButton Color="Color.Error"
                                    OnClick="RemoveSelectedItems"
-                                   StartIcon="@Icons.Material.Filled.Delete">Remove Item</MudButton>
+                                   StartIcon="@Icons.Material.Filled.Delete"
+                                   Variant="Variant.Outlined"
+                                   Size="Size.Small"
+                                   Class="ml-2"
+                                   Disabled="@(!selectedReceiptItems.Any())">Remove</MudButton>
+                        <MudSpacer />
+                        <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mr-2">Un-Allocated:</MudText>
+                        <MudText Typo="Typo.body2" Style="font-weight: 600;">@Math.Max(0m, receipt.NetValue - receipt.OffsetValue).ToString("C")</MudText>
                     </div>
+                    <MudDataGrid @bind-SelectedItems="selectedReceiptItems"
+                                 Items="receiptItems"
+                                 EditMode="DataGridEditMode.Cell"
+                                 EditTrigger="DataGridEditTrigger.OnRowClick"
+                                 MultiSelection="true"
+                                 ReadOnly="false"
+                                 SelectOnRowClick="false"
+                                 T="ReceiptItem">
+                        <Columns>
+                            <SelectColumn T="ReceiptItem" />
+                            <PropertyColumn Editable="false"
+                                            Property="x => x.Invoice.InvoiceRef"
+                                            Title="Ref" />
+                            <PropertyColumn Editable="false"
+                                            Property="x => x.Invoice.InvoiceDate"
+                                            Title="Date"
+                                            Format="dd/MM/yyyy" />
+                            <PropertyColumn Editable="false"
+                                            Property="x => x.Invoice.NetValue"
+                                            Title="Net"
+                                            Format="C" />
+                            <PropertyColumn Editable="false"
+                                            Property="x => Math.Max(0m, x.Invoice.NetValue - x.Invoice.OffsetValue - x.NetValue)"
+                                            Title="Outstanding Amt."
+                                            Format="C" />
+                            <TemplateColumn Editable="true" Title="Allocated">
+                                <CellTemplate>
+                                    @context.Item.NetValue.ToString("C")
+                                </CellTemplate>
+                                <EditTemplate>
+                                    <MudNumericField Format="C"
+                                                     Value="context.Item.NetValue"
+                                                     ValueChanged="(value) => OnAllocationUpdated(value, context.Item)"
+                                                     T="decimal" />
+                                </EditTemplate>
+                            </TemplateColumn>
+                            <TemplateColumn>
+                                <CellTemplate>
+                                    <MudStack Row="true">
+                                        <MudButton Color="Color.Success"
+                                                   OnClick="() => CompleteAllocation(context.Item)"
+                                                   Size="Size.Small"
+                                                   Variant="Variant.Filled">
+                                            Allocate
+                                        </MudButton>
+                                        <MudButton Color="Color.Warning"
+                                                   OnClick="() => ClearAllocation(context.Item)"
+                                                   Size="Size.Small"
+                                                   Variant="Variant.Filled">
+                                            De-Allocate
+                                        </MudButton>
+                                    </MudStack>
+                                </CellTemplate>
+                            </TemplateColumn>
+                        </Columns>
+                    </MudDataGrid>
+                </MudPaper>
+            </MudTabPanel>
 
-                    <div>
-                        <MudInputLabel Variant="Variant.Text">
-                            Un-Allocated Amt: $@(Math.Max(0m, receipt.NetValue - receipt.OffsetValue))
-                        </MudInputLabel>
-                    </div>
-                </div>
-
-                <MudDataGrid @bind-SelectedItems="selectedReceiptItems"
-                             Items="receiptItems"
-                             EditMode="DataGridEditMode.Cell"
-                             EditTrigger="DataGridEditTrigger.OnRowClick"
-                             MultiSelection="true"
-                             ReadOnly="false"
-                             SelectOnRowClick="false"
-                             T="ReceiptItem">
-
-                    <Columns>
-                        <SelectColumn T="ReceiptItem" />
-                        <PropertyColumn Editable="false"
-                                        Property="x => x.Invoice.InvoiceRef"
-                                        Title="Ref" />
-
-                        <PropertyColumn Editable="false"
-                                        Property="x => x.Invoice.InvoiceDate"
-                                        Title="Date"
-                                        Format="dd/MM/yyyy" />
-
-                        <PropertyColumn Editable="false"
-                                        Property="x => x.Invoice.NetValue"
-                                        Title="Net"
-                                        Format="C" />
-
-                        <PropertyColumn Editable="false"
-                                        Property="x => Math.Max(0m, x.Invoice.NetValue - x.Invoice.OffsetValue - x.NetValue)"
-                                        Title="Outstanding Amt."
-                                        Format="C" />
-
-                        <TemplateColumn Editable="true"
-                                        Title="Allocated">
-                            <CellTemplate>
-                                @context.Item.NetValue.ToString("C")
-                            </CellTemplate>
-                            <EditTemplate>
-                                <MudNumericField Format="C"
-                                                 Value="context.Item.NetValue"
-                                                 ValueChanged="(value) => OnAllocationUpdated(value, context.Item)"
-                                                 T="decimal" />
-                            </EditTemplate>
-                        </TemplateColumn>
-
-                        <TemplateColumn>
-                            <CellTemplate>
-                                <MudStack Row="true">
-                                    <MudButton Color="Color.Success"
-                                               OnClick="() => CompleteAllocation(context.Item)"
-                                               Size="Size.Small"
-                                               Variant="Variant.Filled">
-                                        Allocate
-                                    </MudButton>
-
-                                    <MudButton Color="Color.Warning"
-                                               OnClick="() => ClearAllocation(context.Item)"
-                                               Size="Size.Small"
-                                               Variant="Variant.Filled">
-                                        De-Allocate
-                                    </MudButton>
-                                </MudStack>
-                            </CellTemplate>
-                        </TemplateColumn>
-                    </Columns>
-
-                </MudDataGrid>
-            </MudPaper>
-        </MudTabPanel>
-    </MudTabs>
+        </MudTabs>
+    </MudContainer>
 
     <MudMessageBox @ref="deleteConfirmationMessage"
                    Title="Warning"

@@ -1,8 +1,34 @@
-﻿<MudNavMenu>
-    <MudNavLink Href="/">Dashboard</MudNavLink>
-    <MudNavLink Href="/clients">Clients</MudNavLink>
-    <MudNavLink Href="/invoices">Invoices</MudNavLink>
-    <MudNavLink Href="/receipts">Receipts</MudNavLink>
-    <MudNavLink Href="/products">Products</MudNavLink>
-</MudNavMenu>
+<div class="pa-3 pt-4">
+    <MudText Typo="Typo.caption"
+             Style="text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; color: #475569; padding-left: 12px; display: block; margin-bottom: 4px;">
+        Main Menu
+    </MudText>
+</div>
 
+<MudNavMenu>
+    <MudNavLink Href="/"
+                Icon="@Icons.Material.Filled.GridView"
+                Match="NavLinkMatch.All">
+        Dashboard
+    </MudNavLink>
+
+    <MudNavLink Href="/clients"
+                Icon="@Icons.Material.Filled.People">
+        Clients
+    </MudNavLink>
+
+    <MudNavLink Href="/invoices"
+                Icon="@Icons.Material.Filled.Description">
+        Invoices
+    </MudNavLink>
+
+    <MudNavLink Href="/receipts"
+                Icon="@Icons.Material.Filled.Payments">
+        Receipts
+    </MudNavLink>
+
+    <MudNavLink Href="/products"
+                Icon="@Icons.Material.Filled.Inventory2">
+        Products
+    </MudNavLink>
+</MudNavMenu>

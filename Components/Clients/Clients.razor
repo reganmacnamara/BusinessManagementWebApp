@@ -1,4 +1,4 @@
-﻿@page "/clients"
+@page "/clients"
 @using System.Text.Json
 @using System.Threading.Tasks
 @using AutoMapper
@@ -17,46 +17,64 @@
 
 <PageTitle>Clients</PageTitle>
 
-<div class="d-flex">
-    <div class="mr-auto p-2">
-        <h1>Clients</h1>
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pa-6">
+
+    <div class="d-flex align-center mb-6">
+        <div>
+            <MudText Typo="Typo.h5" Style="font-weight: 700; color: #0F172A;">Clients</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">Manage your client accounts</MudText>
+        </div>
+        <MudSpacer />
+        <MudStack Row="true" Spacing="2">
+            <MudButton Color="Color.Error"
+                       Disabled="@(!selectedClients.Any())"
+                       OnClick="OnDelete"
+                       StartIcon="@Icons.Material.Filled.Delete"
+                       Variant="Variant.Outlined">Delete</MudButton>
+            <MudButton Color="Color.Primary"
+                       OnClick="OpenCreateClientDialogAsync"
+                       StartIcon="@Icons.Material.Filled.Add"
+                       Variant="Variant.Filled">New Client</MudButton>
+        </MudStack>
     </div>
-</div>
 
-<div class="p-2">
-    <MudButton Color="Color.Success"
-               OnClick="OpenCreateClientDialogAsync"
-               StartIcon="@Icons.Material.Filled.Add">Add Client</MudButton>
+    <MudGrid Spacing="3" Class="mb-5">
+        <MudItem xs="12" sm="4">
+            <div class="stat-card">
+                <div class="d-flex align-center justify-space-between mb-3">
+                    <MudText Typo="Typo.caption" Style="font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #64748B;">Total Clients</MudText>
+                    <div class="stat-icon-wrap" style="background: #EFF6FF;">
+                        <MudIcon Icon="@Icons.Material.Filled.People" Style="color: #3B82F6; font-size: 1.2rem;" />
+                    </div>
+                </div>
+                <MudText Typo="Typo.h4" Style="font-weight: 700; color: #0F172A; line-height: 1;">@clients.Count</MudText>
+            </div>
+        </MudItem>
+    </MudGrid>
 
-    <MudButton Color="Color.Error"
-               OnClick="OnDelete"
-               StartIcon="@Icons.Material.Filled.Delete">Remove Client(s)</MudButton>
-</div>
+    <MudPaper Elevation="0" Class="table-card">
+        <MudDataGrid @bind-SelectedItems="selectedClients"
+                     Breakpoint="Breakpoint.Sm"
+                     Items="@clients"
+                     Hover="true"
+                     Loading="@loading"
+                     LoadingProgressColor="Color.Primary"
+                     MultiSelection="true"
+                     RowClass="cursor-pointer"
+                     RowClick="ClientSelected"
+                     SelectOnRowClick="false"
+                     T="Client">
+            <Columns>
+                <SelectColumn T="Client" />
+                <PropertyColumn Property="x => x.ClientName" Title="Name" />
+                <PropertyColumn Property="x => x.ClientPhone" Title="Phone" />
+                <PropertyColumn Property="x => x.ClientEmail" Title="Email" />
+                <PropertyColumn Property="x => x.ClientMobile" Title="Mobile" />
+            </Columns>
+        </MudDataGrid>
+    </MudPaper>
 
-<MudTable @bind-SelectedItems="selectedClients"
-          Breakpoint="Breakpoint.Sm"
-          Items="@clients"
-          Hover="true"
-          Loading="@loading"
-          LoadingProgressColor="Color.Info"
-          MultiSelection="true"
-          OnRowClick="ClientSelected"
-          RowClass="cursor-pointer"
-          T="Client">
-
-    <HeaderContent>
-        <MudTh>Name</MudTh>
-        <MudTh>Phone</MudTh>
-        <MudTh>Email</MudTh>
-    </HeaderContent>
-
-    <RowTemplate>
-        <MudTd DataLabel="Name">@context.ClientName</MudTd>
-        <MudTd DataLabel="Phone">@context.ClientPhone</MudTd>
-        <MudTd DataLabel="Email">@context.ClientEmail</MudTd>
-    </RowTemplate>
-
-</MudTable>
+</MudContainer>
 
 <AddClientDialog />
 
@@ -80,19 +98,16 @@
     private bool loading;
     private HashSet<Client> selectedClients = [];
 
-    private void ClientSelected(TableRowClickEventArgs<Client> args)
+    private void ClientSelected(DataGridRowClickEventArgs<Client> args)
     {
-        var _SelectedClient = args.Item;
-
-        if (_SelectedClient is not null)
-            NavigationManager.NavigateTo($"/clients/{_SelectedClient.ClientID}");
+        if (args.Item is not null)
+            NavigationManager.NavigateTo($"/clients/{args.Item.ClientID}");
     }
 
     private async Task GetClients()
     {
         loading = true;
         var _Response = await api.GetClientsAsync();
-
         clients = _Response.Clients ?? [];
         loading = false;
         this.StateHasChanged();
@@ -132,7 +147,6 @@
     private async Task OpenCreateClientDialogAsync()
     {
         var dialog = await DialogService.ShowAsync<AddClientDialog>();
-
         var result = await dialog.Result;
 
         if (!dialog.Result.IsCanceled && result?.Data is not null)

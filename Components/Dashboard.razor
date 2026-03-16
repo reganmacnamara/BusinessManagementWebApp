@@ -1,7 +1,194 @@
-﻿@page "/"
+@page "/"
+@using BusinessManagementWebApp.Data
+@using BusinessManagementWebApp.Data.Entities
+
+@inject ApiClient api
+@inject NavigationManager NavigationManager
 
 <PageTitle>Dashboard</PageTitle>
 
-<h1>Welcome Back</h1>
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pa-6">
 
+    <div class="mb-6">
+        <MudText Typo="Typo.h5" Style="font-weight: 700; color: #0F172A;">Dashboard</MudText>
+        <MudText Typo="Typo.body2" Color="Color.Secondary">Welcome back — here's what's happening today.</MudText>
+    </div>
 
+    @if (isLoading)
+    {
+        <MudGrid Spacing="3">
+            @for (int i = 0; i < 4; i++)
+            {
+                <MudItem xs="12" sm="6" md="3">
+                    <MudSkeleton Height="110px" Style="border-radius: 12px;" />
+                </MudItem>
+            }
+        </MudGrid>
+    }
+    else
+    {
+        <MudGrid Spacing="3" Class="mb-6">
+
+            <MudItem xs="12" sm="6" md="3">
+                <div class="stat-card" @onclick='() => NavigationManager.NavigateTo("/clients")' style="cursor: pointer;">
+                    <div class="d-flex align-center justify-space-between mb-3">
+                        <MudText Typo="Typo.caption" Style="font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #64748B;">Clients</MudText>
+                        <div class="stat-icon-wrap" style="background: #EFF6FF;">
+                            <MudIcon Icon="@Icons.Material.Filled.People" Style="color: #3B82F6; font-size: 1.2rem;" />
+                        </div>
+                    </div>
+                    <MudText Typo="Typo.h4" Style="font-weight: 700; color: #0F172A; line-height: 1;">@clients.Count</MudText>
+                    <MudText Typo="Typo.caption" Style="color: #94A3B8; margin-top: 4px;">Total clients</MudText>
+                </div>
+            </MudItem>
+
+            <MudItem xs="12" sm="6" md="3">
+                <div class="stat-card" @onclick='() => NavigationManager.NavigateTo("/invoices")' style="cursor: pointer;">
+                    <div class="d-flex align-center justify-space-between mb-3">
+                        <MudText Typo="Typo.caption" Style="font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #64748B;">Outstanding</MudText>
+                        <div class="stat-icon-wrap" style="background: #FFFBEB;">
+                            <MudIcon Icon="@Icons.Material.Filled.Pending" Style="color: #F59E0B; font-size: 1.2rem;" />
+                        </div>
+                    </div>
+                    <MudText Typo="Typo.h5" Style="font-weight: 700; color: #0F172A; line-height: 1;">@totalOutstanding.ToString("C")</MudText>
+                    <MudText Typo="Typo.caption" Style="color: #94A3B8; margin-top: 4px;">@outstandingCount invoice(s) unpaid</MudText>
+                </div>
+            </MudItem>
+
+            <MudItem xs="12" sm="6" md="3">
+                <div class="stat-card" @onclick='() => NavigationManager.NavigateTo("/receipts")' style="cursor: pointer;">
+                    <div class="d-flex align-center justify-space-between mb-3">
+                        <MudText Typo="Typo.caption" Style="font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #64748B;">Received</MudText>
+                        <div class="stat-icon-wrap" style="background: #ECFDF5;">
+                            <MudIcon Icon="@Icons.Material.Filled.Payments" Style="color: #10B981; font-size: 1.2rem;" />
+                        </div>
+                    </div>
+                    <MudText Typo="Typo.h5" Style="font-weight: 700; color: #0F172A; line-height: 1;">@totalReceived.ToString("C")</MudText>
+                    <MudText Typo="Typo.caption" Style="color: #94A3B8; margin-top: 4px;">@receipts.Count receipt(s)</MudText>
+                </div>
+            </MudItem>
+
+            <MudItem xs="12" sm="6" md="3">
+                <div class="stat-card" @onclick='() => NavigationManager.NavigateTo("/products")' style="cursor: pointer;">
+                    <div class="d-flex align-center justify-space-between mb-3">
+                        <MudText Typo="Typo.caption" Style="font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #64748B;">Products</MudText>
+                        <div class="stat-icon-wrap" style="background: #F5F3FF;">
+                            <MudIcon Icon="@Icons.Material.Filled.Inventory2" Style="color: #8B5CF6; font-size: 1.2rem;" />
+                        </div>
+                    </div>
+                    <MudText Typo="Typo.h4" Style="font-weight: 700; color: #0F172A; line-height: 1;">@products.Count</MudText>
+                    <MudText Typo="Typo.caption" Style="color: #94A3B8; margin-top: 4px;">Total products</MudText>
+                </div>
+            </MudItem>
+
+        </MudGrid>
+
+        <MudGrid Spacing="3">
+            <MudItem xs="12" md="6">
+                <MudPaper Elevation="0" Class="table-card">
+                    <div class="d-flex align-center justify-space-between pa-4" style="border-bottom: 1px solid #E2E8F0;">
+                        <MudText Typo="Typo.subtitle1" Style="font-weight: 600;">Recent Invoices</MudText>
+                        <MudButton Variant="Variant.Text" Color="Color.Primary" Size="Size.Small"
+                                   OnClick='() => NavigationManager.NavigateTo("/invoices")'>View all</MudButton>
+                    </div>
+                    <MudList T="Invoice" Dense="true" DisablePadding="true">
+                        @foreach (var invoice in invoices.OrderByDescending(x => x.InvoiceDate).Take(5))
+                        {
+                            <MudListItem T="Invoice" OnClick='() => NavigationManager.NavigateTo($"/invoices/{invoice.InvoiceID}")'
+                                         Style="border-bottom: 1px solid #F1F5F9; cursor: pointer;">
+                                <div class="d-flex align-center justify-space-between">
+                                    <div>
+                                        <MudText Typo="Typo.body2" Style="font-weight: 600;">@invoice.InvoiceRef</MudText>
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary">@invoice.Client?.ClientName</MudText>
+                                    </div>
+                                    <div class="d-flex align-center" style="gap: 8px;">
+                                        <MudText Typo="Typo.body2" Style="font-weight: 600;">@invoice.NetValue.ToString("C")</MudText>
+                                        <MudChip T="string" Size="Size.Small"
+                                                 Color="@(invoice.Outstanding ? Color.Warning : Color.Success)"
+                                                 Variant="Variant.Filled"
+                                                 Style="height: 20px; font-size: 0.65rem;">
+                                            @(invoice.Outstanding ? "Due" : "Paid")
+                                        </MudChip>
+                                    </div>
+                                </div>
+                            </MudListItem>
+                        }
+                        @if (!invoices.Any())
+                        {
+                            <div class="pa-6 d-flex flex-column align-center">
+                                <MudIcon Icon="@Icons.Material.Filled.Description" Style="color: #CBD5E1; font-size: 2.5rem;" Class="mb-2" />
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">No invoices yet</MudText>
+                            </div>
+                        }
+                    </MudList>
+                </MudPaper>
+            </MudItem>
+
+            <MudItem xs="12" md="6">
+                <MudPaper Elevation="0" Class="table-card">
+                    <div class="d-flex align-center justify-space-between pa-4" style="border-bottom: 1px solid #E2E8F0;">
+                        <MudText Typo="Typo.subtitle1" Style="font-weight: 600;">Recent Receipts</MudText>
+                        <MudButton Variant="Variant.Text" Color="Color.Primary" Size="Size.Small"
+                                   OnClick='() => NavigationManager.NavigateTo("/receipts")'>View all</MudButton>
+                    </div>
+                    <MudList T="Receipt" Dense="true" DisablePadding="true">
+                        @foreach (var receipt in receipts.OrderByDescending(x => x.ReceiptDate).Take(5))
+                        {
+                            <MudListItem T="Receipt" OnClick='() => NavigationManager.NavigateTo($"/receipts/{receipt.ReceiptID}")'
+                                         Style="border-bottom: 1px solid #F1F5F9; cursor: pointer;">
+                                <div class="d-flex align-center justify-space-between">
+                                    <div>
+                                        <MudText Typo="Typo.body2" Style="font-weight: 600;">@receipt.ReceiptRef</MudText>
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary">@receipt.Client?.ClientName</MudText>
+                                    </div>
+                                    <MudText Typo="Typo.body2" Style="font-weight: 600; color: #10B981;">@receipt.NetValue.ToString("C")</MudText>
+                                </div>
+                            </MudListItem>
+                        }
+                        @if (!receipts.Any())
+                        {
+                            <div class="pa-6 d-flex flex-column align-center">
+                                <MudIcon Icon="@Icons.Material.Filled.Payments" Style="color: #CBD5E1; font-size: 2.5rem;" Class="mb-2" />
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">No receipts yet</MudText>
+                            </div>
+                        }
+                    </MudList>
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+    }
+
+</MudContainer>
+
+@code {
+    private bool isLoading = true;
+    private List<Invoice> invoices = [];
+    private List<Receipt> receipts = [];
+    private List<Client> clients = [];
+    private List<Data.Entities.Product> products = [];
+
+    private decimal totalOutstanding;
+    private decimal totalReceived;
+    private int outstandingCount;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var invoicesTask = api.GetInvoicesAsync();
+        var receiptsTask = api.GetReceiptsAsync();
+        var clientsTask = api.GetClientsAsync();
+        var productsTask = api.GetProductsAsync();
+
+        await Task.WhenAll(invoicesTask, receiptsTask, clientsTask, productsTask);
+
+        invoices = (await invoicesTask).Invoices ?? [];
+        receipts = (await receiptsTask).Receipts ?? [];
+        clients = (await clientsTask).Clients ?? [];
+        products = (await productsTask).Products ?? [];
+
+        totalOutstanding = invoices.Sum(x => Math.Max(0m, x.NetValue - x.OffsetValue));
+        totalReceived = receipts.Sum(x => x.NetValue);
+        outstandingCount = invoices.Count(x => x.Outstanding);
+
+        isLoading = false;
+    }
+}
