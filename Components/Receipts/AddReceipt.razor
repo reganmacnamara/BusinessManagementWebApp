@@ -141,7 +141,7 @@
                                     Format="C" />
 
                     <PropertyColumn Editable="false"
-                                    Property="x => (x.Invoice.NetValue - x.Invoice.OffsetValue) - (x.Invoice.Outstanding ? x.NetValue : 0)"
+                                    Property="x => x.Invoice.NetValue - x.Invoice.OffsetValue - x.NetValue"
                                     Title="Outstanding Amt."
                                     Format="C" />
 
@@ -195,28 +195,20 @@
     private Receipt receipt = new();
     private List<ReceiptItem> receiptItems = [];
 
-    [CascadingParameter]
-    private IMudDialogInstance MudDialog { get; set; } = default!;
-
-    private async Task ClearAllocation(ReceiptItem allocation)
+    private void ClearAllocation(ReceiptItem allocation)
     {
         allocation.NetValue = 0;
-        allocation.Invoice.OffsetValue = allocation.NetValue;
-        allocation.Invoice.Outstanding = (allocation.Invoice.OffsetValue == allocation.Invoice.NetValue);
         RecalculateOffsets();
         StateHasChanged();
     }
 
-    private async Task CompleteAllocation(ReceiptItem allocation)
+    private void CompleteAllocation(ReceiptItem allocation)
     {
-        if ((receipt.NetValue - receipt.OffsetValue) >= (allocation.Invoice.NetValue - allocation.Invoice.OffsetValue))
-        {
-            allocation.NetValue = allocation.Invoice.NetValue - allocation.Invoice.OffsetValue;
-            allocation.Invoice.OffsetValue = allocation.Invoice.NetValue;
-            allocation.Invoice.Outstanding = (allocation.Invoice.OffsetValue == allocation.Invoice.NetValue);
-            RecalculateOffsets();
-            StateHasChanged();
-        }
+        var invoiceRemaining = allocation.Invoice.NetValue - allocation.Invoice.OffsetValue;
+        var receiptAvailable = receipt.NetValue - receipt.OffsetValue + allocation.NetValue;
+        allocation.NetValue = Math.Min(invoiceRemaining, receiptAvailable);
+        RecalculateOffsets();
+        StateHasChanged();
     }
 
     private async Task DeleteReceiptItems()
@@ -244,7 +236,7 @@
     {
         var _Response = await api.GetClientInvoicesAsync(receipt.Client.ClientID);
 
-        clientInvoices = _Response.Invoices.Where(t => t.Outstanding = true).ToList() ?? [];
+        clientInvoices = _Response.Invoices.Where(t => t.Outstanding == true).ToList() ?? [];
         StateHasChanged();
     }
 
@@ -254,12 +246,12 @@
     protected override async Task OnInitializedAsync()
         => await GetClients();
 
-    private async Task OnAllocationUpdated(decimal value, ReceiptItem item)
+    private void OnAllocationUpdated(decimal value, ReceiptItem item)
     {
-        if (value <= item.Invoice.NetValue && value >= 0)
+        var invoiceRemaining = item.Invoice.NetValue - item.Invoice.OffsetValue;
+        if (value >= 0 && value <= invoiceRemaining)
         {
             item.NetValue = value;
-            item.Invoice.Outstanding = (item.Invoice.OffsetValue == item.Invoice.NetValue);
             RecalculateOffsets();
         }
     }
@@ -285,7 +277,7 @@
         }
 
         RecalculateOffsets();
-        receipt.Outstanding = receipt.NetValue == receipt.OffsetValue;
+        receipt.Outstanding = receipt.OffsetValue < receipt.NetValue;
 
         var _Response = await api.CreateReceiptAsync(mapper.Map<CreateReceiptRequest>(receipt));
 
@@ -336,21 +328,21 @@
         await GetClientInvoices();
     }
 
-    private async Task OnGrossValueChanged(decimal value)
+    private void OnGrossValueChanged(decimal value)
     {
         receipt.GrossValue = value;
         receipt.TaxValue = value * 0.1m;
         receipt.NetValue = receipt.GrossValue + receipt.TaxValue;
     }
 
-    private async Task OnNetValueChanged(decimal value)
+    private void OnNetValueChanged(decimal value)
     {
         receipt.NetValue = value;
         receipt.GrossValue = receipt.NetValue / 1.1m;
         receipt.TaxValue = receipt.GrossValue * 0.1m;
     }
 
-    private async Task OnTaxValueChanged(decimal value)
+    private void OnTaxValueChanged(decimal value)
     {
         receipt.TaxValue = value;
         receipt.GrossValue = receipt.TaxValue * 10;

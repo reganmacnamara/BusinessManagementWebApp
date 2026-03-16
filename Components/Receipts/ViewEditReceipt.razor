@@ -1,0 +1,364 @@
+@page "/receipts/{id:long}"
+@using AutoMapper
+@using BusinessManagementWebApp.Data
+@using BusinessManagementWebApp.Data.Entities
+@using BusinessManagementWebApp.Data.Receipts.DeleteReceiptItem
+@using BusinessManagementWebApp.Data.Receipts.UpdateReceipt
+@using BusinessManagementWebApp.Data.Receipts.UpsertReceiptItem
+
+@inject ApiClient api
+@inject IDialogService DialogService
+@inject IMapper mapper
+@inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
+
+@if (isLoading)
+{
+    <h1>Fetching Data...</h1>
+    <MudSkeleton Width="70%" Height="50px" />
+    <MudSkeleton Width="70%" Height="50px" />
+    <MudSkeleton Width="70%" Height="50px" />
+    <MudSkeleton Width="70%" Height="50px" />
+    <MudSkeleton Width="70%" Height="50px" />
+}
+else
+{
+    <div class="d-flex">
+        <div class="mr-auto p-2">
+            <h1>@receipt!.ReceiptRef</h1>
+        </div>
+
+        <div class="p-2">
+            <MudTooltip Delay="300" Text="Save">
+                <MudFab Color="Color.Default"
+                        OnClick="OnSave"
+                        StartIcon="@Icons.Material.Filled.Save" />
+            </MudTooltip>
+
+            <MudTooltip Delay="300" Text="Delete">
+                <MudFab Color="Color.Error"
+                        OnClick="OnDelete"
+                        StartIcon="@Icons.Material.Filled.Delete" />
+            </MudTooltip>
+
+            <MudTooltip Delay="300" Text="Cancel">
+                <MudFab Color="Color.Error"
+                        OnClick="NavigateToReceipts"
+                        StartIcon="@Icons.Material.Filled.Cancel" />
+            </MudTooltip>
+        </div>
+    </div>
+
+    <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6">
+        <MudTabPanel Text="Details">
+            <MudPaper MaxWidth="70%">
+                <MudTextField @bind-Value="receipt.ReceiptRef"
+                              Label="Receipt Reference"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              RequiredError="Receipt Reference Required" />
+
+                <MudDatePicker @bind-Value="receipt.ReceiptDate"
+                               Format="dd/MM/yyyy"
+                               Label="Receipt Date"
+                               Variant="Variant.Outlined" />
+
+                <MudTextField Value="receipt.Client?.ClientName"
+                              Disabled="true"
+                              Label="Client"
+                              Variant="Variant.Outlined" />
+
+                <MudNumericField Format="C"
+                                 Label="Gross Value"
+                                 T="decimal"
+                                 Value="receipt.GrossValue"
+                                 ValueChanged="OnGrossValueChanged"
+                                 Variant="Variant.Outlined" />
+
+                <MudNumericField Format="C"
+                                 Label="Tax Value"
+                                 T="decimal"
+                                 Value="receipt.TaxValue"
+                                 ValueChanged="OnTaxValueChanged"
+                                 Variant="Variant.Outlined" />
+
+                <MudNumericField Format="C"
+                                 Label="Net Value"
+                                 T="decimal"
+                                 Value="receipt.NetValue"
+                                 ValueChanged="OnNetValueChanged"
+                                 Variant="Variant.Outlined" />
+            </MudPaper>
+        </MudTabPanel>
+
+        <MudTabPanel Text="Allocations">
+            <MudPaper MaxWidth="70%">
+                <div class="d-flex">
+                    <div class="mr-auto">
+                        <MudButton Color="Color.Success"
+                                   OnClick="OpenAddAllocationDialogAsync"
+                                   StartIcon="@Icons.Material.Filled.Add">Add Item</MudButton>
+
+                        <MudButton Color="Color.Error"
+                                   OnClick="RemoveSelectedItems"
+                                   StartIcon="@Icons.Material.Filled.Delete">Remove Item</MudButton>
+                    </div>
+
+                    <div>
+                        <MudInputLabel Variant="Variant.Text">
+                            Un-Allocated Amt: $@(receipt.NetValue - receipt.OffsetValue)
+                        </MudInputLabel>
+                    </div>
+                </div>
+
+                <MudDataGrid @bind-SelectedItems="selectedReceiptItems"
+                             Items="receiptItems"
+                             EditMode="DataGridEditMode.Cell"
+                             EditTrigger="DataGridEditTrigger.OnRowClick"
+                             MultiSelection="true"
+                             ReadOnly="false"
+                             SelectOnRowClick="false"
+                             T="ReceiptItem">
+
+                    <Columns>
+                        <SelectColumn T="ReceiptItem" />
+                        <PropertyColumn Editable="false"
+                                        Property="x => x.Invoice.InvoiceRef"
+                                        Title="Ref" />
+
+                        <PropertyColumn Editable="false"
+                                        Property="x => x.Invoice.InvoiceDate"
+                                        Title="Date" />
+
+                        <PropertyColumn Editable="false"
+                                        Property="x => x.Invoice.NetValue"
+                                        Title="Net"
+                                        Format="C" />
+
+                        <PropertyColumn Editable="false"
+                                        Property="x => x.Invoice.NetValue - x.Invoice.OffsetValue - x.NetValue"
+                                        Title="Outstanding Amt."
+                                        Format="C" />
+
+                        <TemplateColumn Editable="true"
+                                        Title="Allocated">
+                            <EditTemplate>
+                                <MudNumericField Format="C"
+                                                 Value="context.Item.NetValue"
+                                                 ValueChanged="(value) => OnAllocationUpdated(value, context.Item)"
+                                                 T="decimal" />
+                            </EditTemplate>
+                        </TemplateColumn>
+
+                        <TemplateColumn Editable="true">
+                            <EditTemplate>
+                                <MudStack Row="true">
+                                    <MudButton Color="Color.Success"
+                                               OnClick="() => CompleteAllocation(context.Item)"
+                                               Size="Size.Small"
+                                               Variant="Variant.Filled">
+                                        Allocate
+                                    </MudButton>
+
+                                    <MudButton Color="Color.Warning"
+                                               OnClick="() => ClearAllocation(context.Item)"
+                                               Size="Size.Small"
+                                               Variant="Variant.Filled">
+                                        De-Allocate
+                                    </MudButton>
+                                </MudStack>
+                            </EditTemplate>
+                        </TemplateColumn>
+                    </Columns>
+
+                </MudDataGrid>
+            </MudPaper>
+        </MudTabPanel>
+    </MudTabs>
+
+    <MudMessageBox @ref="deleteConfirmationMessage"
+                   Title="Warning"
+                   CancelText="Cancel">
+        <MessageContent>
+            Are you sure you want to delete @(receipt.ReceiptRef)?
+        </MessageContent>
+        <YesButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.DeleteForever">Delete!</MudButton>
+        </YesButton>
+    </MudMessageBox>
+
+    <AddReceiptAllocationDialog />
+}
+
+@code {
+    private MudMessageBox deleteConfirmationMessage = default!;
+    private bool isLoading = true;
+    private Receipt receipt = new();
+    private List<ReceiptItem> receiptItems = [];
+    private List<ReceiptItem> receiptItemsToDelete = [];
+    private HashSet<ReceiptItem> selectedReceiptItems = [];
+
+    [Parameter]
+    public long id { get; set; }
+
+    protected override async Task OnParametersSetAsync()
+        => await LoadReceiptDataAsync();
+
+    private async Task LoadReceiptDataAsync()
+    {
+        var _Response = await api.GetReceiptAsync(id);
+        receipt = _Response.Receipt;
+        receiptItems = _Response.ReceiptItems;
+        isLoading = false;
+    }
+
+    private void NavigateToReceipts()
+        => NavigationManager.NavigateTo("receipts");
+
+    private void ClearAllocation(ReceiptItem allocation)
+    {
+        allocation.NetValue = 0;
+        RecalculateOffsets();
+        StateHasChanged();
+    }
+
+    private void CompleteAllocation(ReceiptItem allocation)
+    {
+        var invoiceRemaining = allocation.Invoice.NetValue - allocation.Invoice.OffsetValue;
+        var receiptAvailable = receipt.NetValue - receipt.OffsetValue + allocation.NetValue;
+        allocation.NetValue = Math.Min(invoiceRemaining, receiptAvailable);
+        RecalculateOffsets();
+        StateHasChanged();
+    }
+
+    private void OnAllocationUpdated(decimal value, ReceiptItem item)
+    {
+        var invoiceRemaining = item.Invoice.NetValue - item.Invoice.OffsetValue;
+        if (value >= 0 && value <= invoiceRemaining)
+        {
+            item.NetValue = value;
+            RecalculateOffsets();
+        }
+    }
+
+    private void RecalculateOffsets()
+        => receipt.OffsetValue = receiptItems.Sum(a => a.NetValue);
+
+    private async Task RemoveSelectedItems()
+    {
+        if (!selectedReceiptItems.Any())
+            return;
+
+        foreach (var item in selectedReceiptItems)
+        {
+            if (item.ReceiptItemID != 0)
+                receiptItemsToDelete.Add(item);
+
+            receiptItems.Remove(item);
+        }
+
+        selectedReceiptItems.Clear();
+        RecalculateOffsets();
+        StateHasChanged();
+    }
+
+    private async Task OpenAddAllocationDialogAsync()
+    {
+        var dialog = await DialogService.ShowAsync<AddReceiptAllocationDialog>("", new DialogParameters<AddReceiptAllocationDialog>()
+        {
+            { x => x.ClientID, receipt.ClientID }
+        });
+
+        var result = await dialog.Result;
+
+        if (!dialog.Result.IsCanceled && result?.Data is not null)
+        {
+            foreach (var allocation in (HashSet<ReceiptItem>)result.Data)
+                receiptItems.Add(allocation);
+
+            RecalculateOffsets();
+            StateHasChanged();
+        }
+    }
+
+    private void OnGrossValueChanged(decimal value)
+    {
+        receipt.GrossValue = value;
+        receipt.TaxValue = value * 0.1m;
+        receipt.NetValue = receipt.GrossValue + receipt.TaxValue;
+    }
+
+    private void OnNetValueChanged(decimal value)
+    {
+        receipt.NetValue = value;
+        receipt.GrossValue = receipt.NetValue / 1.1m;
+        receipt.TaxValue = receipt.GrossValue * 0.1m;
+    }
+
+    private void OnTaxValueChanged(decimal value)
+    {
+        receipt.TaxValue = value;
+        receipt.GrossValue = receipt.TaxValue * 10;
+        receipt.NetValue = receipt.GrossValue + receipt.TaxValue;
+    }
+
+    private async Task OnDelete()
+    {
+        bool? result = await deleteConfirmationMessage.ShowAsync();
+        if (result is null) return;
+
+        var _Response = await api.DeleteReceiptAsync(receipt.ReceiptID);
+        if (_Response.IsSuccessStatusCode)
+        {
+            Snackbar.Add($"{receipt.ReceiptRef} Deleted.", Severity.Warning);
+            NavigateToReceipts();
+        }
+        else
+            Snackbar.Add($"Error {(int)_Response.StatusCode}: {_Response.ReasonPhrase}", Severity.Error);
+    }
+
+    private async Task OnSave()
+    {
+        if (string.IsNullOrEmpty(receipt.ReceiptRef))
+        {
+            Snackbar.Add("Receipt must have a reference.", Severity.Error);
+            return;
+        }
+
+        RecalculateOffsets();
+        receipt.Outstanding = receipt.OffsetValue < receipt.NetValue;
+
+        var _UpdateResponse = await api.UpdateReceiptAsync(mapper.Map<UpdateReceiptRequest>(receipt));
+        if (!_UpdateResponse.IsSuccessStatusCode)
+        {
+            Snackbar.Add($"Error {(int)_UpdateResponse.StatusCode}: {_UpdateResponse.ReasonPhrase}", Severity.Error);
+            return;
+        }
+
+        foreach (var item in receiptItems)
+        {
+            var _UpsertRequest = mapper.Map<UpsertReceiptItemRequest>(item);
+            _UpsertRequest.ReceiptID = receipt.ReceiptID;
+
+            var _UpsertResponse = await api.UpsertReceiptItemAsync(_UpsertRequest);
+            if (!_UpsertResponse.IsSuccessStatusCode)
+            {
+                Snackbar.Add($"Error {(int)_UpsertResponse.StatusCode}: {_UpsertResponse.ReasonPhrase}", Severity.Error);
+                return;
+            }
+        }
+
+        foreach (var item in receiptItemsToDelete)
+        {
+            var _DeleteResponse = await api.DeleteReceiptItemAsync(item.ReceiptItemID);
+            if (!_DeleteResponse.IsSuccessStatusCode)
+            {
+                Snackbar.Add($"Error {(int)_DeleteResponse.StatusCode}: {_DeleteResponse.ReasonPhrase}", Severity.Error);
+                return;
+            }
+        }
+
+        Snackbar.Add("Receipt Updated.", Severity.Success);
+        NavigateToReceipts();
+    }
+}

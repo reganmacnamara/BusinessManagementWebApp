@@ -153,25 +153,24 @@
     private Invoice invoice = new();
     private List<InvoiceItem> invoiceItems = [];
 
-    [CascadingParameter]
-    private IMudDialogInstance MudDialog { get; set; }
-
     private void AddTransactionItem(Product product)
     {
+        var gross = product.UnitPrice * 1;
+        var tax = gross * 0.1m;
         invoiceItems.Add(new()
         {
             Product = product,
             ProductID = product.ProductID,
             PricePerUnit = product.UnitPrice,
             Quantity = 1,
-            GrossValue = product.UnitPrice,
-            TaxValue = product.UnitPrice,
-            NetValue = product.UnitPrice,
+            GrossValue = gross,
+            TaxValue = tax,
+            NetValue = gross + tax,
         });
         StateHasChanged();
     }
 
-    private async Task DeleteTransactionItems()
+    private void DeleteTransactionItems()
     {
         if (!selectedInvoiceItems.Any())
             return;
@@ -271,7 +270,7 @@
         }
     }
 
-    private async Task OnClientChanged(Client client)
+    private void OnClientChanged(Client client)
     {
         invoice.Client = client;
         invoice.ClientID = client.ClientID;
