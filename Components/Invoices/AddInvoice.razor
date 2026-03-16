@@ -48,10 +48,12 @@
                       RequiredError="Transaction Reference Required" />
 
         <MudDatePicker @bind-Value="invoice.InvoiceDate"
+                       Format="dd/MM/yyyy"
                        Label="Transaction Date"
                        Variant="Variant.Outlined" />
 
         <MudDatePicker @bind-Date="invoice.DueDate"
+                       Format="dd/MM/yyyy"
                        Label="Transaction Due Date"
                        Variant="Variant.Outlined" />
 
@@ -111,6 +113,10 @@
                     <PropertyColumn Editable="false"
                                     Property="x => x.Product.ProductDescription"
                                     Title="Description" />
+
+                    <PropertyColumn Editable="false"
+                                    Property="x => x.Product.QuantityOnHand"
+                                    Title="In Stock" />
 
                     <PropertyColumn Editable="true"
                                     Property="x => x.Quantity"

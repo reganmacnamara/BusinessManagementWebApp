@@ -46,7 +46,8 @@
 
                 <PropertyColumn Editable="false"
                                 Property="x => x.InvoiceDate"
-                                Title="Date" />
+                                Title="Date"
+                                Format="dd/MM/yyyy" />
 
                 <PropertyColumn Editable="false"
                                 Property="x => x.NetValue"
@@ -54,7 +55,7 @@
                                 Format="C" />
 
                 <PropertyColumn Editable="false"
-                                Property="x => x.NetValue - x.OffsetValue"
+                                Property="x => Math.Max(0m, x.NetValue - x.OffsetValue)"
                                 Title="Outstanding"
                                 Format="C" />
             </Columns>

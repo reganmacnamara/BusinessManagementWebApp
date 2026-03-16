@@ -47,11 +47,11 @@
                      T="Receipt">
             <Columns>
                 <SelectColumn T="Receipt" />
-                <PropertyColumn Property="x => x.ReceiptDate" Title="Date" />
+                <PropertyColumn Property="x => x.ReceiptDate" Title="Date" Format="dd/MM/yyyy" />
                 <PropertyColumn Property="x => x.ReceiptRef" Title="Reference" />
                 <PropertyColumn Property="x => x.Client.ClientName" Title="Client" />
                 <PropertyColumn Property="x => x.NetValue" Title="Net Value" Format="C" />
-                <PropertyColumn Property="x => x.NetValue - x.OffsetValue" Title="Outstanding Amt." Format="C" />
+                <PropertyColumn Property="x => Math.Max(0m, x.NetValue - x.OffsetValue)" Title="Outstanding Amt." Format="C" />
             </Columns>
         </MudDataGrid>
     </MudTabPanel>

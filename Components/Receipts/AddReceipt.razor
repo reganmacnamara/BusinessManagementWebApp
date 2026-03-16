@@ -111,7 +111,7 @@
 
                 <div class="">
                     <MudInputLabel Variant="Variant.Text">
-                        Un-Allocated Amt: $@(receipt.NetValue - receipt.OffsetValue)
+                        Un-Allocated Amt: $@(Math.Max(0m, receipt.NetValue - receipt.OffsetValue))
                     </MudInputLabel>
                 </div>
             </div>
@@ -133,7 +133,8 @@
 
                     <PropertyColumn Editable="false"
                                     Property="x => x.Invoice.InvoiceDate"
-                                    Title="Date" />
+                                    Title="Date"
+                                    Format="dd/MM/yyyy" />
 
                     <PropertyColumn Editable="false"
                                     Property="x => x.Invoice.NetValue"
@@ -141,7 +142,7 @@
                                     Format="C" />
 
                     <PropertyColumn Editable="false"
-                                    Property="x => x.Invoice.NetValue - x.Invoice.OffsetValue - x.NetValue"
+                                    Property="x => Math.Max(0m, x.Invoice.NetValue - x.Invoice.OffsetValue - x.NetValue)"
                                     Title="Outstanding Amt."
                                     Format="C" />
 
@@ -250,10 +251,13 @@
     private void OnAllocationUpdated(decimal value, ReceiptItem item)
     {
         var invoiceRemaining = item.Invoice.NetValue - item.Invoice.OffsetValue;
-        if (value >= 0 && value <= invoiceRemaining)
+        var receiptAvailable = receipt.NetValue - receipt.OffsetValue + item.NetValue;
+        var maxAllowable = Math.Min(invoiceRemaining, receiptAvailable);
+        if (value >= 0 && value <= maxAllowable)
         {
             item.NetValue = value;
             RecalculateOffsets();
+            StateHasChanged();
         }
     }
 
@@ -364,6 +368,7 @@
             foreach (var _Allocation in (HashSet<ReceiptItem>)result.Data)
                 receiptItems.Add(_Allocation);
 
+            RecalculateOffsets();
             StateHasChanged();
         }
     }

@@ -113,7 +113,7 @@ else
 
                     <div>
                         <MudInputLabel Variant="Variant.Text">
-                            Un-Allocated Amt: $@(receipt.NetValue - receipt.OffsetValue)
+                            Un-Allocated Amt: $@(Math.Max(0m, receipt.NetValue - receipt.OffsetValue))
                         </MudInputLabel>
                     </div>
                 </div>
@@ -135,7 +135,8 @@ else
 
                         <PropertyColumn Editable="false"
                                         Property="x => x.Invoice.InvoiceDate"
-                                        Title="Date" />
+                                        Title="Date"
+                                        Format="dd/MM/yyyy" />
 
                         <PropertyColumn Editable="false"
                                         Property="x => x.Invoice.NetValue"
@@ -143,7 +144,7 @@ else
                                         Format="C" />
 
                         <PropertyColumn Editable="false"
-                                        Property="x => x.Invoice.NetValue - x.Invoice.OffsetValue - x.NetValue"
+                                        Property="x => Math.Max(0m, x.Invoice.NetValue - x.Invoice.OffsetValue - x.NetValue)"
                                         Title="Outstanding Amt."
                                         Format="C" />
 
@@ -247,7 +248,7 @@ else
 
     private void CompleteAllocation(ReceiptItem allocation)
     {
-        var invoiceRemaining = allocation.Invoice.NetValue - allocation.Invoice.OffsetValue;
+        var invoiceRemaining = allocation.Invoice.NetValue - allocation.Invoice.OffsetValue + allocation.NetValue;
         var receiptAvailable = receipt.NetValue - receipt.OffsetValue + allocation.NetValue;
         allocation.NetValue = Math.Min(invoiceRemaining, receiptAvailable);
         RecalculateOffsets();
@@ -256,11 +257,14 @@ else
 
     private void OnAllocationUpdated(decimal value, ReceiptItem item)
     {
-        var invoiceRemaining = item.Invoice.NetValue - item.Invoice.OffsetValue;
-        if (value >= 0 && value <= invoiceRemaining)
+        var invoiceRemaining = item.Invoice.NetValue - item.Invoice.OffsetValue + item.NetValue;
+        var receiptAvailable = receipt.NetValue - receipt.OffsetValue + item.NetValue;
+        var maxAllowable = Math.Min(invoiceRemaining, receiptAvailable);
+        if (value >= 0 && value <= maxAllowable)
         {
             item.NetValue = value;
             RecalculateOffsets();
+            StateHasChanged();
         }
     }
 
