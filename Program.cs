@@ -1,4 +1,4 @@
-using BusinessManagementWebApp.Components;
+using MacsBusinessManagementWebApp.Components;
 using MacsBusinessManagementWebApp.Data;
 using MudBlazor;
 using MudBlazor.Services;
