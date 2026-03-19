@@ -41,13 +41,15 @@
     <MudGrid Spacing="3" Class="mb-5">
         <MudItem xs="12" sm="4">
             <div class="stat-card">
-                <div class="d-flex align-center justify-space-between mb-3">
-                    <MudText Typo="Typo.caption" Style="font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #64748B;">Total Clients</MudText>
-                    <div class="stat-icon-wrap" style="background: #EFF6FF;">
-                        <MudIcon Icon="@Icons.Material.Filled.People" Style="color: #3B82F6; font-size: 1.2rem;" />
+                <div class="d-flex align-center" style="gap: 16px;">
+                    <div class="stat-icon-wrap stat-icon-wrap--lg" style="background: #EFF6FF;">
+                        <MudIcon Icon="@Icons.Material.Filled.People" Style="color: #3B82F6; font-size: 1.5rem;" />
+                    </div>
+                    <div>
+                        <MudText Typo="Typo.caption" Style="font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #64748B;">Total Clients</MudText>
+                        <MudText Typo="Typo.h4" Style="font-weight: 700; color: #0F172A; line-height: 1.2;">@clients.Count</MudText>
                     </div>
                 </div>
-                <MudText Typo="Typo.h4" Style="font-weight: 700; color: #0F172A; line-height: 1;">@clients.Count</MudText>
             </div>
         </MudItem>
     </MudGrid>

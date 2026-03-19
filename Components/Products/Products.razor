@@ -41,25 +41,29 @@
     <MudGrid Spacing="3" Class="mb-5">
         <MudItem xs="12" sm="6" md="4">
             <div class="stat-card">
-                <div class="d-flex align-center justify-space-between mb-3">
-                    <MudText Typo="Typo.caption" Style="font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #64748B;">Total Products</MudText>
-                    <div class="stat-icon-wrap" style="background: #F5F3FF;">
-                        <MudIcon Icon="@Icons.Material.Filled.Inventory2" Style="color: #8B5CF6; font-size: 1.2rem;" />
+                <div class="d-flex align-center" style="gap: 16px;">
+                    <div class="stat-icon-wrap stat-icon-wrap--lg" style="background: #F5F3FF;">
+                        <MudIcon Icon="@Icons.Material.Filled.Inventory2" Style="color: #8B5CF6; font-size: 1.5rem;" />
+                    </div>
+                    <div>
+                        <MudText Typo="Typo.caption" Style="font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #64748B;">Total Products</MudText>
+                        <MudText Typo="Typo.h4" Style="font-weight: 700; color: #0F172A; line-height: 1.2;">@products.Count</MudText>
                     </div>
                 </div>
-                <MudText Typo="Typo.h4" Style="font-weight: 700; color: #0F172A; line-height: 1;">@products.Count</MudText>
             </div>
         </MudItem>
         <MudItem xs="12" sm="6" md="4">
             <div class="stat-card">
-                <div class="d-flex align-center justify-space-between mb-3">
-                    <MudText Typo="Typo.caption" Style="font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #64748B;">Low Stock</MudText>
-                    <div class="stat-icon-wrap" style="background: #FEF2F2;">
-                        <MudIcon Icon="@Icons.Material.Filled.Warning" Style="color: #EF4444; font-size: 1.2rem;" />
+                <div class="d-flex align-center" style="gap: 16px;">
+                    <div class="stat-icon-wrap stat-icon-wrap--lg" style="background: #FEF2F2;">
+                        <MudIcon Icon="@Icons.Material.Filled.Warning" Style="color: #EF4444; font-size: 1.5rem;" />
+                    </div>
+                    <div>
+                        <MudText Typo="Typo.caption" Style="font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #64748B;">Low Stock</MudText>
+                        <MudText Typo="Typo.h4" Style="font-weight: 700; color: #0F172A; line-height: 1.2;">@products.Count(x => x.QuantityOnHand <= 5)</MudText>
+                        <MudText Typo="Typo.caption" Style="color: #94A3B8;">5 or fewer in stock</MudText>
                     </div>
                 </div>
-                <MudText Typo="Typo.h4" Style="font-weight: 700; color: #0F172A; line-height: 1;">@products.Count(x => x.QuantityOnHand <= 5)</MudText>
-                <MudText Typo="Typo.caption" Style="color: #94A3B8; margin-top: 4px;">5 or fewer in stock</MudText>
             </div>
         </MudItem>
     </MudGrid>

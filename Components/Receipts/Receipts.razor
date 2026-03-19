@@ -40,35 +40,41 @@
     <MudGrid Spacing="3" Class="mb-5">
         <MudItem xs="12" sm="6" md="4">
             <div class="stat-card">
-                <div class="d-flex align-center justify-space-between mb-3">
-                    <MudText Typo="Typo.caption" Style="font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #64748B;">Total Receipts</MudText>
-                    <div class="stat-icon-wrap" style="background: #EFF6FF;">
-                        <MudIcon Icon="@Icons.Material.Filled.Payments" Style="color: #3B82F6; font-size: 1.2rem;" />
+                <div class="d-flex align-center" style="gap: 16px;">
+                    <div class="stat-icon-wrap stat-icon-wrap--lg" style="background: #EFF6FF;">
+                        <MudIcon Icon="@Icons.Material.Filled.Payments" Style="color: #3B82F6; font-size: 1.5rem;" />
+                    </div>
+                    <div>
+                        <MudText Typo="Typo.caption" Style="font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #64748B;">Total Receipts</MudText>
+                        <MudText Typo="Typo.h4" Style="font-weight: 700; color: #0F172A; line-height: 1.2;">@receipts.Count</MudText>
                     </div>
                 </div>
-                <MudText Typo="Typo.h4" Style="font-weight: 700; color: #0F172A; line-height: 1;">@receipts.Count</MudText>
             </div>
         </MudItem>
         <MudItem xs="12" sm="6" md="4">
             <div class="stat-card">
-                <div class="d-flex align-center justify-space-between mb-3">
-                    <MudText Typo="Typo.caption" Style="font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #64748B;">Total Received</MudText>
-                    <div class="stat-icon-wrap" style="background: #ECFDF5;">
-                        <MudIcon Icon="@Icons.Material.Filled.AttachMoney" Style="color: #10B981; font-size: 1.2rem;" />
+                <div class="d-flex align-center" style="gap: 16px;">
+                    <div class="stat-icon-wrap stat-icon-wrap--lg" style="background: #ECFDF5;">
+                        <MudIcon Icon="@Icons.Material.Filled.AttachMoney" Style="color: #10B981; font-size: 1.5rem;" />
+                    </div>
+                    <div>
+                        <MudText Typo="Typo.caption" Style="font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #64748B;">Total Received</MudText>
+                        <MudText Typo="Typo.h5" Style="font-weight: 700; color: #0F172A; line-height: 1.2;">@receipts.Sum(x => x.NetValue).ToString("C")</MudText>
                     </div>
                 </div>
-                <MudText Typo="Typo.h5" Style="font-weight: 700; color: #0F172A; line-height: 1;">@receipts.Sum(x => x.NetValue).ToString("C")</MudText>
             </div>
         </MudItem>
         <MudItem xs="12" sm="6" md="4">
             <div class="stat-card">
-                <div class="d-flex align-center justify-space-between mb-3">
-                    <MudText Typo="Typo.caption" Style="font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #64748B;">Unallocated</MudText>
-                    <div class="stat-icon-wrap" style="background: #FFFBEB;">
-                        <MudIcon Icon="@Icons.Material.Filled.AccountBalanceWallet" Style="color: #F59E0B; font-size: 1.2rem;" />
+                <div class="d-flex align-center" style="gap: 16px;">
+                    <div class="stat-icon-wrap stat-icon-wrap--lg" style="background: #FFFBEB;">
+                        <MudIcon Icon="@Icons.Material.Filled.AccountBalanceWallet" Style="color: #F59E0B; font-size: 1.5rem;" />
+                    </div>
+                    <div>
+                        <MudText Typo="Typo.caption" Style="font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #64748B;">Unallocated</MudText>
+                        <MudText Typo="Typo.h5" Style="font-weight: 700; color: #0F172A; line-height: 1.2;">@receipts.Sum(x => Math.Max(0m, x.NetValue - x.OffsetValue)).ToString("C")</MudText>
                     </div>
                 </div>
-                <MudText Typo="Typo.h5" Style="font-weight: 700; color: #0F172A; line-height: 1;">@receipts.Sum(x => Math.Max(0m, x.NetValue - x.OffsetValue)).ToString("C")</MudText>
             </div>
         </MudItem>
     </MudGrid>
