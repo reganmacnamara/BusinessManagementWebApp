@@ -1,4 +1,4 @@
-namespace BusinessManagementWebApp.Data;
+namespace MacsBusinessManagementWebApp.Data;
 
 public static class HttpResponseMessageExtensions
 {

@@ -1,4 +1,4 @@
-﻿namespace BusinessManagementWebApp.Data.Entities;
+﻿namespace MacsBusinessManagementWebApp.Data.Entities;
 
 public class Receipt
 {

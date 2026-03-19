@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace BusinessManagementWebApp.Data.Entities
+namespace MacsBusinessManagementWebApp.Data.Entities
 {
 
     public class Client

@@ -1,4 +1,4 @@
-﻿namespace BusinessManagementWebApp.Data.Products.UpdateProduct;
+﻿namespace MacsBusinessManagementWebApp.Data.Products.UpdateProduct;
 
 public class UpdateProductResponse
 {

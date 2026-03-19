@@ -1,6 +1,6 @@
-﻿using BusinessManagementWebApp.Data.Entities;
+﻿using MacsBusinessManagementWebApp.Data.Entities;
 
-namespace BusinessManagementWebApp.Data.Invoices.GetInvoice;
+namespace MacsBusinessManagementWebApp.Data.Invoices.GetInvoice;
 
 public class GetInvoiceResponse
 {

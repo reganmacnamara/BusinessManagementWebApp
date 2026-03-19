@@ -1,4 +1,4 @@
-﻿namespace BusinessManagementWebApp.Data.Products.CreateProduct;
+﻿namespace MacsBusinessManagementWebApp.Data.Products.CreateProduct;
 
 public class CreateProductResponse
 {

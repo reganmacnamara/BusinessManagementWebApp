@@ -1,10 +1,10 @@
 ﻿using AutoMapper;
-using BusinessManagementWebApp.Data.Clients.CreateClient;
-using BusinessManagementWebApp.Data.Clients.DeleteClient;
-using BusinessManagementWebApp.Data.Clients.UpdateClient;
-using BusinessManagementWebApp.Data.Entities;
+using MacsBusinessManagementWebApp.Data.Clients.CreateClient;
+using MacsBusinessManagementWebApp.Data.Clients.DeleteClient;
+using MacsBusinessManagementWebApp.Data.Clients.UpdateClient;
+using MacsBusinessManagementWebApp.Data.Entities;
 
-namespace BusinessManagementWebApp.Infrastructure.AutoMapper
+namespace MacsBusinessManagementWebApp.Infrastructure.AutoMapper
 {
 
     public class ClientProfile : Profile

@@ -1,4 +1,4 @@
-﻿namespace BusinessManagementWebApp.Data.Receipts.DeleteReceipt;
+﻿namespace MacsBusinessManagementWebApp.Data.Receipts.DeleteReceipt;
 
 public class DeleteReceiptRequest
 {

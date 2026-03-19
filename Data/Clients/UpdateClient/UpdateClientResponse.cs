@@ -1,4 +1,4 @@
-﻿namespace BusinessManagementWebApp.Data.Clients.UpdateClient
+﻿namespace MacsBusinessManagementWebApp.Data.Clients.UpdateClient
 {
 
     public class UpdateClientResponse

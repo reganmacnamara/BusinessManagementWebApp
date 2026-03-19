@@ -1,4 +1,4 @@
-﻿namespace BusinessManagementWebApp.Data.Products.GetProduct;
+﻿namespace MacsBusinessManagementWebApp.Data.Products.GetProduct;
 
 public class GetProductRequest
 {

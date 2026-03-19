@@ -1,8 +1,8 @@
 ﻿using AutoMapper;
-using BusinessManagementWebApp.Data.Entities;
-using BusinessManagementWebApp.Data.Invoices.UpsertInvoiceItem;
+using MacsBusinessManagementWebApp.Data.Entities;
+using MacsBusinessManagementWebApp.Data.Invoices.UpsertInvoiceItem;
 
-namespace BusinessManagementWebApp.Infrastructure.AutoMapper;
+namespace MacsBusinessManagementWebApp.Infrastructure.AutoMapper;
 
 public class InvoiceItemProfile : Profile
 {

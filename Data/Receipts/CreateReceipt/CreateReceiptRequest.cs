@@ -1,4 +1,4 @@
-﻿namespace BusinessManagementWebApp.Data.Receipts.CreateReceipt;
+﻿namespace MacsBusinessManagementWebApp.Data.Receipts.CreateReceipt;
 
 public class CreateReceiptRequest
 {

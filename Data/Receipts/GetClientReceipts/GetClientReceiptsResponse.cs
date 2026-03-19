@@ -1,6 +1,6 @@
-﻿using BusinessManagementWebApp.Data.Entities;
+﻿using MacsBusinessManagementWebApp.Data.Entities;
 
-namespace BusinessManagementWebApp.Data.Receipts.GetClientReceipts;
+namespace MacsBusinessManagementWebApp.Data.Receipts.GetClientReceipts;
 
 public class GetClientReceiptsResponse
 {

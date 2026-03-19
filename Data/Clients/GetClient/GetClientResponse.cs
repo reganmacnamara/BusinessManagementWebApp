@@ -1,6 +1,6 @@
-﻿using BusinessManagementWebApp.Data.Entities;
+﻿using MacsBusinessManagementWebApp.Data.Entities;
 
-namespace BusinessManagementWebApp.Data.Clients.GetClient
+namespace MacsBusinessManagementWebApp.Data.Clients.GetClient
 {
 
     public class GetClientResponse

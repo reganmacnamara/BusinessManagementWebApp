@@ -1,4 +1,4 @@
-﻿namespace BusinessManagementWebApp.Data.Invoices.DeleteInvoiceItem;
+﻿namespace MacsBusinessManagementWebApp.Data.Invoices.DeleteInvoiceItem;
 
 public class DeleteInvoiceItemRequest
 {

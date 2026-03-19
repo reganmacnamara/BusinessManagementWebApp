@@ -1,9 +1,9 @@
 ﻿using AutoMapper;
-using BusinessManagementWebApp.Data.Entities;
-using BusinessManagementWebApp.Data.Invoices.CreateInvoice;
-using BusinessManagementWebApp.Data.Invoices.UpdateInvoice;
+using MacsBusinessManagementWebApp.Data.Entities;
+using MacsBusinessManagementWebApp.Data.Invoices.CreateInvoice;
+using MacsBusinessManagementWebApp.Data.Invoices.UpdateInvoice;
 
-namespace BusinessManagementWebApp.Infrastructure.AutoMapper;
+namespace MacsBusinessManagementWebApp.Infrastructure.AutoMapper;
 
 public class InvoiceProfile : Profile
 {

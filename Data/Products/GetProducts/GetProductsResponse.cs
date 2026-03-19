@@ -1,6 +1,6 @@
-﻿using BusinessManagementWebApp.Data.Entities;
+﻿using MacsBusinessManagementWebApp.Data.Entities;
 
-namespace BusinessManagementWebApp.Data.Products.GetProducts;
+namespace MacsBusinessManagementWebApp.Data.Products.GetProducts;
 
 public class GetProductsResponse
 {

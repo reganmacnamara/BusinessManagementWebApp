@@ -1,4 +1,4 @@
-﻿namespace BusinessManagementWebApp.Data.Invoices.GetClientInvoices;
+﻿namespace MacsBusinessManagementWebApp.Data.Invoices.GetClientInvoices;
 
 public class GetClientInvoicesRequest
 {

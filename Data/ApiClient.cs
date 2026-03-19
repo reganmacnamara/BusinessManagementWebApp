@@ -1,25 +1,25 @@
-﻿using BusinessManagementWebApp.Data.Clients.CreateClient;
-using BusinessManagementWebApp.Data.Clients.GetClient;
-using BusinessManagementWebApp.Data.Clients.GetClients;
-using BusinessManagementWebApp.Data.Clients.UpdateClient;
-using BusinessManagementWebApp.Data.Invoices.CreateInvoice;
-using BusinessManagementWebApp.Data.Invoices.GetClientInvoices;
-using BusinessManagementWebApp.Data.Invoices.GetInvoice;
-using BusinessManagementWebApp.Data.Invoices.GetInvoices;
-using BusinessManagementWebApp.Data.Invoices.UpdateInvoice;
-using BusinessManagementWebApp.Data.Invoices.UpsertInvoiceItem;
-using BusinessManagementWebApp.Data.Products.CreateProduct;
-using BusinessManagementWebApp.Data.Products.GetProduct;
-using BusinessManagementWebApp.Data.Products.GetProducts;
-using BusinessManagementWebApp.Data.Products.UpdateProduct;
-using BusinessManagementWebApp.Data.Receipts.CreateReceipt;
-using BusinessManagementWebApp.Data.Receipts.GetClientReceipts;
-using BusinessManagementWebApp.Data.Receipts.GetReceipt;
-using BusinessManagementWebApp.Data.Receipts.GetReceipts;
-using BusinessManagementWebApp.Data.Receipts.UpdateReceipt;
-using BusinessManagementWebApp.Data.Receipts.UpsertReceiptItem;
+﻿using MacsBusinessManagementWebApp.Data.Clients.CreateClient;
+using MacsBusinessManagementWebApp.Data.Clients.GetClient;
+using MacsBusinessManagementWebApp.Data.Clients.GetClients;
+using MacsBusinessManagementWebApp.Data.Clients.UpdateClient;
+using MacsBusinessManagementWebApp.Data.Invoices.CreateInvoice;
+using MacsBusinessManagementWebApp.Data.Invoices.GetClientInvoices;
+using MacsBusinessManagementWebApp.Data.Invoices.GetInvoice;
+using MacsBusinessManagementWebApp.Data.Invoices.GetInvoices;
+using MacsBusinessManagementWebApp.Data.Invoices.UpdateInvoice;
+using MacsBusinessManagementWebApp.Data.Invoices.UpsertInvoiceItem;
+using MacsBusinessManagementWebApp.Data.Products.CreateProduct;
+using MacsBusinessManagementWebApp.Data.Products.GetProduct;
+using MacsBusinessManagementWebApp.Data.Products.GetProducts;
+using MacsBusinessManagementWebApp.Data.Products.UpdateProduct;
+using MacsBusinessManagementWebApp.Data.Receipts.CreateReceipt;
+using MacsBusinessManagementWebApp.Data.Receipts.GetClientReceipts;
+using MacsBusinessManagementWebApp.Data.Receipts.GetReceipt;
+using MacsBusinessManagementWebApp.Data.Receipts.GetReceipts;
+using MacsBusinessManagementWebApp.Data.Receipts.UpdateReceipt;
+using MacsBusinessManagementWebApp.Data.Receipts.UpsertReceiptItem;
 
-namespace BusinessManagementWebApp.Data
+namespace MacsBusinessManagementWebApp.Data
 {
 
     public class ApiClient(HttpClient http)

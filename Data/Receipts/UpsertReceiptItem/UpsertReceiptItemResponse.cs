@@ -1,4 +1,4 @@
-﻿namespace BusinessManagementWebApp.Data.Receipts.UpsertReceiptItem;
+﻿namespace MacsBusinessManagementWebApp.Data.Receipts.UpsertReceiptItem;
 
 public class UpsertReceiptItemResponse
 {

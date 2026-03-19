@@ -1,9 +1,9 @@
 ﻿using AutoMapper;
-using BusinessManagementWebApp.Data.Entities;
-using BusinessManagementWebApp.Data.Receipts.CreateReceipt;
-using BusinessManagementWebApp.Data.Receipts.UpdateReceipt;
+using MacsBusinessManagementWebApp.Data.Entities;
+using MacsBusinessManagementWebApp.Data.Receipts.CreateReceipt;
+using MacsBusinessManagementWebApp.Data.Receipts.UpdateReceipt;
 
-namespace BusinessManagementWebApp.Infrastructure.AutoMapper;
+namespace MacsBusinessManagementWebApp.Infrastructure.AutoMapper;
 
 public class ReceiptProfile : Profile
 {

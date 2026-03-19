@@ -1,4 +1,4 @@
-﻿namespace BusinessManagementWebApp.Data.Products.DeleteProduct;
+﻿namespace MacsBusinessManagementWebApp.Data.Products.DeleteProduct;
 
 public class DeleteProductRequest
 {

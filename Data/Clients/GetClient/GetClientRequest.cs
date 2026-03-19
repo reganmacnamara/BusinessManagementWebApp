@@ -1,4 +1,4 @@
-﻿namespace BusinessManagementWebApp.Data.Clients.GetClient
+﻿namespace MacsBusinessManagementWebApp.Data.Clients.GetClient
 {
 
     public class GetClientRequest

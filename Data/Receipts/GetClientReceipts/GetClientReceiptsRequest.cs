@@ -1,4 +1,4 @@
-﻿namespace BusinessManagementWebApp.Data.Receipts.GetClientReceipts;
+﻿namespace MacsBusinessManagementWebApp.Data.Receipts.GetClientReceipts;
 
 public class GetClientReceiptsRequest
 {

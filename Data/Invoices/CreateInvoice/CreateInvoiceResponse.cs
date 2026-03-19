@@ -1,4 +1,4 @@
-﻿namespace BusinessManagementWebApp.Data.Invoices.CreateInvoice;
+﻿namespace MacsBusinessManagementWebApp.Data.Invoices.CreateInvoice;
 
 public class CreateInvoiceResponse
 {

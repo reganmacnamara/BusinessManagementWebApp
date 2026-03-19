@@ -1,4 +1,4 @@
-﻿namespace BusinessManagementWebApp.Data.Clients.CreateClient
+﻿namespace MacsBusinessManagementWebApp.Data.Clients.CreateClient
 {
 
     public class CreateClientRequest

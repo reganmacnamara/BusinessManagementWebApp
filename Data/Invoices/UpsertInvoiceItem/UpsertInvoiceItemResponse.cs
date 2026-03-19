@@ -1,4 +1,4 @@
-﻿namespace BusinessManagementWebApp.Data.Invoices.UpsertInvoiceItem;
+﻿namespace MacsBusinessManagementWebApp.Data.Invoices.UpsertInvoiceItem;
 
 public class UpsertInvoiceItemResponse
 {

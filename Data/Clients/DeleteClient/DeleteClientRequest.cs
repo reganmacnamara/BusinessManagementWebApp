@@ -1,4 +1,4 @@
-﻿namespace BusinessManagementWebApp.Data.Clients.DeleteClient
+﻿namespace MacsBusinessManagementWebApp.Data.Clients.DeleteClient
 {
 
     public class DeleteClientRequest

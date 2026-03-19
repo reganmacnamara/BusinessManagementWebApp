@@ -1,4 +1,4 @@
-﻿namespace BusinessManagementWebApp.Data.Receipts.UpdateReceipt;
+﻿namespace MacsBusinessManagementWebApp.Data.Receipts.UpdateReceipt;
 
 public class UpdateReceiptRequest
 {

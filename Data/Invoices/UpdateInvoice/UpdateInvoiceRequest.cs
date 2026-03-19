@@ -1,4 +1,4 @@
-﻿namespace BusinessManagementWebApp.Data.Invoices.UpdateInvoice;
+﻿namespace MacsBusinessManagementWebApp.Data.Invoices.UpdateInvoice;
 
 public class UpdateInvoiceRequest
 {
