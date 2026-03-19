@@ -116,10 +116,10 @@ else
                             <PropertyColumn Editable="false" Property="x => x.Product.ProductDescription" Title="Description" />
                             <PropertyColumn Editable="false" Property="x => x.Product.QuantityOnHand" Title="In Stock" />
                             <PropertyColumn Editable="true" Property="x => x.Quantity" Title="Quantity" />
-                            <PropertyColumn Editable="true" Property="x => x.PricePerUnit" Format="N2" Title="Each" />
-                            <PropertyColumn Editable="false" Property="x => x.GrossValue" Format="N2" Title="Gross" />
-                            <PropertyColumn Editable="false" Property="x => x.TaxValue" Format="N2" Title="Tax" />
-                            <PropertyColumn Editable="false" Property="x => x.NetValue" Format="N2" Title="Net" />
+                            <PropertyColumn Editable="true" Property="x => x.PricePerUnit" Format="C" Title="Each" />
+                            <PropertyColumn Editable="false" Property="x => x.GrossValue" Format="C" Title="Gross" />
+                            <PropertyColumn Editable="false" Property="x => x.TaxValue" Format="C" Title="Tax" />
+                            <PropertyColumn Editable="false" Property="x => x.NetValue" Format="C" Title="Net" />
                         </Columns>
                     </MudDataGrid>
                 </MudPaper>
