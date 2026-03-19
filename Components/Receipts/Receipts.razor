@@ -91,6 +91,15 @@
                 <PropertyColumn Property="x => x.ReceiptRef" Title="Reference" />
                 <PropertyColumn Property="x => x.Client.ClientName" Title="Client" />
                 <PropertyColumn Property="x => x.NetValue" Title="Net Value" Format="C" />
+                <TemplateColumn Title="Status">
+                    <CellTemplate>
+                        <MudChip T="string" Size="Size.Small"
+                                 Color="@(context.Item.Outstanding ? Color.Warning : Color.Success)"
+                                 Variant="Variant.Filled">
+                            @(context.Item.Outstanding ? "Unallocated" : "Allocated")
+                        </MudChip>
+                    </CellTemplate>
+                </TemplateColumn>
                 <PropertyColumn Property="x => Math.Max(0m, x.NetValue - x.OffsetValue)" Title="Outstanding Amt." Format="C" />
             </Columns>
         </MudDataGrid>
