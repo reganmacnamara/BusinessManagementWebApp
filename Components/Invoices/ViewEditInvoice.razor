@@ -26,34 +26,34 @@ else
 {
     <div class="page-header">
         <MudContainer MaxWidth="MaxWidth.Large" Class="pa-0">
-        <div class="d-flex align-center">
-            <MudButton Variant="Variant.Text"
-                       Color="Color.Default"
-                       StartIcon="@Icons.Material.Filled.ArrowBack"
-                       OnClick="NavigateToInvoices"
-                       Class="mr-2"
-                       Style="min-width: 0;">Back</MudButton>
-            <MudDivider Vertical="true" FlexItem="true" Class="mx-2" Style="height: 32px; align-self: center;" />
-            <div>
-                <MudText Typo="Typo.h6" Style="font-weight: 700; line-height: 1.2;">@invoice!.InvoiceRef</MudText>
-                <MudText Typo="Typo.caption" Color="Color.Secondary">@invoice.Client?.ClientName</MudText>
+            <div class="d-flex align-center">
+                <MudButton Variant="Variant.Text"
+                           Color="Color.Default"
+                           StartIcon="@Icons.Material.Filled.ArrowBack"
+                           OnClick="NavigateToInvoices"
+                           Class="mr-2"
+                           Style="min-width: 0;">Back</MudButton>
+                <MudDivider Vertical="true" FlexItem="true" Class="mx-2" Style="height: 32px; align-self: center;" />
+                <div>
+                    <MudText Typo="Typo.h6" Style="font-weight: 700; line-height: 1.2;">@invoice!.InvoiceRef</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">@invoice.Client?.ClientName</MudText>
+                </div>
+                <MudSpacer />
+                <MudStack Row="true" Spacing="2">
+                    <MudButton Color="Color.Info"
+                               OnClick="ExportPdf"
+                               StartIcon="@Icons.Material.Filled.PictureAsPdf"
+                               Variant="Variant.Outlined">Export PDF</MudButton>
+                    <MudButton Color="Color.Primary"
+                               OnClick="OnSave"
+                               StartIcon="@Icons.Material.Filled.Save"
+                               Variant="Variant.Filled">Save</MudButton>
+                    <MudButton Color="Color.Error"
+                               OnClick="OnDelete"
+                               StartIcon="@Icons.Material.Filled.Delete"
+                               Variant="Variant.Outlined">Delete</MudButton>
+                </MudStack>
             </div>
-            <MudSpacer />
-            <MudStack Row="true" Spacing="2">
-                <MudButton Color="Color.Info"
-                           OnClick="ExportPdf"
-                           StartIcon="@Icons.Material.Filled.PictureAsPdf"
-                           Variant="Variant.Outlined">Export PDF</MudButton>
-                <MudButton Color="Color.Primary"
-                           OnClick="OnSave"
-                           StartIcon="@Icons.Material.Filled.Save"
-                           Variant="Variant.Filled">Save</MudButton>
-                <MudButton Color="Color.Error"
-                           OnClick="OnDelete"
-                           StartIcon="@Icons.Material.Filled.Delete"
-                           Variant="Variant.Outlined">Delete</MudButton>
-            </MudStack>
-        </div>
         </MudContainer>
     </div>
 
@@ -64,14 +64,15 @@ else
                 <MudPaper Elevation="0" Class="table-card pa-6">
                     <MudGrid Spacing="3">
                         <MudItem xs="12" sm="6">
-                            <MudDatePicker @bind-Date="invoice.InvoiceDate"
+                            <MudDatePicker @bind-Value="invoice.InvoiceDate"
                                            Disabled="true"
                                            Format="dd/MM/yyyy"
                                            Label="Transaction Date"
                                            Variant="Variant.Outlined" />
                         </MudItem>
                         <MudItem xs="12" sm="6">
-                            <MudDatePicker @bind-Date="invoice.DueDate"
+                            <MudDatePicker Date="invoice.DueDate"
+                                           DateChanged="OnDueDateChanged"
                                            Format="dd/MM/yyyy"
                                            Label="Due Date"
                                            Variant="Variant.Outlined" />
@@ -233,6 +234,14 @@ else
             else
                 Snackbar.Add($"Error {(int)_Response.StatusCode}: {await _Response.GetErrorBodyAsync()}", Severity.Error);
         }
+    }
+
+    private async Task OnDueDateChanged(DateTime? dateTime)
+    {
+        if (!dateTime.HasValue)
+            return;
+
+        invoice.DueDate = dateTime.Value;
     }
 
     protected override async Task OnParametersSetAsync()

@@ -48,13 +48,13 @@
                                       RequiredError="Invoice Reference Required" />
                     </MudItem>
                     <MudItem xs="12" sm="6">
-                        <MudDatePicker @bind-Value="invoice.InvoiceDate"
+                        <MudDatePicker Date="invoice.InvoiceDate"
                                        Format="dd/MM/yyyy"
                                        Label="Invoice Date"
                                        Variant="Variant.Outlined" />
                     </MudItem>
                     <MudItem xs="12" sm="6">
-                        <MudDatePicker @bind-Date="invoice.DueDate"
+                        <MudDatePicker @bind-Value="invoice.DueDate"
                                        Format="dd/MM/yyyy"
                                        Label="Due Date"
                                        Variant="Variant.Outlined" />
