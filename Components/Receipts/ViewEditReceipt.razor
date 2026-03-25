@@ -25,34 +25,34 @@ else
 {
     <div class="page-header">
         <MudContainer MaxWidth="MaxWidth.Large" Class="pa-0">
-        <div class="d-flex align-center">
-            <MudButton Variant="Variant.Text"
-                       Color="Color.Default"
-                       StartIcon="@Icons.Material.Filled.ArrowBack"
-                       OnClick="NavigateToReceipts"
-                       Class="mr-2"
-                       Style="min-width: 0;">Back</MudButton>
-            <MudDivider Vertical="true" FlexItem="true" Class="mx-2" Style="height: 32px; align-self: center;" />
-            <div>
-                <MudText Typo="Typo.h6" Style="font-weight: 700; line-height: 1.2;">@receipt!.ReceiptRef</MudText>
-                <MudText Typo="Typo.caption" Color="Color.Secondary">@receipt.Client?.ClientName</MudText>
+            <div class="d-flex align-center">
+                <MudButton Variant="Variant.Text"
+                           Color="Color.Default"
+                           StartIcon="@Icons.Material.Filled.ArrowBack"
+                           OnClick="NavigateToReceipts"
+                           Class="mr-2"
+                           Style="min-width: 0;">Back</MudButton>
+                <MudDivider Vertical="true" FlexItem="true" Class="mx-2" Style="height: 32px; align-self: center;" />
+                <div>
+                    <MudText Typo="Typo.h6" Style="font-weight: 700; line-height: 1.2;">@receipt!.ReceiptRef</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">@receipt.Client?.ClientName</MudText>
+                </div>
+                <MudSpacer />
+                <MudStack Row="true" Spacing="2">
+                    <MudButton Color="Color.Info"
+                               OnClick="ExportPdf"
+                               StartIcon="@Icons.Material.Filled.PictureAsPdf"
+                               Variant="Variant.Outlined">Export PDF</MudButton>
+                    <MudButton Color="Color.Primary"
+                               OnClick="OnSave"
+                               StartIcon="@Icons.Material.Filled.Save"
+                               Variant="Variant.Filled">Save</MudButton>
+                    <MudButton Color="Color.Error"
+                               OnClick="OnDelete"
+                               StartIcon="@Icons.Material.Filled.Delete"
+                               Variant="Variant.Outlined">Delete</MudButton>
+                </MudStack>
             </div>
-            <MudSpacer />
-            <MudStack Row="true" Spacing="2">
-                <MudButton Color="Color.Info"
-                           OnClick="ExportPdf"
-                           StartIcon="@Icons.Material.Filled.PictureAsPdf"
-                           Variant="Variant.Outlined">Export PDF</MudButton>
-                <MudButton Color="Color.Primary"
-                           OnClick="OnSave"
-                           StartIcon="@Icons.Material.Filled.Save"
-                           Variant="Variant.Filled">Save</MudButton>
-                <MudButton Color="Color.Error"
-                           OnClick="OnDelete"
-                           StartIcon="@Icons.Material.Filled.Delete"
-                           Variant="Variant.Outlined">Delete</MudButton>
-            </MudStack>
-        </div>
         </MudContainer>
     </div>
 
@@ -70,7 +70,8 @@ else
                                           RequiredError="Receipt Reference Required" />
                         </MudItem>
                         <MudItem xs="12" sm="6">
-                            <MudDatePicker @bind-Value="receipt.ReceiptDate"
+                            <MudDatePicker Date="receipt.ReceiptDate"
+                                           DateChanged="OnReceiptDateChanged"
                                            Format="dd/MM/yyyy"
                                            Label="Receipt Date"
                                            Variant="Variant.Outlined" />
@@ -269,6 +270,14 @@ else
             RecalculateOffsets();
             StateHasChanged();
         }
+    }
+
+    private async Task OnReceiptDateChanged(DateTime? dateTime)
+    {
+        if (!dateTime.HasValue)
+            return;
+
+        receipt.ReceiptDate = dateTime.Value;
     }
 
     private void RecalculateOffsets()

@@ -49,12 +49,14 @@
                     </MudItem>
                     <MudItem xs="12" sm="6">
                         <MudDatePicker Date="invoice.InvoiceDate"
+                                       DateChanged="OnInvoiceDateChanged"
                                        Format="dd/MM/yyyy"
                                        Label="Invoice Date"
                                        Variant="Variant.Outlined" />
                     </MudItem>
                     <MudItem xs="12" sm="6">
-                        <MudDatePicker @bind-Value="invoice.DueDate"
+                        <MudDatePicker Date="invoice.DueDate"
+                                       DateChanged="OnDueDateChanged"
                                        Format="dd/MM/yyyy"
                                        Label="Due Date"
                                        Variant="Variant.Outlined" />
@@ -92,6 +94,7 @@
                                StartIcon="@Icons.Material.Filled.Add"
                                Variant="Variant.Filled"
                                Size="Size.Small">Add Item</MudButton>
+
                     <MudButton Color="Color.Error"
                                OnClick="DeleteTransactionItems"
                                StartIcon="@Icons.Material.Filled.Delete"
@@ -176,6 +179,14 @@
     private void NavigateToInvoices()
         => NavigationManager.NavigateTo("invoices");
 
+    private async Task OnDueDateChanged(DateTime? dateTime)
+    {
+        if (!dateTime.HasValue)
+            return;
+
+        invoice.DueDate = dateTime.Value;
+    }
+
     private async Task OnEditInvoiceItem(InvoiceItem item)
     {
         item.GrossValue = item.PricePerUnit * item.Quantity;
@@ -185,7 +196,20 @@
     }
 
     protected override async Task OnInitializedAsync()
-        => await GetClients();
+    {
+        await GetClients();
+
+        invoice.InvoiceDate = DateTime.UtcNow;
+        invoice.DueDate = invoice.InvoiceDate.AddDays(30);
+    }
+
+    private async Task OnInvoiceDateChanged(DateTime? dateTime)
+    {
+        if (!dateTime.HasValue)
+            return;
+
+        invoice.InvoiceDate = dateTime.Value;
+    }
 
     private async Task OnSave()
     {

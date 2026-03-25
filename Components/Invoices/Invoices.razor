@@ -26,11 +26,13 @@
                        OnClick="ExportSelectedPdfs"
                        StartIcon="@Icons.Material.Filled.PictureAsPdf"
                        Variant="Variant.Outlined">Export PDF</MudButton>
+
             <MudButton Color="Color.Error"
                        Disabled="@(!selectedInvoices.Any())"
                        OnClick="OnDelete"
                        StartIcon="@Icons.Material.Filled.Delete"
                        Variant="Variant.Outlined">Delete</MudButton>
+
             <MudButton Color="Color.Primary"
                        OnClick="NavigateToCreateInvoice"
                        StartIcon="@Icons.Material.Filled.Add"

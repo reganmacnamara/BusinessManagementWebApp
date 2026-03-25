@@ -48,7 +48,8 @@
                                       RequiredError="Receipt Reference Required" />
                     </MudItem>
                     <MudItem xs="12" sm="6">
-                        <MudDatePicker @bind-Value="receipt.ReceiptDate"
+                        <MudDatePicker Date="receipt.ReceiptDate"
+                                        DateChanged="OnReceiptDateChanged"
                                        Format="dd/MM/yyyy"
                                        Label="Receipt Date"
                                        Variant="Variant.Outlined" />
@@ -247,6 +248,14 @@
             RecalculateOffsets();
             StateHasChanged();
         }
+    }
+
+    private async Task OnReceiptDateChanged(DateTime? dateTime)
+    {
+        if (!dateTime.HasValue)
+            return;
+
+        receipt.ReceiptDate = dateTime.Value;
     }
 
     private async Task OnSave()
