@@ -1,21 +1,51 @@
-# Invoice Automation Web App
+<p align="center">
+  <img src="https://img.shields.io/badge/.NET-8.0-512BD4?style=for-the-badge&logo=dotnet&logoColor=white" />
+  <img src="https://img.shields.io/badge/Blazor-Server-512BD4?style=for-the-badge&logo=blazor&logoColor=white" />
+  <img src="https://img.shields.io/badge/MudBlazor-8.15-594AE2?style=for-the-badge&logo=materialdesign&logoColor=white" />
+  <img src="https://img.shields.io/badge/License-MIT-10B981?style=for-the-badge" />
+</p>
 
-A business management web application for tracking clients, invoices, receipts, and products. Built with Blazor Server and MudBlazor, it connects to a companion REST API to provide a clean, responsive interface for day-to-day invoicing and payment workflows.
+# Mac's Business Manager
 
-![.NET](https://img.shields.io/badge/.NET-8.0-512BD4?logo=dotnet&logoColor=white)
-![Blazor](https://img.shields.io/badge/Blazor-Server-512BD4?logo=blazor&logoColor=white)
-![MudBlazor](https://img.shields.io/badge/MudBlazor-8.15-594AE2?logo=materialdesign&logoColor=white)
+A modern, responsive business management frontend for tracking clients, invoices, receipts, and products. Built with **Blazor Server** and **MudBlazor**, it connects to a companion REST API to provide a clean interface for day-to-day invoicing and payment workflows.
 
 ---
 
 ## Features
 
-- **Dashboard** — at-a-glance summary of clients, outstanding invoices, receipts received, and product count
-- **Clients** — create, view, edit, and delete client accounts with full contact and address details
-- **Invoices** — raise invoices against clients, add line items per product, track outstanding vs. paid status, and export to PDF
-- **Receipts** — record payments received and allocate them against outstanding invoices
-- **Products** — maintain a product/service catalogue with pricing and stock levels
-- **PDF Export** — generate and download invoice and receipt PDFs directly from the browser
+### Authentication
+- JWT-based login and registration with automatic token expiry handling
+- Bearer token attached to all API requests via a custom `DelegatingHandler`
+- Unauthenticated users are automatically redirected to the login screen
+
+### Dashboard
+- At-a-glance stat cards: total clients, outstanding invoices (with dollar amounts), payments received, and product count
+- Recent invoices and receipts with status indicators
+- Clickable cards for quick navigation
+
+### Clients
+- Full CRUD with contact details and address fields
+- Tabbed detail view showing the client's invoices and receipts in one place
+- Bulk delete with confirmation dialog
+
+### Invoices
+- Raise invoices against clients with editable line items linked to products
+- Inline cell editing for quantity and price
+- Automatic tax and net value calculation (10% GST)
+- Status tracking: **Outstanding** / **Paid** chips with color coding
+- PDF export (single or bulk)
+
+### Receipts
+- Record payments and allocate them against outstanding invoices
+- Smart allocation: auto-calculates maximum allocatable amount per invoice
+- Un-allocated balance shown in real time
+- Status tracking: **Unallocated** / **Allocated** chips
+- PDF export (single or bulk)
+
+### Products
+- Product/service catalogue with code, description, pricing, and stock levels
+- Low-stock alerts (5 or fewer in stock) with visual indicators
+- Currency-formatted unit cost and unit price fields
 
 ---
 
@@ -23,11 +53,11 @@ A business management web application for tracking clients, invoices, receipts, 
 
 | Layer | Technology |
 |---|---|
-| Framework | ASP.NET Core 8 — Blazor Server |
-| UI Components | MudBlazor 8.15 (Material Design) |
-| Object Mapping | AutoMapper 16.0 |
-| JSON Serialization | Newtonsoft.Json 13.0 |
-| Backend API | BusinessManagementAPI (separate service) |
+| **Framework** | ASP.NET Core 8 — Blazor Server |
+| **UI Components** | MudBlazor 8.15 (Material Design) |
+| **Object Mapping** | AutoMapper 16.0 |
+| **Authentication** | JWT Bearer Tokens |
+| **Backend API** | [BusinessManagementAPI](https://github.com/reganmacnamara/BusinessManagementAPI) (separate service) |
 
 ---
 
@@ -35,19 +65,25 @@ A business management web application for tracking clients, invoices, receipts, 
 
 ```
 Components/
+├── Auth/                    # Login & registration page
 ├── Dashboard.razor          # Overview stats and recent activity
-├── Clients/                 # Client list + view/edit screens
-├── Invoices/                # Invoice list, create, view/edit
-├── Receipts/                # Receipt list, create, view/edit
-├── Products/                # Product catalogue list + view/edit
-└── Layout/                  # Nav menu and main layout shell
+├── Clients/                 # Client list, view/edit, add dialog
+├── Invoices/                # Invoice list, create, view/edit, add item dialog
+├── Receipts/                # Receipt list, create, view/edit, allocation dialog
+├── Products/                # Product catalogue, view/edit, add dialog
+└── Layout/
+    ├── MainLayout.razor     # App shell with theme, nav drawer, auth guard
+    ├── EmptyLayout.razor    # Minimal layout for login page
+    └── NavMenu.razor        # Sidebar navigation
 
 Data/
-├── Entities/                # Core domain models (Client, Invoice, Receipt, Product, ...)
+├── Auth/                    # Login & register request/response DTOs
+├── Entities/                # Domain models (Client, Invoice, Receipt, Product, ...)
 ├── {Module}/                # Request/response DTOs per module
 └── ApiClient.cs             # Central HTTP client wrapping all API calls
 
 Infrastructure/
+├── Services/Auth/           # AuthTokenService, AuthHeaderHandler
 └── AutoMapper/              # Mapping profiles between entities and DTOs
 ```
 
@@ -58,7 +94,7 @@ Infrastructure/
 ### Prerequisites
 
 - [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
-- A running instance of **BusinessManagementAPI**
+- A running instance of the **BusinessManagementAPI**
 - Visual Studio 2022, VS Code, or JetBrains Rider
 
 ### Running the App
@@ -70,15 +106,9 @@ Infrastructure/
    cd InvoiceAutomationWebApp
    ```
 
-2. **Configure the API base address**
+2. **Ensure the API is running**
 
-   In `appsettings.Development.json`, set the URL of your running BusinessManagementAPI instance:
-
-   ```json
-   {
-     "ApiBaseAddress": "https://localhost:7285"
-   }
-   ```
+   The app connects to the BusinessManagementAPI at `https://localhost:7285` by default. Update the base address in `Program.cs` if your API runs elsewhere.
 
 3. **Run the app**
 
@@ -86,7 +116,11 @@ Infrastructure/
    dotnet run
    ```
 
-   Then open your browser at `https://localhost:5001` (or the port shown in the terminal).
+   Open your browser at `http://localhost:5099`.
+
+4. **Log in or register**
+
+   Create an account from the login page, then sign in to access the dashboard.
 
 ---
 
@@ -94,11 +128,31 @@ Infrastructure/
 
 The app is a pure frontend — it holds no database of its own. All data is fetched from and persisted to the **BusinessManagementAPI** via HTTP. The `ApiClient` class centralises every API call, keeping components clean.
 
-**Invoice lifecycle:**
-1. Create a client
-2. Raise an invoice against that client, add line items (linked to products)
-3. When payment is received, create a receipt and allocate it against the outstanding invoice
-4. The outstanding balance on the invoice is reduced by the allocated receipt amount
+### Invoice Lifecycle
+
+```
+Create Client  →  Raise Invoice  →  Add Line Items  →  Receive Payment  →  Allocate Receipt
+                                         ↓                                       ↓
+                                   Auto-calculates               Outstanding balance reduced
+                                   Gross / Tax / Net             Invoice marked as Paid
+```
+
+1. **Create a client** with contact and address details
+2. **Raise an invoice** against that client and add line items linked to products
+3. **Record a receipt** when payment is received
+4. **Allocate the receipt** against outstanding invoices — the balance updates automatically
+
+---
+
+## API Endpoints Used
+
+| Module | Endpoints |
+|---|---|
+| **Auth** | `POST /Auth/Login` · `POST /Auth/Register` |
+| **Clients** | `GET /Client` · `GET /Client/{id}` · `POST /Client` · `PATCH /Client` · `DELETE /Client/{id}` |
+| **Invoices** | `GET /Invoice` · `GET /Invoice/{id}` · `GET /Invoice/Client/{id}` · `POST /Invoice` · `PATCH /Invoice` · `DELETE /Invoice/{id}` · `PUT /Invoice/Item` · `DELETE /Invoice/Item/{id}` · `GET /Invoice/{id}/pdf` |
+| **Receipts** | `GET /Receipt` · `GET /Receipt/{id}` · `GET /Receipt/Client/{id}` · `POST /Receipt` · `PATCH /Receipt` · `DELETE /Receipt/{id}` · `PUT /Receipt/Item` · `DELETE /Receipt/Item/{id}` · `GET /Receipt/{id}/pdf` |
+| **Products** | `GET /Product` · `GET /Product/{id}` · `POST /Product` · `PATCH /Product` · `DELETE /Product/{id}` |
 
 ---
 
