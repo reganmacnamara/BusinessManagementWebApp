@@ -1,9 +1,9 @@
 @page "/login"
 @layout MacsBusinessManagementWebApp.Components.Layout.EmptyLayout
 @using MacsBusinessManagementWebApp.Data
-@using MacsBusinessManagementWebApp.Data.Auth
 @using MacsBusinessManagementWebApp.Data.Auth.Login
 @using MacsBusinessManagementWebApp.Data.Auth.Register
+@using MacsBusinessManagementWebApp.Infrastructure.Services.Auth
 @using MudBlazor
 @rendermode InteractiveServer
 
@@ -167,7 +167,7 @@
                 var authResult = await loginResponse.Content.ReadFromJsonAsync<LoginAccountResponse>();
                 if (authResult?.Token is not null)
                 {
-                    tokenService.SetToken(authResult.Token);
+                    tokenService.SetToken(authResult.Token, authResult.Expiry);
                     NavigationManager.NavigateTo("/", forceLoad: true);
                 }
                 else
