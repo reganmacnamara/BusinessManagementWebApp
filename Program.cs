@@ -1,5 +1,6 @@
 using MacsBusinessManagementWebApp.Components;
 using MacsBusinessManagementWebApp.Data;
+using MacsBusinessManagementWebApp.Infrastructure.Services.Auth;
 using MudBlazor;
 using MudBlazor.Services;
 
@@ -24,7 +25,11 @@ builder.Services.AddMudServices(config =>
     config.SnackbarConfiguration.SnackbarVariant = Variant.Filled;
 });
 
-builder.Services.AddHttpClient<ApiClient>("WebAPI", client => client.BaseAddress = new Uri("https://localhost:7285"));
+builder.Services.AddSingleton<AuthTokenService>();
+builder.Services.AddTransient<AuthHeaderHandler>();
+
+builder.Services.AddHttpClient<ApiClient>("WebAPI", client => client.BaseAddress = new Uri("https://localhost:7285"))
+    .AddHttpMessageHandler<AuthHeaderHandler>();
 
 var app = builder.Build();
 

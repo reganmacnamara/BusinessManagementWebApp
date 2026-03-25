@@ -1,4 +1,7 @@
 @inherits LayoutComponentBase
+@using MacsBusinessManagementWebApp.Data.Auth
+@inject AuthTokenService tokenService
+@inject NavigationManager NavigationManager
 
 <MudThemeProvider Theme="_theme" />
 
@@ -21,6 +24,10 @@
             Mac's Business Manager
         </MudText>
         <MudSpacer />
+        <MudIconButton Icon="@Icons.Material.Filled.Logout"
+                       Color="Color.Inherit"
+                       OnClick="Logout"
+                       Title="Sign Out" />
     </MudAppBar>
 
     <MudDrawer @bind-Open="_drawerOpen"
@@ -82,5 +89,17 @@
         }
     };
 
+    protected override void OnInitialized()
+    {
+        if (!tokenService.IsAuthenticated)
+            NavigationManager.NavigateTo("/login");
+    }
+
     private void DrawerToggle() => _drawerOpen = !_drawerOpen;
+
+    private void Logout()
+    {
+        tokenService.ClearToken();
+        NavigationManager.NavigateTo("/login", forceLoad: true);
+    }
 }

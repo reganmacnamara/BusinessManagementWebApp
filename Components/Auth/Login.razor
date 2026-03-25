@@ -1,0 +1,199 @@
+@page "/login"
+@layout MacsBusinessManagementWebApp.Components.Layout.EmptyLayout
+@using MacsBusinessManagementWebApp.Data
+@using MacsBusinessManagementWebApp.Data.Auth
+@using MacsBusinessManagementWebApp.Data.Auth.Login
+@using MacsBusinessManagementWebApp.Data.Auth.Register
+@using MudBlazor
+@rendermode InteractiveServer
+
+@inject ApiClient api
+@inject AuthTokenService tokenService
+@inject NavigationManager NavigationManager
+
+<PageTitle>Login — Mac's Business Manager</PageTitle>
+
+<MudThemeProvider Theme="_theme" />
+
+<div style="min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);">
+    <MudPaper Elevation="4" Style="width: 100%; max-width: 420px; border-radius: 16px; overflow: hidden;">
+
+        <div style="background: #0F172A; padding: 32px 32px 24px; text-align: center;">
+            <MudIcon Icon="@Icons.Material.Filled.Business" Style="font-size: 2.5rem; color: #3B82F6;" />
+            <MudText Typo="Typo.h5" Style="font-weight: 700; color: #F1F5F9; margin-top: 8px;">
+                Mac's Business Manager
+            </MudText>
+            <MudText Typo="Typo.body2" Style="color: #94A3B8; margin-top: 4px;">
+                @(isRegisterMode ? "Create your account" : "Sign in to your account")
+            </MudText>
+        </div>
+
+        <div style="padding: 32px;">
+            <MudForm @ref="form">
+                <MudTextField @bind-Value="email"
+                              Label="Email"
+                              Variant="Variant.Outlined"
+                              InputType="InputType.Email"
+                              Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Email"
+                              Required="true"
+                              RequiredError="Email is required"
+                              Class="mb-4" />
+
+                <MudTextField @bind-Value="password"
+                              Label="Password"
+                              Variant="Variant.Outlined"
+                              InputType="@(showPassword ? InputType.Text : InputType.Password)"
+                              Adornment="Adornment.End"
+                              AdornmentIcon="@(showPassword ? Icons.Material.Filled.Visibility : Icons.Material.Filled.VisibilityOff)"
+                              OnAdornmentClick="() => showPassword = !showPassword"
+                              Required="true"
+                              RequiredError="Password is required"
+                              Class="mb-4" />
+
+                @if (isRegisterMode)
+                {
+                    <MudTextField @bind-Value="confirmPassword"
+                                  Label="Confirm Password"
+                                  Variant="Variant.Outlined"
+                                  InputType="@(showPassword ? InputType.Text : InputType.Password)"
+                                  Adornment="Adornment.End"
+                                  AdornmentIcon="@(showPassword ? Icons.Material.Filled.Visibility : Icons.Material.Filled.VisibilityOff)"
+                                  OnAdornmentClick="() => showPassword = !showPassword"
+                                  Required="true"
+                                  RequiredError="Please confirm your password"
+                                  Class="mb-4" />
+                }
+
+                @if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    <MudAlert Severity="Severity.Error" Class="mb-4" Dense="true">@errorMessage</MudAlert>
+                }
+
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           FullWidth="true"
+                           Size="Size.Large"
+                           Style="font-weight: 600; text-transform: none; border-radius: 8px; height: 48px;"
+                           Disabled="@isLoading"
+                           OnClick="OnSubmit">
+                    @if (isLoading)
+                    {
+                        <MudProgressCircular Size="Size.Small" Color="Color.Inherit" Indeterminate="true" Class="mr-2" />
+                    }
+                    @(isRegisterMode ? "Create Account" : "Sign In")
+                </MudButton>
+            </MudForm>
+
+            <MudDivider Class="my-4" />
+
+            <div style="text-align: center;">
+                <MudText Typo="Typo.body2" Style="color: #64748B;">
+                    @(isRegisterMode ? "Already have an account?" : "Don't have an account?")
+                    <MudLink OnClick="ToggleMode"
+                             Style="font-weight: 600; cursor: pointer;">
+                        @(isRegisterMode ? "Sign In" : "Register")
+                    </MudLink>
+                </MudText>
+            </div>
+        </div>
+    </MudPaper>
+</div>
+
+@code {
+    private MudForm form = default!;
+    private string email = string.Empty;
+    private string password = string.Empty;
+    private string confirmPassword = string.Empty;
+    private string errorMessage = string.Empty;
+    private bool isLoading;
+    private bool isRegisterMode;
+    private bool showPassword;
+
+    private readonly MudTheme _theme = new()
+    {
+        PaletteLight = new PaletteLight
+        {
+            Primary = "#3B82F6",
+            PrimaryContrastText = "#FFFFFF",
+        }
+    };
+
+    protected override void OnInitialized()
+    {
+        if (tokenService.IsAuthenticated)
+            NavigationManager.NavigateTo("/");
+    }
+
+    private async Task OnSubmit()
+    {
+        await form.Validate();
+        if (!form.IsValid) return;
+
+        if (isRegisterMode && password != confirmPassword)
+        {
+            errorMessage = "Passwords do not match.";
+            return;
+        }
+
+        isLoading = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            if (isRegisterMode)
+            {
+                var registerResponse = await api.RegisterAsync(new RegisterAccountRequest
+                {
+                    Email = email,
+                    Password = password
+                });
+
+                if (!registerResponse.IsSuccessStatusCode)
+                {
+                    errorMessage = await registerResponse.GetErrorBodyAsync();
+                    return;
+                }
+            }
+
+            var loginResponse = await api.LoginAsync(new LoginAccountRequest
+            {
+                Email = email,
+                Password = password
+            });
+
+            if (loginResponse.IsSuccessStatusCode)
+            {
+                var authResult = await loginResponse.Content.ReadFromJsonAsync<LoginAccountResponse>();
+                if (authResult?.Token is not null)
+                {
+                    tokenService.SetToken(authResult.Token);
+                    NavigationManager.NavigateTo("/", forceLoad: true);
+                }
+                else
+                {
+                    errorMessage = "Invalid response from server.";
+                }
+            }
+            else
+            {
+                errorMessage = await loginResponse.GetErrorBodyAsync();
+            }
+        }
+        catch (Exception)
+        {
+            errorMessage = "Unable to connect to the server. Please try again.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void ToggleMode()
+    {
+        isRegisterMode = !isRegisterMode;
+        errorMessage = string.Empty;
+        confirmPassword = string.Empty;
+    }
+}

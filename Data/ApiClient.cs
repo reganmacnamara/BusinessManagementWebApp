@@ -1,4 +1,6 @@
-﻿using MacsBusinessManagementWebApp.Data.Clients.CreateClient;
+﻿using MacsBusinessManagementWebApp.Data.Auth.Login;
+using MacsBusinessManagementWebApp.Data.Auth.Register;
+using MacsBusinessManagementWebApp.Data.Clients.CreateClient;
 using MacsBusinessManagementWebApp.Data.Clients.GetClient;
 using MacsBusinessManagementWebApp.Data.Clients.GetClients;
 using MacsBusinessManagementWebApp.Data.Clients.UpdateClient;
@@ -24,6 +26,16 @@ namespace MacsBusinessManagementWebApp.Data
 
     public class ApiClient(HttpClient http)
     {
+
+        #region Auth Endpoints
+
+        public async Task<HttpResponseMessage> LoginAsync(LoginAccountRequest request)
+            => await http.PostAsJsonAsync("/Auth/Login", request);
+
+        public async Task<HttpResponseMessage> RegisterAsync(RegisterAccountRequest request)
+            => await http.PostAsJsonAsync("/Auth/Register", request);
+
+        #endregion
 
         #region Client Endpoints
 
