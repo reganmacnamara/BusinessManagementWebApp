@@ -1,11 +1,8 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-namespace MacsBusinessManagementWebApp.Data.Entities
+﻿namespace MacsBusinessManagementWebApp.Data.Entities
 {
 
     public class Client
     {
-        [Key]
         public long ClientID { get; set; }
 
         public string ClientName { get; set; } = string.Empty;
@@ -25,6 +22,12 @@ namespace MacsBusinessManagementWebApp.Data.Entities
         public string State { get; set; } = string.Empty;
 
         public string Country { get; set; } = string.Empty;
+
+        public long? PaymentTermID { get; set; }
+
+        //Navigational Properties
+
+        public PaymentTerm? PaymentTerm { get; set; }
     }
 
 }
