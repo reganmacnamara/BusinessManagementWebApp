@@ -46,10 +46,10 @@ namespace MacsBusinessManagementWebApp.Data
             => await http.DeleteAsync($"/Client/{clientID}");
 
         public async Task<GetClientResponse> GetClientAsync(long clientID)
-            => await http.GetFromJsonAsync<GetClientResponse>($"/Client/{clientID}") ?? new GetClientResponse();
+            => await http.GetFromJsonAsync<GetClientResponse>($"/Client/{clientID}");
 
         public async Task<GetClientsResponse> GetClientsAsync()
-            => await http.GetFromJsonAsync<GetClientsResponse>("/Client") ?? new GetClientsResponse();
+            => await http.GetFromJsonAsync<GetClientsResponse>("/Client");
 
         public async Task<HttpResponseMessage> UpdateClientAsync(UpdateClientRequest request)
             => await http.PatchAsJsonAsync("/Client", request);
@@ -68,13 +68,13 @@ namespace MacsBusinessManagementWebApp.Data
             => await http.DeleteAsync($"/Invoice/Item/{invoiceItemID}");
 
         public async Task<GetClientInvoicesResponse> GetClientInvoicesAsync(long clientID)
-            => await http.GetFromJsonAsync<GetClientInvoicesResponse>($"/Invoice/Client/{clientID}") ?? new GetClientInvoicesResponse();
+            => await http.GetFromJsonAsync<GetClientInvoicesResponse>($"/Invoice/Client/{clientID}");
 
         public async Task<GetInvoiceResponse> GetInvoiceAsync(long invoiceID)
-            => await http.GetFromJsonAsync<GetInvoiceResponse>($"/Invoice/{invoiceID}") ?? new GetInvoiceResponse();
+            => await http.GetFromJsonAsync<GetInvoiceResponse>($"/Invoice/{invoiceID}");
 
         public async Task<GetInvoicesResponse> GetInvoicesAsync()
-            => await http.GetFromJsonAsync<GetInvoicesResponse>("/Invoice") ?? new GetInvoicesResponse();
+            => await http.GetFromJsonAsync<GetInvoicesResponse>("/Invoice");
 
         public async Task<HttpResponseMessage> UpdateInvoiceAsync(UpdateInvoiceRequest request)
             => await http.PatchAsJsonAsync("/Invoice", request);
@@ -93,10 +93,10 @@ namespace MacsBusinessManagementWebApp.Data
             => await http.DeleteAsync($"/Product/{productID}");
 
         public async Task<GetProductResponse> GetProductAsync(long productID)
-            => await http.GetFromJsonAsync<GetProductResponse>($"/Product/{productID}") ?? new GetProductResponse();
+            => await http.GetFromJsonAsync<GetProductResponse>($"/Product/{productID}");
 
         public async Task<GetProductsResponse> GetProductsAsync()
-            => await http.GetFromJsonAsync<GetProductsResponse>("/Product") ?? new GetProductsResponse();
+            => await http.GetFromJsonAsync<GetProductsResponse>("/Product");
 
         public async Task<HttpResponseMessage> UpdateProductAsync(UpdateProductRequest request)
             => await http.PatchAsJsonAsync("/Product", request);
@@ -125,13 +125,13 @@ namespace MacsBusinessManagementWebApp.Data
             => await http.DeleteAsync($"/Receipt/Item/{receiptItemID}");
 
         public async Task<GetClientReceiptsResponse> GetClientReceiptsAsync(long clientID)
-            => await http.GetFromJsonAsync<GetClientReceiptsResponse>($"/Receipt/Client/{clientID}") ?? new GetClientReceiptsResponse();
+            => await http.GetFromJsonAsync<GetClientReceiptsResponse>($"/Receipt/Client/{clientID}");
 
         public async Task<GetReceiptResponse> GetReceiptAsync(long receiptID)
-            => await http.GetFromJsonAsync<GetReceiptResponse>($"/Receipt/{receiptID}") ?? new GetReceiptResponse();
+            => await http.GetFromJsonAsync<GetReceiptResponse>($"/Receipt/{receiptID}");
 
         public async Task<GetReceiptsResponse> GetReceiptsAsync()
-            => await http.GetFromJsonAsync<GetReceiptsResponse>("/Receipt") ?? new GetReceiptsResponse();
+            => await http.GetFromJsonAsync<GetReceiptsResponse>("/Receipt");
 
         public async Task<HttpResponseMessage> UpdateReceiptAsync(UpdateReceiptRequest request)
             => await http.PatchAsJsonAsync("/Receipt", request);
