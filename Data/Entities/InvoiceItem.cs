@@ -11,9 +11,6 @@ public class InvoiceItem
     public decimal GrossValue { get; set; }
     public decimal TaxValue { get; set; }
     public decimal NetValue { get; set; }
-
-    //Navigation Properties
-
     public Invoice Invoice { get; set; } = default!;
     public Product Product { get; set; } = default!;
 }

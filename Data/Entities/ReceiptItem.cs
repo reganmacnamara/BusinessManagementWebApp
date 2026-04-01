@@ -8,9 +8,6 @@ public class ReceiptItem
     public decimal GrossValue { get; set; }
     public decimal TaxValue { get; set; }
     public decimal NetValue { get; set; }
-
-    //Navigation Properties
-
     public Invoice Invoice { get; set; } = default!;
     public Receipt Receipt { get; set; } = default!;
 }

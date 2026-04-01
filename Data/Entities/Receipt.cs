@@ -11,9 +11,5 @@ public class Receipt
     public decimal TaxValue { get; set; }
     public decimal NetValue { get; set; }
     public decimal OffsetValue { get; set; }
-
-
-    //Navigation Properties
-
     public Client Client { get; set; } = default!;
 }

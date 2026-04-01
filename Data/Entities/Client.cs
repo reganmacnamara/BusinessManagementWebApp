@@ -25,8 +25,6 @@
 
         public long? PaymentTermID { get; set; }
 
-        //Navigational Properties
-
         public PaymentTerm? PaymentTerm { get; set; }
     }
 
