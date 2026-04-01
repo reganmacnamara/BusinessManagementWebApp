@@ -4,9 +4,11 @@
 @using MacsBusinessManagementWebApp.Data
 @using MacsBusinessManagementWebApp.Data.Clients.DeleteClient
 @using MacsBusinessManagementWebApp.Data.Clients.UpdateClient
+@using MacsBusinessManagementWebApp.Components.PaymentTerms
 @using MacsBusinessManagementWebApp.Data.Entities
 
 @inject ApiClient api
+@inject IDialogService DialogService
 @inject IMapper mapper
 @inject NavigationManager NavigationManager
 @inject ISnackbar Snackbar
@@ -87,6 +89,27 @@ else
                         <MudItem xs="12" sm="4">
                             <MudTextField @bind-Value="client.Country" Label="Country" Variant="Variant.Outlined" />
                         </MudItem>
+                        <MudItem xs="10" sm="5">
+                            <MudSelect @key="paymentTerms.Count"
+                                       Value="client.PaymentTerm"
+                                       T="PaymentTerm"
+                                       Label="Payment Term"
+                                       Placeholder="Select Payment Term"
+                                       ValueChanged="OnPaymentTermChanged"
+                                       Variant="Variant.Outlined">
+                                @foreach (var pt in paymentTerms)
+                                {
+                                    <MudSelectItem Value="pt">@pt.PaymentTermName</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudItem>
+                        <MudItem xs="2" sm="1" Class="d-flex align-self-end">
+                            <MudTooltip Text="Add new payment term">
+                                <MudIconButton Icon="@Icons.Material.Filled.Add"
+                                               Color="Color.Primary"
+                                               OnClick="OpenCreatePaymentTermDialogAsync" />
+                            </MudTooltip>
+                        </MudItem>
                     </MudGrid>
                 </MudPaper>
             </MudTabPanel>
@@ -157,6 +180,7 @@ else
     private string deleteState = string.Empty;
     private List<Invoice> invoices = [];
     private bool isLoading = true;
+    private List<PaymentTerm> paymentTerms = [];
     private List<Receipt> receipts = [];
 
     [Parameter]
@@ -167,10 +191,36 @@ else
         var _Client = await api.GetClientAsync(id);
         var _ClientInvoices = await api.GetClientInvoicesAsync(id);
         var _ClientReceipts = await api.GetClientReceiptsAsync(id);
+        var _PaymentTerms = await api.GetPaymentTermsAsync();
 
         client = _Client.Client;
         invoices = _ClientInvoices.Invoices;
         receipts = _ClientReceipts.Receipts;
+        paymentTerms = _PaymentTerms.PaymentTerms ?? [];
+
+        if (client.PaymentTermID.HasValue)
+            client.PaymentTerm = paymentTerms.FirstOrDefault(pt => pt.PaymentTermID == client.PaymentTermID.Value);
+    }
+
+    private void OnPaymentTermChanged(PaymentTerm paymentTerm)
+    {
+        client.PaymentTerm = paymentTerm;
+        client.PaymentTermID = paymentTerm?.PaymentTermID;
+    }
+
+    private async Task OpenCreatePaymentTermDialogAsync()
+    {
+        var dialog = await DialogService.ShowAsync<AddPaymentTermDialog>();
+        var result = await dialog.Result;
+
+        if (result is not null && !result.Canceled && result.Data is not null)
+        {
+            var newPaymentTerm = (PaymentTerm)result.Data;
+            paymentTerms.Add(newPaymentTerm);
+            client.PaymentTerm = newPaymentTerm;
+            client.PaymentTermID = newPaymentTerm.PaymentTermID;
+            StateHasChanged();
+        }
     }
 
     private void InvoiceSelected(DataGridRowClickEventArgs<Invoice> args)

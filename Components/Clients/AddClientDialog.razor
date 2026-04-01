@@ -1,5 +1,6 @@
 ﻿@using System.Text.Json
 @using AutoMapper
+@using MacsBusinessManagementWebApp.Components.PaymentTerms
 @using MacsBusinessManagementWebApp.Data
 @using MacsBusinessManagementWebApp.Data.Clients.CreateClient
 @using MacsBusinessManagementWebApp.Data.Entities
@@ -25,6 +26,26 @@
         <MudTextField @bind-Value="client.PostCode" Label="Postcode" Variant="Variant.Outlined"></MudTextField>
         <MudTextField @bind-Value="client.State" Label="State" Variant="Variant.Outlined"></MudTextField>
         <MudTextField @bind-Value="client.Country" Label="Country" Variant="Variant.Outlined"></MudTextField>
+        <div class="d-flex align-center gap-2 mt-2">
+            <MudSelect @key="paymentTerms.Count"
+                       Value="client.PaymentTerm"
+                       T="PaymentTerm"
+                       Label="Payment Term"
+                       Placeholder="Select Payment Term"
+                       ValueChanged="OnPaymentTermChanged"
+                       Variant="Variant.Outlined"
+                       Style="flex: 1;">
+                @foreach (var pt in paymentTerms)
+                {
+                    <MudSelectItem Value="pt">@pt.PaymentTermName</MudSelectItem>
+                }
+            </MudSelect>
+            <MudTooltip Text="Add new payment term">
+                <MudIconButton Icon="@Icons.Material.Filled.Add"
+                               Color="Color.Primary"
+                               OnClick="OpenCreatePaymentTermDialogAsync" />
+            </MudTooltip>
+        </div>
     </DialogContent>
     <DialogActions>
         <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="OnSave" Class="px-10">Create</MudButton>
@@ -33,9 +54,37 @@
 
 @code {
     private Client client = new();
+    private List<PaymentTerm> paymentTerms = [];
 
     [CascadingParameter]
     private IMudDialogInstance MudDialog { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var _Response = await api.GetPaymentTermsAsync();
+        paymentTerms = _Response.PaymentTerms ?? [];
+    }
+
+    private void OnPaymentTermChanged(PaymentTerm paymentTerm)
+    {
+        client.PaymentTerm = paymentTerm;
+        client.PaymentTermID = paymentTerm?.PaymentTermID;
+    }
+
+    private async Task OpenCreatePaymentTermDialogAsync()
+    {
+        var dialog = await DialogService.ShowAsync<AddPaymentTermDialog>();
+        var result = await dialog.Result;
+
+        if (result is not null && !result.Canceled && result.Data is not null)
+        {
+            var newPaymentTerm = (PaymentTerm)result.Data;
+            paymentTerms.Add(newPaymentTerm);
+            client.PaymentTerm = newPaymentTerm;
+            client.PaymentTermID = newPaymentTerm.PaymentTermID;
+            StateHasChanged();
+        }
+    }
 
     private async Task OnSave()
     {

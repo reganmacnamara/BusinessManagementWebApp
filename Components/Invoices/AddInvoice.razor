@@ -139,6 +139,7 @@
     private HashSet<InvoiceItem> selectedInvoiceItems = [];
     private Invoice invoice = new();
     private List<InvoiceItem> invoiceItems = [];
+    private List<PaymentTerm> paymentTerms = [];
 
     private void AddTransactionItem(Product product)
     {
@@ -199,6 +200,9 @@
     {
         await GetClients();
 
+        var _PaymentTermsResponse = await api.GetPaymentTermsAsync();
+        paymentTerms = _PaymentTermsResponse.PaymentTerms ?? [];
+
         invoice.InvoiceDate = DateTime.UtcNow;
         invoice.DueDate = invoice.InvoiceDate.AddDays(30);
     }
@@ -209,6 +213,35 @@
             return;
 
         invoice.InvoiceDate = dateTime.Value;
+
+        if (invoice.PaymentTerm is not null)
+            invoice.DueDate = CalculateDueDate(invoice.InvoiceDate, invoice.PaymentTerm);
+    }
+
+    private DateTime CalculateDueDate(DateTime invoiceDate, PaymentTerm term)
+    {
+        var date = invoiceDate;
+
+        if (term.OffsetFirst)
+        {
+            date = date.AddDays(term.Days).AddMonths(term.Months);
+
+            if (term.EndOfMonth)
+                date = new DateTime(date.Year, date.Month, DateTime.DaysInMonth(date.Year, date.Month));
+            else if (term.DayOfMonth.HasValue)
+                date = new DateTime(date.Year, date.Month, Math.Min(term.DayOfMonth.Value, DateTime.DaysInMonth(date.Year, date.Month)));
+        }
+        else
+        {
+            if (term.EndOfMonth)
+                date = new DateTime(date.Year, date.Month, DateTime.DaysInMonth(date.Year, date.Month));
+            else if (term.DayOfMonth.HasValue)
+                date = new DateTime(date.Year, date.Month, Math.Min(term.DayOfMonth.Value, DateTime.DaysInMonth(date.Year, date.Month)));
+
+            date = date.AddDays(term.Days).AddMonths(term.Months);
+        }
+
+        return date;
     }
 
     private async Task OnSave()
@@ -280,6 +313,20 @@
     {
         invoice.Client = client;
         invoice.ClientID = client.ClientID;
+
+        if (client.PaymentTermID.HasValue)
+        {
+            var paymentTerm = client.PaymentTerm
+                ?? paymentTerms.FirstOrDefault(pt => pt.PaymentTermID == client.PaymentTermID.Value);
+
+            if (paymentTerm is not null)
+            {
+                invoice.PaymentTermID = (int)paymentTerm.PaymentTermID;
+                invoice.PaymentTerm = paymentTerm;
+                invoice.DueDate = CalculateDueDate(invoice.InvoiceDate, paymentTerm);
+                StateHasChanged();
+            }
+        }
     }
 
     private async Task OpenCreateTransactionItemDialogAsync()
@@ -310,8 +357,6 @@
     private void SelectCreatedClient(Client client)
     {
         clients.Add(client);
-        invoice.Client = client;
-        invoice.ClientID = client.ClientID;
-        StateHasChanged();
+        OnClientChanged(client);
     }
 }

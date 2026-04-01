@@ -1,0 +1,54 @@
+@using AutoMapper
+@using MacsBusinessManagementWebApp.Data
+@using MacsBusinessManagementWebApp.Data.Entities
+@using MacsBusinessManagementWebApp.Data.PaymentTerms.CreatePaymentTerm
+
+@inject ApiClient api
+@inject IMapper mapper
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.Schedule" Class="mr-3" /> Create Payment Term
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudTextField @bind-Value="paymentTerm.PaymentTermName" Label="Name" Variant="Variant.Outlined" Required="true" RequiredError="Payment Term Name Required"></MudTextField>
+        <MudNumericField @bind-Value="paymentTerm.Days" Label="Days" Variant="Variant.Outlined" Min="0"></MudNumericField>
+        <MudNumericField @bind-Value="paymentTerm.Months" Label="Months" Variant="Variant.Outlined" Min="0"></MudNumericField>
+        <MudCheckBox @bind-Value="paymentTerm.EndOfMonth" Label="End of Month" Color="Color.Primary"></MudCheckBox>
+        <MudNumericField @bind-Value="paymentTerm.DayOfMonth" Label="Day of Month" Variant="Variant.Outlined" Min="1" Max="31"></MudNumericField>
+        <MudCheckBox @bind-Value="paymentTerm.OffsetFirst" Label="Offset First" Color="Color.Primary"></MudCheckBox>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="OnSave" Class="px-10">Create</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private PaymentTerm paymentTerm = new() { PaymentTermName = string.Empty };
+
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; }
+
+    private async Task OnSave()
+    {
+        if (string.IsNullOrEmpty(paymentTerm.PaymentTermName))
+        {
+            Snackbar.Add("Payment Term must have a name.", Severity.Error);
+            return;
+        }
+        var _Request = mapper.Map<CreatePaymentTermRequest>(paymentTerm);
+        var _Response = await api.CreatePaymentTermAsync(_Request);
+        if (!_Response.IsSuccessStatusCode)
+        {
+            Snackbar.Add($"Error {(int)_Response.StatusCode}: {await _Response.GetErrorBodyAsync()}", Severity.Error);
+            return;
+        }
+
+        paymentTerm.PaymentTermID = Newtonsoft.Json.JsonConvert.DeserializeObject<CreatePaymentTermResponse>(await _Response.Content.ReadAsStringAsync())!.PaymentTermID;
+        Snackbar.Add("Payment Term Created.", Severity.Success);
+        MudDialog.Close(DialogResult.Ok(paymentTerm));
+    }
+}
