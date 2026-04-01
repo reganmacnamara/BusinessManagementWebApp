@@ -8,7 +8,7 @@ public class UpdateInvoiceRequest
 
     public DateTime InvoiceDate { get; set; }
 
-    public DateTime DueDate { get; set; }
+    public DateTime? DueDate { get; set; }
 
     public long ClientID { get; set; }
 
@@ -19,4 +19,6 @@ public class UpdateInvoiceRequest
     public decimal NetValue { get; set; }
 
     public decimal OffsetValue { get; set; }
+
+    public int? PaymentTermID { get; set; }
 }

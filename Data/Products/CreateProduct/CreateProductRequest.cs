@@ -2,9 +2,9 @@
 
 public class CreateProductRequest
 {
-    public required string ProductName { get; set; }
+    public string ProductName { get; set; } = string.Empty;
 
-    public required string ProductCode { get; set; }
+    public string ProductCode { get; set; } = string.Empty;
 
     public string ProductDescription { get; set; } = string.Empty;
 

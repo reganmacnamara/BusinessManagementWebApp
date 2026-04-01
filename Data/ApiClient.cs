@@ -10,6 +10,10 @@ using MacsBusinessManagementWebApp.Data.Invoices.GetInvoice;
 using MacsBusinessManagementWebApp.Data.Invoices.GetInvoices;
 using MacsBusinessManagementWebApp.Data.Invoices.UpdateInvoice;
 using MacsBusinessManagementWebApp.Data.Invoices.UpsertInvoiceItem;
+using MacsBusinessManagementWebApp.Data.PaymentTerms.CreatePaymentTerm;
+using MacsBusinessManagementWebApp.Data.PaymentTerms.GetPaymentTerm;
+using MacsBusinessManagementWebApp.Data.PaymentTerms.GetPaymentTerms;
+using MacsBusinessManagementWebApp.Data.PaymentTerms.UpdatePaymentTerm;
 using MacsBusinessManagementWebApp.Data.Products.CreateProduct;
 using MacsBusinessManagementWebApp.Data.Products.GetProduct;
 using MacsBusinessManagementWebApp.Data.Products.GetProducts;
@@ -81,6 +85,25 @@ namespace MacsBusinessManagementWebApp.Data
 
         public async Task<HttpResponseMessage> UpsertInvoiceItemAsync(UpsertInvoiceItemRequest request)
             => await http.PutAsJsonAsync("/Invoice/Item", request);
+
+        #endregion
+
+        #region PaymentTerm Endpoints
+
+        public async Task<HttpResponseMessage> CreatePaymentTermAsync(CreatePaymentTermRequest request)
+            => await http.PostAsJsonAsync("/PaymentTerms", request);
+
+        public async Task<HttpResponseMessage> DeletePaymentTermAsync(long paymentTermID)
+            => await http.DeleteAsync($"/PaymentTerms/{paymentTermID}");
+
+        public async Task<GetPaymentTermResponse> GetPaymentTermAsync(long paymentTermID)
+            => await http.GetFromJsonAsync<GetPaymentTermResponse>($"/PaymentTerms/{paymentTermID}");
+
+        public async Task<GetPaymentTermsResponse> GetPaymentTermsAsync()
+            => await http.GetFromJsonAsync<GetPaymentTermsResponse>("/PaymentTerms");
+
+        public async Task<HttpResponseMessage> UpdatePaymentTermAsync(UpdatePaymentTermRequest request)
+            => await http.PatchAsJsonAsync("/PaymentTerms", request);
 
         #endregion
 
