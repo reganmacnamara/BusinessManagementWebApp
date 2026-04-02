@@ -6,7 +6,7 @@ public class InvoiceItem
     public long InvoiceID { get; set; }
     public long ProductID { get; set; }
     public string Description { get; set; } = string.Empty;
-    public long Quantity { get; set; }
+    public decimal Quantity { get; set; }
     public decimal PricePerUnit { get; set; }
     public decimal GrossValue { get; set; }
     public decimal TaxValue { get; set; }

@@ -1,5 +1,6 @@
 ﻿using MacsBusinessManagementWebApp.Data.Auth.Login;
 using MacsBusinessManagementWebApp.Data.Auth.Register;
+using MacsBusinessManagementWebApp.Data.Companies.RegisterCompany;
 using MacsBusinessManagementWebApp.Data.Clients.CreateClient;
 using MacsBusinessManagementWebApp.Data.Clients.GetClient;
 using MacsBusinessManagementWebApp.Data.Clients.GetClients;
@@ -57,6 +58,13 @@ namespace MacsBusinessManagementWebApp.Data
 
         public async Task<HttpResponseMessage> UpdateClientAsync(UpdateClientRequest request)
             => await http.PatchAsJsonAsync("/Client", request);
+
+        #endregion
+
+        #region Company Endpoints
+
+        public async Task<HttpResponseMessage> RegisterCompanyAsync(RegisterCompanyRequest request)
+            => await http.PostAsJsonAsync("/Company/Register", request);
 
         #endregion
 

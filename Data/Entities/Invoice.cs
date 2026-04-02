@@ -22,7 +22,7 @@ public class Invoice
 
     public decimal OffsetValue { get; set; }
 
-    public int? PaymentTermID { get; set; }
+    public long PaymentTermID { get; set; }
 
     public Client Client { get; set; } = default!;
 

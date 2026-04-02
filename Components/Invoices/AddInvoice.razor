@@ -321,7 +321,7 @@
 
             if (paymentTerm is not null)
             {
-                invoice.PaymentTermID = (int)paymentTerm.PaymentTermID;
+                invoice.PaymentTermID = paymentTerm.PaymentTermID;
                 invoice.PaymentTerm = paymentTerm;
                 invoice.DueDate = CalculateDueDate(invoice.InvoiceDate, paymentTerm);
                 StateHasChanged();

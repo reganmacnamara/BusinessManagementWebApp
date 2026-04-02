@@ -25,6 +25,8 @@
 
         public long? PaymentTermID { get; set; }
 
+        public int? ReminderIntervalDays { get; set; }
+
         public PaymentTerm? PaymentTerm { get; set; }
     }
 

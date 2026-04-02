@@ -2,7 +2,7 @@ namespace MacsBusinessManagementWebApp.Data.PaymentTerms.CreatePaymentTerm;
 
 public class CreatePaymentTermRequest
 {
-    public string PaymentTermName { get; set; } = string.Empty;
+    public required string PaymentTermName { get; set; }
 
     public int Days { get; set; }
 

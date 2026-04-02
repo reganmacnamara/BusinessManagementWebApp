@@ -89,6 +89,9 @@ else
                         <MudItem xs="12" sm="4">
                             <MudTextField @bind-Value="client.Country" Label="Country" Variant="Variant.Outlined" />
                         </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudNumericField @bind-Value="client.ReminderIntervalDays" Label="Reminder Interval (Days)" Variant="Variant.Outlined" Min="0" />
+                        </MudItem>
                         <MudItem xs="10" sm="5">
                             <MudSelect @key="paymentTerms.Count"
                                        Value="client.PaymentTerm"

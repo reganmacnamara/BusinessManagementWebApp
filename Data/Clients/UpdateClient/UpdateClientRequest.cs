@@ -24,6 +24,8 @@
         public string Country { get; set; } = string.Empty;
 
         public int PaymentTermID { get; set; }
+
+        public int ReminderIntervalDays { get; set; }
     }
 
 }

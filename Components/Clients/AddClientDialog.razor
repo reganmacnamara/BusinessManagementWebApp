@@ -26,6 +26,7 @@
         <MudTextField @bind-Value="client.PostCode" Label="Postcode" Variant="Variant.Outlined"></MudTextField>
         <MudTextField @bind-Value="client.State" Label="State" Variant="Variant.Outlined"></MudTextField>
         <MudTextField @bind-Value="client.Country" Label="Country" Variant="Variant.Outlined"></MudTextField>
+        <MudNumericField @bind-Value="client.ReminderIntervalDays" Label="Reminder Interval (Days)" Variant="Variant.Outlined" Min="0"></MudNumericField>
         <div class="d-flex align-center gap-2 mt-2">
             <MudSelect @key="paymentTerms.Count"
                        Value="client.PaymentTerm"

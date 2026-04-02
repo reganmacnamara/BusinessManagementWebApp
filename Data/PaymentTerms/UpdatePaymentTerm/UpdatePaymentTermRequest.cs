@@ -4,7 +4,7 @@ public class UpdatePaymentTermRequest
 {
     public long PaymentTermID { get; set; }
 
-    public string PaymentTermName { get; set; } = string.Empty;
+    public required string PaymentTermName { get; set; }
 
     public int Days { get; set; }
 
