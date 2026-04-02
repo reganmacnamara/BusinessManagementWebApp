@@ -7,6 +7,8 @@ using MacsBusinessManagementWebApp.Data.Clients.UpdateClient;
 using MacsBusinessManagementWebApp.Data.Companies.GetCompany;
 using MacsBusinessManagementWebApp.Data.Companies.RegisterCompany;
 using MacsBusinessManagementWebApp.Data.Companies.UpdateCompany;
+using MacsBusinessManagementWebApp.Data.CompanySettings.GetCompanySettings;
+using MacsBusinessManagementWebApp.Data.CompanySettings.UpsertCompanySettings;
 using MacsBusinessManagementWebApp.Data.Invoices.CreateInvoice;
 using MacsBusinessManagementWebApp.Data.Invoices.GetClientInvoices;
 using MacsBusinessManagementWebApp.Data.Invoices.GetInvoice;
@@ -72,7 +74,17 @@ namespace MacsBusinessManagementWebApp.Data
             => await http.PostAsJsonAsync("/Company/Register", request);
 
         public async Task<HttpResponseMessage> UpdateCompanyAsync(UpdateCompanyRequest request)
-            => await http.PatchAsJsonAsync("/Company", request);
+            => await http.PostAsJsonAsync("/Company", request);
+
+        #endregion
+
+        #region CompanySettings Endpoints
+
+        public async Task<GetCompanySettingsResponse> GetCompanySettingsAsync()
+            => await http.GetFromJsonAsync<GetCompanySettingsResponse>("/CompanySettings");
+
+        public async Task<HttpResponseMessage> UpsertCompanySettingsAsync(UpsertCompanySettingsRequest request)
+            => await http.PostAsJsonAsync("/CompanySettings", request);
 
         #endregion
 

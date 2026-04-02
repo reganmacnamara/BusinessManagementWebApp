@@ -23,11 +23,11 @@
 
         public string Country { get; set; } = string.Empty;
 
-        public long? PaymentTermID { get; set; }
+        public long PaymentTermID { get; set; }
 
-        public int? ReminderIntervalDays { get; set; }
+        public int ReminderIntervalDays { get; set; }
 
-        public PaymentTerm? PaymentTerm { get; set; }
+        public PaymentTerm PaymentTerm { get; set; } = default!;
     }
 
 }

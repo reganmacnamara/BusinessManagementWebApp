@@ -1,71 +1,91 @@
-using Microsoft.JSInterop;
-using System.Text.Json;
+using MacsBusinessManagementWebApp.Data;
+using MacsBusinessManagementWebApp.Data.CompanySettings.UpsertCompanySettings;
+using MacsBusinessManagementWebApp.Data.Entities;
 
 namespace MacsBusinessManagementWebApp.Infrastructure.Services.Settings;
 
-public class UserSettings
+public class UserSettingsService(ApiClient api)
 {
-    public string InvoiceRefPrefix { get; set; } = string.Empty;
-    public string ReceiptRefPrefix { get; set; } = string.Empty;
-    public bool InvoiceAutoIncrement { get; set; }
-    public bool ReceiptAutoIncrement { get; set; }
-    public int NextInvoiceNumber { get; set; } = 1;
-    public int NextReceiptNumber { get; set; } = 1;
-}
-
-public class UserSettingsService(IJSRuntime js)
-{
-    private const string StorageKey = "user_settings";
-
-    public async Task<UserSettings> GetSettingsAsync()
+    public async Task<CompanySettings> GetSettingsAsync()
     {
         try
         {
-            var json = await js.InvokeAsync<string?>("localStorage.getItem", StorageKey);
-            if (!string.IsNullOrEmpty(json))
-                return JsonSerializer.Deserialize<UserSettings>(json) ?? new();
+            var response = await api.GetCompanySettingsAsync();
+            return response.CompanySettings ?? new();
         }
-        catch { }
-        return new();
+        catch
+        {
+            return new();
+        }
     }
 
-    public async Task SaveSettingsAsync(UserSettings settings)
+    public async Task<bool> SaveSettingsAsync(UpsertCompanySettingsRequest request)
     {
-        var json = JsonSerializer.Serialize(settings);
-        await js.InvokeVoidAsync("localStorage.setItem", StorageKey, json);
+        var response = await api.UpsertCompanySettingsAsync(request);
+        return response.IsSuccessStatusCode;
     }
 
     public async Task<string?> GenerateInvoiceRefAsync()
     {
         var settings = await GetSettingsAsync();
-        if (string.IsNullOrEmpty(settings.InvoiceRefPrefix) && !settings.InvoiceAutoIncrement)
+        if (string.IsNullOrEmpty(settings.InvoicePrefix) && !settings.AutoIncrementInvoice)
             return null;
 
-        var reference = settings.InvoiceRefPrefix;
-        if (settings.InvoiceAutoIncrement)
-        {
+        var reference = settings.InvoicePrefix;
+        if (settings.AutoIncrementInvoice)
             reference += settings.NextInvoiceNumber.ToString("D4");
-            settings.NextInvoiceNumber++;
-            await SaveSettingsAsync(settings);
-        }
 
         return reference;
+    }
+
+    public async Task IncrementInvoiceNumberAsync()
+    {
+        var settings = await GetSettingsAsync();
+        if (settings.AutoIncrementInvoice)
+        {
+            settings.NextInvoiceNumber++;
+            await api.UpsertCompanySettingsAsync(new UpsertCompanySettingsRequest
+            {
+                CompanySettingsID = settings.CompanySettingsID,
+                InvoicePrefix = settings.InvoicePrefix,
+                NextInvoiceNumber = settings.NextInvoiceNumber,
+                AutoIncrementInvoice = settings.AutoIncrementInvoice,
+                ReceiptPrefix = settings.ReceiptPrefix,
+                NextReceiptNumber = settings.NextReceiptNumber,
+                AutoIncrementReceipt = settings.AutoIncrementReceipt,
+            });
+        }
     }
 
     public async Task<string?> GenerateReceiptRefAsync()
     {
         var settings = await GetSettingsAsync();
-        if (string.IsNullOrEmpty(settings.ReceiptRefPrefix) && !settings.ReceiptAutoIncrement)
+        if (string.IsNullOrEmpty(settings.ReceiptPrefix) && !settings.AutoIncrementReceipt)
             return null;
 
-        var reference = settings.ReceiptRefPrefix;
-        if (settings.ReceiptAutoIncrement)
-        {
+        var reference = settings.ReceiptPrefix;
+        if (settings.AutoIncrementReceipt)
             reference += settings.NextReceiptNumber.ToString("D4");
-            settings.NextReceiptNumber++;
-            await SaveSettingsAsync(settings);
-        }
 
         return reference;
+    }
+
+    public async Task IncrementReceiptNumberAsync()
+    {
+        var settings = await GetSettingsAsync();
+        if (settings.AutoIncrementReceipt)
+        {
+            settings.NextReceiptNumber++;
+            await api.UpsertCompanySettingsAsync(new UpsertCompanySettingsRequest
+            {
+                CompanySettingsID = settings.CompanySettingsID,
+                InvoicePrefix = settings.InvoicePrefix,
+                NextInvoiceNumber = settings.NextInvoiceNumber,
+                AutoIncrementInvoice = settings.AutoIncrementInvoice,
+                ReceiptPrefix = settings.ReceiptPrefix,
+                NextReceiptNumber = settings.NextReceiptNumber,
+                AutoIncrementReceipt = settings.AutoIncrementReceipt,
+            });
+        }
     }
 }

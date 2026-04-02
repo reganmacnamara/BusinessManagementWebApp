@@ -21,4 +21,6 @@ public class Company
     public string PostCode { get; set; } = string.Empty;
 
     public string Country { get; set; } = string.Empty;
+
+    public long CompanySettingsID { get; set; }
 }

@@ -1,5 +1,6 @@
 using AutoMapper;
 using MacsBusinessManagementWebApp.Data.Companies.UpdateCompany;
+using MacsBusinessManagementWebApp.Data.CompanySettings.UpsertCompanySettings;
 using MacsBusinessManagementWebApp.Data.Entities;
 
 namespace MacsBusinessManagementWebApp.Infrastructure.AutoMapper
@@ -11,6 +12,7 @@ namespace MacsBusinessManagementWebApp.Infrastructure.AutoMapper
         public CompanyProfile()
         {
             CreateMap<Company, UpdateCompanyRequest>();
+            CreateMap<CompanySettings, UpsertCompanySettingsRequest>();
         }
 
     }

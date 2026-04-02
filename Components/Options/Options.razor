@@ -1,10 +1,12 @@
 @page "/options"
 @using AutoMapper
 @using MacsBusinessManagementWebApp.Data
+@using AutoMapper
+@using MacsBusinessManagementWebApp.Data
 @using MacsBusinessManagementWebApp.Data.Companies.UpdateCompany
+@using MacsBusinessManagementWebApp.Data.CompanySettings.UpsertCompanySettings
 @using MacsBusinessManagementWebApp.Data.Entities
 @using MacsBusinessManagementWebApp.Data.PaymentTerms.UpdatePaymentTerm
-@using MacsBusinessManagementWebApp.Infrastructure.Services.Settings
 @using MudBlazor
 @rendermode InteractiveServer
 
@@ -12,7 +14,6 @@
 @inject IDialogService DialogService
 @inject IMapper mapper
 @inject ISnackbar Snackbar
-@inject UserSettingsService settingsService
 
 <PageTitle>Options</PageTitle>
 
@@ -203,19 +204,19 @@
                             </MudText>
                         </MudItem>
                         <MudItem xs="12" sm="4">
-                            <MudTextField @bind-Value="settings.InvoiceRefPrefix"
+                            <MudTextField @bind-Value="companySettings.InvoicePrefix"
                                           Label="Invoice Prefix"
                                           Placeholder="e.g. INV-"
                                           Variant="Variant.Outlined" />
                         </MudItem>
                         <MudItem xs="12" sm="4">
-                            <MudNumericField @bind-Value="settings.NextInvoiceNumber"
+                            <MudNumericField @bind-Value="companySettings.NextInvoiceNumber"
                                              Label="Next Number"
                                              Variant="Variant.Outlined"
                                              Min="1" />
                         </MudItem>
                         <MudItem xs="12" sm="4" Class="d-flex align-center">
-                            <MudSwitch @bind-Value="settings.InvoiceAutoIncrement"
+                            <MudSwitch @bind-Value="companySettings.AutoIncrementInvoice"
                                        Color="Color.Primary"
                                        Label="Auto-Increment" />
                         </MudItem>
@@ -237,19 +238,19 @@
                             </MudText>
                         </MudItem>
                         <MudItem xs="12" sm="4">
-                            <MudTextField @bind-Value="settings.ReceiptRefPrefix"
+                            <MudTextField @bind-Value="companySettings.ReceiptPrefix"
                                           Label="Receipt Prefix"
                                           Placeholder="e.g. REC-"
                                           Variant="Variant.Outlined" />
                         </MudItem>
                         <MudItem xs="12" sm="4">
-                            <MudNumericField @bind-Value="settings.NextReceiptNumber"
+                            <MudNumericField @bind-Value="companySettings.NextReceiptNumber"
                                              Label="Next Number"
                                              Variant="Variant.Outlined"
                                              Min="1" />
                         </MudItem>
                         <MudItem xs="12" sm="4" Class="d-flex align-center">
-                            <MudSwitch @bind-Value="settings.ReceiptAutoIncrement"
+                            <MudSwitch @bind-Value="companySettings.AutoIncrementReceipt"
                                        Color="Color.Primary"
                                        Label="Auto-Increment" />
                         </MudItem>
@@ -453,15 +454,26 @@
 
     #region Defaults
 
-    private UserSettings settings = new();
+    private Data.Entities.CompanySettings companySettings = new();
     private bool settingsLoading = true;
     private bool settingsSaving;
 
     private async Task LoadSettings()
     {
         settingsLoading = true;
-        settings = await settingsService.GetSettingsAsync();
-        settingsLoading = false;
+        try
+        {
+            var response = await api.GetCompanySettingsAsync();
+            companySettings = response.CompanySettings ?? new();
+        }
+        catch
+        {
+            companySettings = new();
+        }
+        finally
+        {
+            settingsLoading = false;
+        }
     }
 
     private async Task SaveSettings()
@@ -469,8 +481,13 @@
         settingsSaving = true;
         try
         {
-            await settingsService.SaveSettingsAsync(settings);
-            Snackbar.Add("Defaults saved.", Severity.Success);
+            var request = mapper.Map<UpsertCompanySettingsRequest>(companySettings);
+            var response = await api.UpsertCompanySettingsAsync(request);
+
+            if (response.IsSuccessStatusCode)
+                Snackbar.Add("Defaults saved.", Severity.Success);
+            else
+                Snackbar.Add($"Error {(int)response.StatusCode}: {await response.GetErrorBodyAsync()}", Severity.Error);
         }
         catch
         {
@@ -484,17 +501,17 @@
 
     private string GetInvoicePreview()
     {
-        var prefix = settings.InvoiceRefPrefix;
-        if (settings.InvoiceAutoIncrement)
-            return $"{prefix}{settings.NextInvoiceNumber:D4}";
+        var prefix = companySettings.InvoicePrefix;
+        if (companySettings.AutoIncrementInvoice)
+            return $"{prefix}{companySettings.NextInvoiceNumber:D4}";
         return string.IsNullOrEmpty(prefix) ? "(no prefix set)" : prefix;
     }
 
     private string GetReceiptPreview()
     {
-        var prefix = settings.ReceiptRefPrefix;
-        if (settings.ReceiptAutoIncrement)
-            return $"{prefix}{settings.NextReceiptNumber:D4}";
+        var prefix = companySettings.ReceiptPrefix;
+        if (companySettings.AutoIncrementReceipt)
+            return $"{prefix}{companySettings.NextReceiptNumber:D4}";
         return string.IsNullOrEmpty(prefix) ? "(no prefix set)" : prefix;
     }
 
@@ -504,17 +521,9 @@
     {
         var companyTask = LoadCompany();
         var termsTask = LoadPaymentTerms();
+        var settingsTask = LoadSettings();
 
-        await Task.WhenAll(companyTask, termsTask);
+        await Task.WhenAll(companyTask, termsTask, settingsTask);
         StateHasChanged();
-    }
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender)
-        {
-            await LoadSettings();
-            StateHasChanged();
-        }
     }
 }

@@ -69,7 +69,7 @@
     private void OnPaymentTermChanged(PaymentTerm paymentTerm)
     {
         client.PaymentTerm = paymentTerm;
-        client.PaymentTermID = paymentTerm?.PaymentTermID;
+        client.PaymentTermID = paymentTerm?.PaymentTermID ?? 0;
     }
 
     private async Task OpenCreatePaymentTermDialogAsync()

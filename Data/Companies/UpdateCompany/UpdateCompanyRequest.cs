@@ -2,8 +2,6 @@ namespace MacsBusinessManagementWebApp.Data.Companies.UpdateCompany;
 
 public class UpdateCompanyRequest
 {
-    public long CompanyID { get; set; }
-
     public string CompanyName { get; set; } = string.Empty;
 
     public string CompanyABN { get; set; } = string.Empty;

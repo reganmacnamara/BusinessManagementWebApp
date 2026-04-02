@@ -6,12 +6,14 @@
 @using MacsBusinessManagementWebApp.Data.Entities
 @using MacsBusinessManagementWebApp.Data.Invoices.CreateInvoice
 @using MacsBusinessManagementWebApp.Data.Invoices.UpsertInvoiceItem
+@using MacsBusinessManagementWebApp.Infrastructure.Services.Settings
 
 @inject ApiClient api
 @inject IMapper mapper
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 @inject NavigationManager NavigationManager
+@inject UserSettingsService settingsService
 
 <PageTitle>New Invoice</PageTitle>
 
@@ -209,6 +211,10 @@
 
         invoice.InvoiceDate = DateTime.UtcNow;
         invoice.DueDate = invoice.InvoiceDate.AddDays(30);
+
+        var generatedRef = await settingsService.GenerateInvoiceRefAsync();
+        if (!string.IsNullOrEmpty(generatedRef))
+            invoice.InvoiceRef = generatedRef;
     }
 
     private async Task OnInvoiceDateChanged(DateTime? dateTime)
@@ -296,6 +302,7 @@
             }
         }
 
+        await settingsService.IncrementInvoiceNumberAsync();
         Snackbar.Add("Invoice Created.", Severity.Success);
         NavigateToInvoices();
     }
@@ -318,10 +325,10 @@
         invoice.Client = client;
         invoice.ClientID = client.ClientID;
 
-        if (client.PaymentTermID.HasValue)
+        if (client.PaymentTermID > 0)
         {
             var paymentTerm = client.PaymentTerm
-                ?? paymentTerms.FirstOrDefault(pt => pt.PaymentTermID == client.PaymentTermID.Value);
+                ?? paymentTerms.FirstOrDefault(pt => pt.PaymentTermID == client.PaymentTermID);
 
             if (paymentTerm is not null)
             {

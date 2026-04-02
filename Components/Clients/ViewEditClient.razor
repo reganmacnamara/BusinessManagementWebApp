@@ -201,8 +201,8 @@ else
         receipts = _ClientReceipts.Receipts;
         paymentTerms = _PaymentTerms.PaymentTerms ?? [];
 
-        if (client.PaymentTermID.HasValue)
-            client.PaymentTerm = paymentTerms.FirstOrDefault(pt => pt.PaymentTermID == client.PaymentTermID.Value);
+        if (client.PaymentTermID > 0)
+            client.PaymentTerm = paymentTerms.FirstOrDefault(pt => pt.PaymentTermID == client.PaymentTermID);
     }
 
     private static string? ValidateEmail(string value)
@@ -219,7 +219,7 @@ else
     private void OnPaymentTermChanged(PaymentTerm paymentTerm)
     {
         client.PaymentTerm = paymentTerm;
-        client.PaymentTermID = paymentTerm?.PaymentTermID;
+        client.PaymentTermID = paymentTerm?.PaymentTermID ?? 0;
     }
 
     private async Task OpenCreatePaymentTermDialogAsync()
