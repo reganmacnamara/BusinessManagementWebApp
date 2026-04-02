@@ -24,6 +24,10 @@
             Mac's Business Manager
         </MudText>
         <MudSpacer />
+        <MudIconButton Icon="@Icons.Material.Filled.Settings"
+                       Color="Color.Inherit"
+                       OnClick="NavigateToOptions"
+                       Title="Options" />
         <MudIconButton Icon="@Icons.Material.Filled.Logout"
                        Color="Color.Inherit"
                        OnClick="Logout"
@@ -98,6 +102,8 @@
     }
 
     private void DrawerToggle() => _drawerOpen = !_drawerOpen;
+
+    private void NavigateToOptions() => NavigationManager.NavigateTo("/options");
 
     private void Logout()
     {
