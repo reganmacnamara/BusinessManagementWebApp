@@ -10,7 +10,7 @@
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pa-6">
 
     <div class="mb-6">
-        <MudText Typo="Typo.h5" Style="font-weight: 700; color: #0F172A;">Dashboard</MudText>
+        <MudText Typo="Typo.h5" Class="page-title">Dashboard</MudText>
         <MudText Typo="Typo.body2" Color="Color.Secondary">Welcome back — here's what's happening today.</MudText>
     </div>
 
@@ -36,9 +36,9 @@
                             <MudIcon Icon="@Icons.Material.Filled.People" Style="color: #3B82F6; font-size: 1.5rem;" />
                         </div>
                         <div>
-                            <MudText Typo="Typo.caption" Style="font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #64748B;">Clients</MudText>
-                            <MudText Typo="Typo.h4" Style="font-weight: 700; color: #0F172A; line-height: 1.2;">@clients.Count</MudText>
-                            <MudText Typo="Typo.caption" Style="color: #94A3B8;">Total clients</MudText>
+                            <MudText Typo="Typo.caption" Class="stat-label">Clients</MudText>
+                            <MudText Typo="Typo.h4" Class="stat-value">@clients.Count</MudText>
+                            <MudText Typo="Typo.caption" Class="stat-hint">Total clients</MudText>
                         </div>
                     </div>
                 </div>
@@ -51,9 +51,9 @@
                             <MudIcon Icon="@Icons.Material.Filled.Pending" Style="color: #F59E0B; font-size: 1.5rem;" />
                         </div>
                         <div>
-                            <MudText Typo="Typo.caption" Style="font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #64748B;">Outstanding</MudText>
-                            <MudText Typo="Typo.h5" Style="font-weight: 700; color: #0F172A; line-height: 1.2;">@totalOutstanding.ToString("C")</MudText>
-                            <MudText Typo="Typo.caption" Style="color: #94A3B8;">@outstandingCount invoice(s) unpaid</MudText>
+                            <MudText Typo="Typo.caption" Class="stat-label">Outstanding</MudText>
+                            <MudText Typo="Typo.h5" Class="stat-value">@totalOutstanding.ToString("C")</MudText>
+                            <MudText Typo="Typo.caption" Class="stat-hint">@outstandingCount invoice(s) unpaid</MudText>
                         </div>
                     </div>
                 </div>
@@ -66,9 +66,9 @@
                             <MudIcon Icon="@Icons.Material.Filled.Payments" Style="color: #10B981; font-size: 1.5rem;" />
                         </div>
                         <div>
-                            <MudText Typo="Typo.caption" Style="font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #64748B;">Received</MudText>
-                            <MudText Typo="Typo.h5" Style="font-weight: 700; color: #0F172A; line-height: 1.2;">@totalReceived.ToString("C")</MudText>
-                            <MudText Typo="Typo.caption" Style="color: #94A3B8;">@receipts.Count receipt(s)</MudText>
+                            <MudText Typo="Typo.caption" Class="stat-label">Received</MudText>
+                            <MudText Typo="Typo.h5" Class="stat-value">@totalReceived.ToString("C")</MudText>
+                            <MudText Typo="Typo.caption" Class="stat-hint">@receipts.Count receipt(s)</MudText>
                         </div>
                     </div>
                 </div>
@@ -81,9 +81,9 @@
                             <MudIcon Icon="@Icons.Material.Filled.Inventory2" Style="color: #8B5CF6; font-size: 1.5rem;" />
                         </div>
                         <div>
-                            <MudText Typo="Typo.caption" Style="font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #64748B;">Products</MudText>
-                            <MudText Typo="Typo.h4" Style="font-weight: 700; color: #0F172A; line-height: 1.2;">@products.Count</MudText>
-                            <MudText Typo="Typo.caption" Style="color: #94A3B8;">Total products</MudText>
+                            <MudText Typo="Typo.caption" Class="stat-label">Products</MudText>
+                            <MudText Typo="Typo.h4" Class="stat-value">@products.Count</MudText>
+                            <MudText Typo="Typo.caption" Class="stat-hint">Total products</MudText>
                         </div>
                     </div>
                 </div>

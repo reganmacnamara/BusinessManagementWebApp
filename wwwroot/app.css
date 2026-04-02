@@ -51,6 +51,44 @@ html, body {
     cursor: pointer;
 }
 
+.stat-label {
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: #64748B;
+}
+
+.stat-value {
+    font-weight: 700;
+    color: #0F172A;
+    line-height: 1.2;
+}
+
+.stat-hint {
+    color: #94A3B8;
+}
+
+.section-divider {
+    border-bottom: 1px solid #E2E8F0;
+}
+
+.page-title {
+    font-weight: 700;
+    color: #0F172A;
+}
+
+.selected {
+    background-color: #1E88E5 !important;
+}
+
+.selected > td {
+    color: white !important;
+}
+
+.selected > td .mud-input {
+    color: white !important;
+}
+
 .mud-nav-link.active {
     background-color: rgba(59, 130, 246, 0.15) !important;
     color: #93C5FD !important;

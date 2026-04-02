@@ -1,10 +1,12 @@
 ﻿using MacsBusinessManagementWebApp.Data.Auth.Login;
 using MacsBusinessManagementWebApp.Data.Auth.Register;
-using MacsBusinessManagementWebApp.Data.Companies.RegisterCompany;
 using MacsBusinessManagementWebApp.Data.Clients.CreateClient;
 using MacsBusinessManagementWebApp.Data.Clients.GetClient;
 using MacsBusinessManagementWebApp.Data.Clients.GetClients;
 using MacsBusinessManagementWebApp.Data.Clients.UpdateClient;
+using MacsBusinessManagementWebApp.Data.Companies.GetCompany;
+using MacsBusinessManagementWebApp.Data.Companies.RegisterCompany;
+using MacsBusinessManagementWebApp.Data.Companies.UpdateCompany;
 using MacsBusinessManagementWebApp.Data.Invoices.CreateInvoice;
 using MacsBusinessManagementWebApp.Data.Invoices.GetClientInvoices;
 using MacsBusinessManagementWebApp.Data.Invoices.GetInvoice;
@@ -63,8 +65,14 @@ namespace MacsBusinessManagementWebApp.Data
 
         #region Company Endpoints
 
+        public async Task<GetCompanyResponse> GetCompanyAsync()
+            => await http.GetFromJsonAsync<GetCompanyResponse>("/Company");
+
         public async Task<HttpResponseMessage> RegisterCompanyAsync(RegisterCompanyRequest request)
             => await http.PostAsJsonAsync("/Company/Register", request);
+
+        public async Task<HttpResponseMessage> UpdateCompanyAsync(UpdateCompanyRequest request)
+            => await http.PatchAsJsonAsync("/Company", request);
 
         #endregion
 

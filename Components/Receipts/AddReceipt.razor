@@ -13,25 +13,29 @@
 @inject ISnackbar Snackbar
 @inject NavigationManager NavigationManager
 
+<PageTitle>New Receipt</PageTitle>
+
 <div class="page-header">
-    <div class="d-flex align-center">
-        <MudButton Variant="Variant.Text"
-                   Color="Color.Default"
-                   StartIcon="@Icons.Material.Filled.ArrowBack"
-                   OnClick="NavigateToReceipts"
-                   Class="mr-2"
-                   Style="min-width: 0;">Back</MudButton>
-        <MudDivider Vertical="true" FlexItem="true" Class="mx-2" Style="height: 32px; align-self: center;" />
-        <div>
-            <MudText Typo="Typo.h6" Style="font-weight: 700; line-height: 1.2;">New Receipt</MudText>
-            <MudText Typo="Typo.caption" Color="Color.Secondary">Record a new client payment</MudText>
+    <MudContainer MaxWidth="MaxWidth.Large" Class="pa-0">
+        <div class="d-flex align-center">
+            <MudButton Variant="Variant.Text"
+                       Color="Color.Default"
+                       StartIcon="@Icons.Material.Filled.ArrowBack"
+                       OnClick="NavigateToReceipts"
+                       Class="mr-2"
+                       Style="min-width: 0;">Back</MudButton>
+            <MudDivider Vertical="true" FlexItem="true" Class="mx-2" Style="height: 32px; align-self: center;" />
+            <div>
+                <MudText Typo="Typo.h6" Style="font-weight: 700; line-height: 1.2;">New Receipt</MudText>
+                <MudText Typo="Typo.caption" Color="Color.Secondary">Record a new client payment</MudText>
+            </div>
+            <MudSpacer />
+            <MudButton Color="Color.Primary"
+                       OnClick="OnSave"
+                       StartIcon="@Icons.Material.Filled.Save"
+                       Variant="Variant.Filled">Save</MudButton>
         </div>
-        <MudSpacer />
-        <MudButton Color="Color.Primary"
-                   OnClick="OnSave"
-                   StartIcon="@Icons.Material.Filled.Save"
-                   Variant="Variant.Filled">Save</MudButton>
-    </div>
+    </MudContainer>
 </div>
 
 <MudContainer MaxWidth="MaxWidth.Large" Class="pa-6">
@@ -197,7 +201,7 @@
 
     private void CompleteAllocation(ReceiptItem allocation)
     {
-        var invoiceRemaining = allocation.Invoice.NetValue - allocation.Invoice.OffsetValue;
+        var invoiceRemaining = allocation.Invoice.NetValue - allocation.Invoice.OffsetValue + allocation.NetValue;
         var receiptAvailable = receipt.NetValue - receipt.OffsetValue + allocation.NetValue;
         allocation.NetValue = Math.Min(invoiceRemaining, receiptAvailable);
         RecalculateOffsets();

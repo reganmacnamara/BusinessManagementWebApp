@@ -11,11 +11,13 @@
 @inject NavigationManager NavigationManager
 @inject ISnackbar Snackbar
 
+<PageTitle>Receipts</PageTitle>
+
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pa-6">
 
     <div class="d-flex align-center mb-6">
         <div>
-            <MudText Typo="Typo.h5" Style="font-weight: 700; color: #0F172A;">Receipts</MudText>
+            <MudText Typo="Typo.h5" Class="page-title">Receipts</MudText>
             <MudText Typo="Typo.body2" Color="Color.Secondary">Track all payments received from clients</MudText>
         </div>
         <MudSpacer />
@@ -45,8 +47,8 @@
                         <MudIcon Icon="@Icons.Material.Filled.Payments" Style="color: #3B82F6; font-size: 1.5rem;" />
                     </div>
                     <div>
-                        <MudText Typo="Typo.caption" Style="font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #64748B;">Total Receipts</MudText>
-                        <MudText Typo="Typo.h4" Style="font-weight: 700; color: #0F172A; line-height: 1.2;">@receipts.Count</MudText>
+                        <MudText Typo="Typo.caption" Class="stat-label">Total Receipts</MudText>
+                        <MudText Typo="Typo.h4" Class="stat-value">@receipts.Count</MudText>
                     </div>
                 </div>
             </div>
@@ -58,8 +60,8 @@
                         <MudIcon Icon="@Icons.Material.Filled.AttachMoney" Style="color: #10B981; font-size: 1.5rem;" />
                     </div>
                     <div>
-                        <MudText Typo="Typo.caption" Style="font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #64748B;">Total Received</MudText>
-                        <MudText Typo="Typo.h5" Style="font-weight: 700; color: #0F172A; line-height: 1.2;">@receipts.Sum(x => x.NetValue).ToString("C")</MudText>
+                        <MudText Typo="Typo.caption" Class="stat-label">Total Received</MudText>
+                        <MudText Typo="Typo.h5" Class="stat-value">@receipts.Sum(x => x.NetValue).ToString("C")</MudText>
                     </div>
                 </div>
             </div>
@@ -71,8 +73,8 @@
                         <MudIcon Icon="@Icons.Material.Filled.AccountBalanceWallet" Style="color: #F59E0B; font-size: 1.5rem;" />
                     </div>
                     <div>
-                        <MudText Typo="Typo.caption" Style="font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #64748B;">Unallocated</MudText>
-                        <MudText Typo="Typo.h5" Style="font-weight: 700; color: #0F172A; line-height: 1.2;">@receipts.Sum(x => Math.Max(0m, x.NetValue - x.OffsetValue)).ToString("C")</MudText>
+                        <MudText Typo="Typo.caption" Class="stat-label">Unallocated</MudText>
+                        <MudText Typo="Typo.h5" Class="stat-value">@receipts.Sum(x => Math.Max(0m, x.NetValue - x.OffsetValue)).ToString("C")</MudText>
                     </div>
                 </div>
             </div>

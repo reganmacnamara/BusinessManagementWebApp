@@ -159,15 +159,17 @@ else
 
     private void AddInvoiceItem(Product product)
     {
+        var gross = product.UnitPrice * 1;
+        var tax = gross * 0.1m;
         invoiceItems.Add(new()
         {
             Product = product,
             ProductID = product.ProductID,
             PricePerUnit = product.UnitPrice,
             Quantity = 1,
-            GrossValue = product.UnitPrice,
-            TaxValue = product.UnitPrice,
-            NetValue = product.UnitPrice,
+            GrossValue = gross,
+            TaxValue = tax,
+            NetValue = gross + tax,
         });
         StateHasChanged();
     }
@@ -187,7 +189,7 @@ else
         StateHasChanged();
     }
 
-    private async Task GetTranctionData()
+    private async Task GetTransactionData()
     {
         var _Response = await api.GetInvoiceAsync(id);
         invoice = _Response.Invoice;
@@ -245,7 +247,7 @@ else
     }
 
     protected override async Task OnParametersSetAsync()
-        => await GetTranctionData();
+        => await GetTransactionData();
 
     private async Task OnSave()
     {

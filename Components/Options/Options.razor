@@ -1,0 +1,520 @@
+@page "/options"
+@using AutoMapper
+@using MacsBusinessManagementWebApp.Data
+@using MacsBusinessManagementWebApp.Data.Companies.UpdateCompany
+@using MacsBusinessManagementWebApp.Data.Entities
+@using MacsBusinessManagementWebApp.Data.PaymentTerms.UpdatePaymentTerm
+@using MacsBusinessManagementWebApp.Infrastructure.Services.Settings
+@using MudBlazor
+@rendermode InteractiveServer
+
+@inject ApiClient api
+@inject IDialogService DialogService
+@inject IMapper mapper
+@inject ISnackbar Snackbar
+@inject UserSettingsService settingsService
+
+<PageTitle>Options</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="pa-6">
+
+    <div class="mb-6">
+        <MudText Typo="Typo.h5" Class="page-title">Options</MudText>
+        <MudText Typo="Typo.body2" Color="Color.Secondary">Manage your company, payment terms and application defaults</MudText>
+    </div>
+
+    <MudTabs Elevation="0" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pt-4"
+             Color="Color.Primary" SliderColor="Color.Primary">
+
+        @* ───────── Company Tab ───────── *@
+        <MudTabPanel Text="Company" Icon="@Icons.Material.Filled.Business">
+            <MudPaper Elevation="0" Class="table-card pa-6">
+                @if (companyLoading)
+                {
+                    <div class="d-flex justify-center pa-8">
+                        <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+                    </div>
+                }
+                else if (companyLoadError)
+                {
+                    <MudAlert Severity="Severity.Warning" Class="mb-4">
+                        Unable to load company details. The API may not support this yet.
+                    </MudAlert>
+                }
+                else
+                {
+                    <MudGrid Spacing="3">
+                        <MudItem xs="12">
+                            <MudText Typo="Typo.subtitle1" Style="font-weight: 600;" Class="mb-2">Company Details</MudText>
+                            <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-4">Update your company information that appears on invoices and receipts.</MudText>
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField @bind-Value="company.CompanyName"
+                                          Label="Company Name"
+                                          Variant="Variant.Outlined"
+                                          Required="true"
+                                          RequiredError="Company name is required" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField @bind-Value="company.CompanyABN"
+                                          Label="ABN"
+                                          Variant="Variant.Outlined"
+                                          Required="true"
+                                          RequiredError="ABN is required" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField @bind-Value="company.Email"
+                                          Label="Email"
+                                          InputType="InputType.Email"
+                                          Variant="Variant.Outlined"
+                                          Required="true"
+                                          RequiredError="Email is required"
+                                          Validation="@(new Func<string, string?>(ValidateEmail))" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField @bind-Value="company.Phone"
+                                          Label="Phone"
+                                          Variant="Variant.Outlined" />
+                        </MudItem>
+
+                        <MudItem xs="12">
+                            <MudDivider Class="my-2" />
+                        </MudItem>
+
+                        <MudItem xs="12" sm="6">
+                            <MudTextField @bind-Value="company.AddressLine1"
+                                          Label="Address Line 1"
+                                          Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField @bind-Value="company.AddressLine2"
+                                          Label="Address Line 2"
+                                          Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" sm="4">
+                            <MudTextField @bind-Value="company.State"
+                                          Label="State"
+                                          Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" sm="4">
+                            <MudTextField @bind-Value="company.PostCode"
+                                          Label="Postcode"
+                                          Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" sm="4">
+                            <MudTextField @bind-Value="company.Country"
+                                          Label="Country"
+                                          Variant="Variant.Outlined" />
+                        </MudItem>
+
+                        <MudItem xs="12" Class="d-flex justify-end">
+                            <MudButton Color="Color.Primary"
+                                       Variant="Variant.Filled"
+                                       StartIcon="@Icons.Material.Filled.Save"
+                                       OnClick="SaveCompany"
+                                       Disabled="@companySaving">
+                                @if (companySaving)
+                                {
+                                    <MudProgressCircular Size="Size.Small" Color="Color.Inherit" Indeterminate="true" Class="mr-2" />
+                                }
+                                Save Changes
+                            </MudButton>
+                        </MudItem>
+                    </MudGrid>
+                }
+            </MudPaper>
+        </MudTabPanel>
+
+        @* ───────── Payment Terms Tab ───────── *@
+        <MudTabPanel Text="Payment Terms" Icon="@Icons.Material.Filled.Schedule">
+            <MudPaper Elevation="0" Class="table-card">
+                <div class="d-flex align-center pa-4" style="border-bottom: 1px solid #E2E8F0;">
+                    <MudText Typo="Typo.subtitle1" Style="font-weight: 600;">Payment Terms</MudText>
+                    <MudSpacer />
+                    <MudStack Row="true" Spacing="2">
+                        <MudButton Color="Color.Error"
+                                   Disabled="@(!selectedTerms.Any())"
+                                   OnClick="OnDeleteTerms"
+                                   StartIcon="@Icons.Material.Filled.Delete"
+                                   Variant="Variant.Outlined"
+                                   Size="Size.Small">Delete</MudButton>
+                        <MudButton Color="Color.Primary"
+                                   OnClick="OpenCreateTermDialogAsync"
+                                   StartIcon="@Icons.Material.Filled.Add"
+                                   Variant="Variant.Filled"
+                                   Size="Size.Small">New Term</MudButton>
+                    </MudStack>
+                </div>
+                <MudDataGrid @bind-SelectedItems="selectedTerms"
+                             Breakpoint="Breakpoint.Sm"
+                             Items="@paymentTerms"
+                             Hover="true"
+                             Loading="@termsLoading"
+                             LoadingProgressColor="Color.Primary"
+                             MultiSelection="true"
+                             SelectOnRowClick="false"
+                             CommittedItemChanges="OnTermEdited"
+                             EditMode="DataGridEditMode.Cell"
+                             EditTrigger="DataGridEditTrigger.OnRowClick"
+                             ReadOnly="false"
+                             T="PaymentTerm">
+                    <Columns>
+                        <SelectColumn T="PaymentTerm" />
+                        <PropertyColumn Property="x => x.PaymentTermName" Title="Name" />
+                        <PropertyColumn Property="x => x.Days" Title="Days" />
+                        <PropertyColumn Property="x => x.Months" Title="Months" />
+                        <TemplateColumn Title="End of Month" Editable="false">
+                            <CellTemplate>
+                                <MudCheckBox T="bool" Value="context.Item.EndOfMonth"
+                                             ValueChanged="(val) => ToggleEndOfMonth(context.Item, val)"
+                                             Color="Color.Primary" Dense="true" />
+                            </CellTemplate>
+                        </TemplateColumn>
+                        <PropertyColumn Property="x => x.DayOfMonth" Title="Day of Month" />
+                        <TemplateColumn Title="Offset First" Editable="false">
+                            <CellTemplate>
+                                <MudCheckBox T="bool" Value="context.Item.OffsetFirst"
+                                             ValueChanged="(val) => ToggleOffsetFirst(context.Item, val)"
+                                             Color="Color.Primary" Dense="true" />
+                            </CellTemplate>
+                        </TemplateColumn>
+                    </Columns>
+                </MudDataGrid>
+            </MudPaper>
+        </MudTabPanel>
+
+        @* ───────── Defaults Tab ───────── *@
+        <MudTabPanel Text="Defaults" Icon="@Icons.Material.Filled.Tune">
+            <MudPaper Elevation="0" Class="table-card pa-6">
+                @if (settingsLoading)
+                {
+                    <div class="d-flex justify-center pa-8">
+                        <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+                    </div>
+                }
+                else
+                {
+                    <MudGrid Spacing="3">
+                        @* Invoice Defaults *@
+                        <MudItem xs="12">
+                            <MudText Typo="Typo.subtitle1" Style="font-weight: 600;" Class="mb-1">Invoice Reference</MudText>
+                            <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-3">
+                                Set a prefix and enable auto-increment to automatically generate invoice references.
+                            </MudText>
+                        </MudItem>
+                        <MudItem xs="12" sm="4">
+                            <MudTextField @bind-Value="settings.InvoiceRefPrefix"
+                                          Label="Invoice Prefix"
+                                          Placeholder="e.g. INV-"
+                                          Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" sm="4">
+                            <MudNumericField @bind-Value="settings.NextInvoiceNumber"
+                                             Label="Next Number"
+                                             Variant="Variant.Outlined"
+                                             Min="1" />
+                        </MudItem>
+                        <MudItem xs="12" sm="4" Class="d-flex align-center">
+                            <MudSwitch @bind-Value="settings.InvoiceAutoIncrement"
+                                       Color="Color.Primary"
+                                       Label="Auto-Increment" />
+                        </MudItem>
+                        <MudItem xs="12">
+                            <MudAlert Severity="Severity.Info" Dense="true" NoIcon="false" Class="mb-2">
+                                Preview: <strong>@GetInvoicePreview()</strong>
+                            </MudAlert>
+                        </MudItem>
+
+                        <MudItem xs="12">
+                            <MudDivider Class="my-2" />
+                        </MudItem>
+
+                        @* Receipt Defaults *@
+                        <MudItem xs="12">
+                            <MudText Typo="Typo.subtitle1" Style="font-weight: 600;" Class="mb-1">Receipt Reference</MudText>
+                            <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-3">
+                                Set a prefix and enable auto-increment to automatically generate receipt references.
+                            </MudText>
+                        </MudItem>
+                        <MudItem xs="12" sm="4">
+                            <MudTextField @bind-Value="settings.ReceiptRefPrefix"
+                                          Label="Receipt Prefix"
+                                          Placeholder="e.g. REC-"
+                                          Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" sm="4">
+                            <MudNumericField @bind-Value="settings.NextReceiptNumber"
+                                             Label="Next Number"
+                                             Variant="Variant.Outlined"
+                                             Min="1" />
+                        </MudItem>
+                        <MudItem xs="12" sm="4" Class="d-flex align-center">
+                            <MudSwitch @bind-Value="settings.ReceiptAutoIncrement"
+                                       Color="Color.Primary"
+                                       Label="Auto-Increment" />
+                        </MudItem>
+                        <MudItem xs="12">
+                            <MudAlert Severity="Severity.Info" Dense="true" NoIcon="false" Class="mb-2">
+                                Preview: <strong>@GetReceiptPreview()</strong>
+                            </MudAlert>
+                        </MudItem>
+
+                        <MudItem xs="12" Class="d-flex justify-end">
+                            <MudButton Color="Color.Primary"
+                                       Variant="Variant.Filled"
+                                       StartIcon="@Icons.Material.Filled.Save"
+                                       OnClick="SaveSettings"
+                                       Disabled="@settingsSaving">
+                                @if (settingsSaving)
+                                {
+                                    <MudProgressCircular Size="Size.Small" Color="Color.Inherit" Indeterminate="true" Class="mr-2" />
+                                }
+                                Save Defaults
+                            </MudButton>
+                        </MudItem>
+                    </MudGrid>
+                }
+            </MudPaper>
+        </MudTabPanel>
+
+    </MudTabs>
+
+</MudContainer>
+
+@* Delete confirmation for payment terms *@
+<MudMessageBox @ref="deleteConfirmationMessage"
+               Title="Warning"
+               CancelText="Cancel">
+    <MessageContent>
+        Are you sure you want to delete @(selectedTerms.Count > 1
+                ? $"{selectedTerms.Count} Payment Terms"
+                : $"{selectedTerms.First().PaymentTermName}")?
+    </MessageContent>
+    <YesButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.DeleteForever">Delete!</MudButton>
+    </YesButton>
+</MudMessageBox>
+
+@code {
+
+    #region Company
+
+    private Company company = new();
+    private bool companyLoading = true;
+    private bool companyLoadError;
+    private bool companySaving;
+
+    private async Task LoadCompany()
+    {
+        companyLoading = true;
+        try
+        {
+            var response = await api.GetCompanyAsync();
+            company = response.Company ?? new();
+        }
+        catch
+        {
+            companyLoadError = true;
+        }
+        finally
+        {
+            companyLoading = false;
+        }
+    }
+
+    private async Task SaveCompany()
+    {
+        if (string.IsNullOrWhiteSpace(company.CompanyName))
+        {
+            Snackbar.Add("Company name is required.", Severity.Error);
+            return;
+        }
+
+        companySaving = true;
+        try
+        {
+            var request = mapper.Map<UpdateCompanyRequest>(company);
+            var response = await api.UpdateCompanyAsync(request);
+
+            if (response.IsSuccessStatusCode)
+                Snackbar.Add("Company details saved.", Severity.Success);
+            else
+                Snackbar.Add($"Error {(int)response.StatusCode}: {await response.GetErrorBodyAsync()}", Severity.Error);
+        }
+        catch
+        {
+            Snackbar.Add("Unable to save company details.", Severity.Error);
+        }
+        finally
+        {
+            companySaving = false;
+        }
+    }
+
+    private static string? ValidateEmail(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return null;
+
+        if (!new System.ComponentModel.DataAnnotations.EmailAddressAttribute().IsValid(value))
+            return "Invalid email address.";
+
+        return null;
+    }
+
+    #endregion
+
+    #region Payment Terms
+
+    private MudMessageBox deleteConfirmationMessage = default!;
+    private string deleteState = string.Empty;
+    private bool termsLoading;
+    private List<PaymentTerm> paymentTerms = [];
+    private HashSet<PaymentTerm> selectedTerms = [];
+
+    private async Task LoadPaymentTerms()
+    {
+        termsLoading = true;
+        var response = await api.GetPaymentTermsAsync();
+        paymentTerms = response.PaymentTerms ?? [];
+        termsLoading = false;
+    }
+
+    private async Task OnDeleteTerms()
+    {
+        if (selectedTerms.Count == 0) return;
+
+        int deleted = 0;
+        bool? result = await deleteConfirmationMessage.ShowAsync();
+        deleteState = result is null ? "Canceled" : "Deleted!";
+
+        if (deleteState == "Deleted!")
+        {
+            foreach (var term in selectedTerms)
+            {
+                var response = await api.DeletePaymentTermAsync(term.PaymentTermID);
+                if (response.IsSuccessStatusCode)
+                {
+                    paymentTerms.Remove(term);
+                    deleted++;
+                }
+                else
+                    Snackbar.Add($"Error {(int)response.StatusCode}: {await response.GetErrorBodyAsync()}", Severity.Error);
+            }
+        }
+
+        if (deleted > 0)
+            Snackbar.Add($"{deleted} Payment Term(s) deleted.", Severity.Warning);
+
+        await LoadPaymentTerms();
+        selectedTerms.Clear();
+        StateHasChanged();
+    }
+
+    private async Task OpenCreateTermDialogAsync()
+    {
+        var dialog = await DialogService.ShowAsync<MacsBusinessManagementWebApp.Components.PaymentTerms.AddPaymentTermDialog>();
+        var result = await dialog.Result;
+
+        if (!dialog.Result.IsCanceled && result?.Data is not null)
+        {
+            paymentTerms.Add((PaymentTerm)result.Data);
+            await LoadPaymentTerms();
+            StateHasChanged();
+        }
+    }
+
+    private async Task OnTermEdited(PaymentTerm term)
+    {
+        var request = mapper.Map<UpdatePaymentTermRequest>(term);
+        var response = await api.UpdatePaymentTermAsync(request);
+
+        if (response.IsSuccessStatusCode)
+            Snackbar.Add("Payment term updated.", Severity.Success);
+        else
+            Snackbar.Add($"Error {(int)response.StatusCode}: {await response.GetErrorBodyAsync()}", Severity.Error);
+    }
+
+    private async Task ToggleEndOfMonth(PaymentTerm term, bool value)
+    {
+        term.EndOfMonth = value;
+        await OnTermEdited(term);
+        StateHasChanged();
+    }
+
+    private async Task ToggleOffsetFirst(PaymentTerm term, bool value)
+    {
+        term.OffsetFirst = value;
+        await OnTermEdited(term);
+        StateHasChanged();
+    }
+
+    #endregion
+
+    #region Defaults
+
+    private UserSettings settings = new();
+    private bool settingsLoading = true;
+    private bool settingsSaving;
+
+    private async Task LoadSettings()
+    {
+        settingsLoading = true;
+        settings = await settingsService.GetSettingsAsync();
+        settingsLoading = false;
+    }
+
+    private async Task SaveSettings()
+    {
+        settingsSaving = true;
+        try
+        {
+            await settingsService.SaveSettingsAsync(settings);
+            Snackbar.Add("Defaults saved.", Severity.Success);
+        }
+        catch
+        {
+            Snackbar.Add("Unable to save defaults.", Severity.Error);
+        }
+        finally
+        {
+            settingsSaving = false;
+        }
+    }
+
+    private string GetInvoicePreview()
+    {
+        var prefix = settings.InvoiceRefPrefix;
+        if (settings.InvoiceAutoIncrement)
+            return $"{prefix}{settings.NextInvoiceNumber:D4}";
+        return string.IsNullOrEmpty(prefix) ? "(no prefix set)" : prefix;
+    }
+
+    private string GetReceiptPreview()
+    {
+        var prefix = settings.ReceiptRefPrefix;
+        if (settings.ReceiptAutoIncrement)
+            return $"{prefix}{settings.NextReceiptNumber:D4}";
+        return string.IsNullOrEmpty(prefix) ? "(no prefix set)" : prefix;
+    }
+
+    #endregion
+
+    protected override async Task OnInitializedAsync()
+    {
+        var companyTask = LoadCompany();
+        var termsTask = LoadPaymentTerms();
+
+        await Task.WhenAll(companyTask, termsTask);
+        StateHasChanged();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await LoadSettings();
+            StateHasChanged();
+        }
+    }
+}

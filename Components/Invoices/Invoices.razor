@@ -12,11 +12,13 @@
 @inject NavigationManager NavigationManager
 @inject ISnackbar Snackbar
 
+<PageTitle>Invoices</PageTitle>
+
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pa-6">
 
     <div class="d-flex align-center mb-6">
         <div>
-            <MudText Typo="Typo.h5" Style="font-weight: 700; color: #0F172A;">Invoices</MudText>
+            <MudText Typo="Typo.h5" Class="page-title">Invoices</MudText>
             <MudText Typo="Typo.body2" Color="Color.Secondary">Manage and track all client invoices</MudText>
         </div>
         <MudSpacer />
@@ -48,8 +50,8 @@
                         <MudIcon Icon="@Icons.Material.Filled.Description" Style="color: #3B82F6; font-size: 1.5rem;" />
                     </div>
                     <div>
-                        <MudText Typo="Typo.caption" Style="font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #64748B;">Total Invoices</MudText>
-                        <MudText Typo="Typo.h4" Style="font-weight: 700; color: #0F172A; line-height: 1.2;">@invoices.Count</MudText>
+                        <MudText Typo="Typo.caption" Class="stat-label">Total Invoices</MudText>
+                        <MudText Typo="Typo.h4" Class="stat-value">@invoices.Count</MudText>
                     </div>
                 </div>
             </div>
@@ -61,8 +63,8 @@
                         <MudIcon Icon="@Icons.Material.Filled.Pending" Style="color: #F59E0B; font-size: 1.5rem;" />
                     </div>
                     <div>
-                        <MudText Typo="Typo.caption" Style="font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #64748B;">Unpaid</MudText>
-                        <MudText Typo="Typo.h4" Style="font-weight: 700; color: #0F172A; line-height: 1.2;">@invoices.Count(x => x.Outstanding)</MudText>
+                        <MudText Typo="Typo.caption" Class="stat-label">Unpaid</MudText>
+                        <MudText Typo="Typo.h4" Class="stat-value">@invoices.Count(x => x.Outstanding)</MudText>
                     </div>
                 </div>
             </div>
@@ -74,8 +76,8 @@
                         <MudIcon Icon="@Icons.Material.Filled.AttachMoney" Style="color: #10B981; font-size: 1.5rem;" />
                     </div>
                     <div>
-                        <MudText Typo="Typo.caption" Style="font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #64748B;">Total Value</MudText>
-                        <MudText Typo="Typo.h5" Style="font-weight: 700; color: #0F172A; line-height: 1.2;">@invoices.Sum(x => x.NetValue).ToString("C")</MudText>
+                        <MudText Typo="Typo.caption" Class="stat-label">Total Value</MudText>
+                        <MudText Typo="Typo.h5" Class="stat-value">@invoices.Sum(x => x.NetValue).ToString("C")</MudText>
                     </div>
                 </div>
             </div>
@@ -87,8 +89,8 @@
                         <MudIcon Icon="@Icons.Material.Filled.TrendingDown" Style="color: #EF4444; font-size: 1.5rem;" />
                     </div>
                     <div>
-                        <MudText Typo="Typo.caption" Style="font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #64748B;">Outstanding Amt.</MudText>
-                        <MudText Typo="Typo.h5" Style="font-weight: 700; color: #0F172A; line-height: 1.2;">@invoices.Sum(x => Math.Max(0m, x.NetValue - x.OffsetValue)).ToString("C")</MudText>
+                        <MudText Typo="Typo.caption" Class="stat-label">Outstanding Amt.</MudText>
+                        <MudText Typo="Typo.h5" Class="stat-value">@invoices.Sum(x => Math.Max(0m, x.NetValue - x.OffsetValue)).ToString("C")</MudText>
                     </div>
                 </div>
             </div>

@@ -13,25 +13,29 @@
 @inject ISnackbar Snackbar
 @inject NavigationManager NavigationManager
 
+<PageTitle>New Invoice</PageTitle>
+
 <div class="page-header">
-    <div class="d-flex align-center">
-        <MudButton Variant="Variant.Text"
-                   Color="Color.Default"
-                   StartIcon="@Icons.Material.Filled.ArrowBack"
-                   OnClick="NavigateToInvoices"
-                   Class="mr-2"
-                   Style="min-width: 0;">Back</MudButton>
-        <MudDivider Vertical="true" FlexItem="true" Class="mx-2" Style="height: 32px; align-self: center;" />
-        <div>
-            <MudText Typo="Typo.h6" Style="font-weight: 700; line-height: 1.2;">New Invoice</MudText>
-            <MudText Typo="Typo.caption" Color="Color.Secondary">Create a new client invoice</MudText>
+    <MudContainer MaxWidth="MaxWidth.Large" Class="pa-0">
+        <div class="d-flex align-center">
+            <MudButton Variant="Variant.Text"
+                       Color="Color.Default"
+                       StartIcon="@Icons.Material.Filled.ArrowBack"
+                       OnClick="NavigateToInvoices"
+                       Class="mr-2"
+                       Style="min-width: 0;">Back</MudButton>
+            <MudDivider Vertical="true" FlexItem="true" Class="mx-2" Style="height: 32px; align-self: center;" />
+            <div>
+                <MudText Typo="Typo.h6" Style="font-weight: 700; line-height: 1.2;">New Invoice</MudText>
+                <MudText Typo="Typo.caption" Color="Color.Secondary">Create a new client invoice</MudText>
+            </div>
+            <MudSpacer />
+            <MudButton Color="Color.Primary"
+                       OnClick="OnSave"
+                       StartIcon="@Icons.Material.Filled.Save"
+                       Variant="Variant.Filled">Save</MudButton>
         </div>
-        <MudSpacer />
-        <MudButton Color="Color.Primary"
-                   OnClick="OnSave"
-                   StartIcon="@Icons.Material.Filled.Save"
-                   Variant="Variant.Filled">Save</MudButton>
-    </div>
+    </MudContainer>
 </div>
 
 <MudContainer MaxWidth="MaxWidth.Large" Class="pa-6">
