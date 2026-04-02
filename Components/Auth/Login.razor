@@ -168,7 +168,11 @@
                 if (authResult?.Token is not null)
                 {
                     tokenService.SetToken(authResult.Token, authResult.Expiry);
-                    NavigationManager.NavigateTo("/", forceLoad: true);
+
+                    if (tokenService.HasCompany)
+                        NavigationManager.NavigateTo("/", forceLoad: true);
+                    else
+                        NavigationManager.NavigateTo("/register-company", forceLoad: true);
                 }
                 else
                 {

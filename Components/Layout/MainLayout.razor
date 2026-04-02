@@ -93,6 +93,8 @@
     {
         if (!tokenService.IsAuthenticated)
             NavigationManager.NavigateTo("/login");
+        else if (!tokenService.HasCompany)
+            NavigationManager.NavigateTo("/register-company");
     }
 
     private void DrawerToggle() => _drawerOpen = !_drawerOpen;
