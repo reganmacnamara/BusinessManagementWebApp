@@ -18,7 +18,7 @@
     </TitleContent>
     <DialogContent>
         <MudTextField @bind-Value="client.ClientName" Label="Name" Variant="Variant.Outlined" Required="true" RequiredError="Client Name Required"></MudTextField>
-        <MudTextField @bind-Value="client.ClientEmail" Label="Email" Variant="Variant.Outlined"></MudTextField>
+        <MudTextField @bind-Value="client.ClientEmail" Label="Email" Variant="Variant.Outlined" InputType="InputType.Email" Validation="@(new Func<string, string?>(ValidateEmail))"></MudTextField>
         <MudTextField @bind-Value="client.ClientPhone" Label="Phone" Variant="Variant.Outlined"></MudTextField>
         <MudTextField @bind-Value="client.ClientMobile" Label="Mobile" Variant="Variant.Outlined"></MudTextField>
         <MudTextField @bind-Value="client.AddressLine1" Label="Address Line 1" Variant="Variant.Outlined"></MudTextField>
@@ -85,6 +85,17 @@
             client.PaymentTermID = newPaymentTerm.PaymentTermID;
             StateHasChanged();
         }
+    }
+
+    private static string? ValidateEmail(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return null;
+
+        if (!new System.ComponentModel.DataAnnotations.EmailAddressAttribute().IsValid(value))
+            return "Invalid email address.";
+
+        return null;
     }
 
     private async Task OnSave()

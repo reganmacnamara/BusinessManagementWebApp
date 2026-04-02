@@ -41,6 +41,8 @@
                 <MudTextField @bind-Value="request.CompanyABN"
                               Label="ABN"
                               Variant="Variant.Outlined"
+                              Required="true"
+                              RequiredError="ABN is required"
                               Class="mb-3" />
 
                 <MudTextField @bind-Value="request.Email"
@@ -49,6 +51,9 @@
                               InputType="InputType.Email"
                               Adornment="Adornment.Start"
                               AdornmentIcon="@Icons.Material.Filled.Email"
+                              Required="true"
+                              RequiredError="Email is required"
+                              Validation="@(new Func<string, string?>(ValidateEmail))"
                               Class="mb-3" />
 
                 <MudTextField @bind-Value="request.Phone"
@@ -128,6 +133,17 @@
     {
         if (!tokenService.IsAuthenticated)
             NavigationManager.NavigateTo("/login");
+    }
+
+    private static string? ValidateEmail(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return null;
+
+        if (!new System.ComponentModel.DataAnnotations.EmailAddressAttribute().IsValid(value))
+            return "Invalid email address.";
+
+        return null;
     }
 
     private async Task OnSubmit()
