@@ -29,7 +29,7 @@ else
                 <MudButton Variant="Variant.Text"
                            Color="Color.Default"
                            StartIcon="@Icons.Material.Filled.ArrowBack"
-                           OnClick="NavigateToReceipts"
+                           OnClick="GoBack"
                            Class="mr-2"
                            Style="min-width: 0;">Back</MudButton>
                 <MudDivider Vertical="true" FlexItem="true" Class="mx-2" Style="height: 32px; align-self: center;" />
@@ -46,7 +46,14 @@ else
                     <MudButton Color="Color.Primary"
                                OnClick="OnSave"
                                StartIcon="@Icons.Material.Filled.Save"
-                               Variant="Variant.Filled">Save</MudButton>
+                               Variant="Variant.Filled"
+                               Disabled="@saving">
+                        @if (saving)
+                        {
+                            <MudProgressCircular Size="Size.Small" Color="Color.Inherit" Indeterminate="true" Class="mr-2" />
+                        }
+                        Save
+                    </MudButton>
                     <MudButton Color="Color.Error"
                                OnClick="OnDelete"
                                StartIcon="@Icons.Material.Filled.Delete"
@@ -208,6 +215,7 @@ else
 @code {
     private MudMessageBox deleteConfirmationMessage = default!;
     private bool isLoading = true;
+    private bool saving;
     private Receipt receipt = new();
     private List<ReceiptItem> receiptItems = [];
     private List<ReceiptItem> receiptItemsToDelete = [];
@@ -239,6 +247,8 @@ else
         var bytes = await _Response.Content.ReadAsByteArrayAsync();
         await JS.InvokeVoidAsync("downloadPdf", $"Receipt_{receipt.ReceiptRef}.pdf", bytes);
     }
+
+    private async Task GoBack() => await JS.InvokeVoidAsync("history.back");
 
     private void NavigateToReceipts()
         => NavigationManager.NavigateTo("receipts");
@@ -364,40 +374,47 @@ else
             return;
         }
 
-        RecalculateOffsets();
-        receipt.Outstanding = receipt.OffsetValue < receipt.NetValue;
-
-        var _UpdateResponse = await api.UpdateReceiptAsync(mapper.Map<UpdateReceiptRequest>(receipt));
-        if (!_UpdateResponse.IsSuccessStatusCode)
+        saving = true;
+        try
         {
-            Snackbar.Add($"Error {(int)_UpdateResponse.StatusCode}: {await _UpdateResponse.GetErrorBodyAsync()}", Severity.Error);
-            return;
-        }
+            RecalculateOffsets();
+            receipt.Outstanding = receipt.OffsetValue < receipt.NetValue;
 
-        foreach (var item in receiptItems)
-        {
-            var _UpsertRequest = mapper.Map<UpsertReceiptItemRequest>(item);
-            _UpsertRequest.ReceiptID = receipt.ReceiptID;
-
-            var _UpsertResponse = await api.UpsertReceiptItemAsync(_UpsertRequest);
-            if (!_UpsertResponse.IsSuccessStatusCode)
+            var _UpdateResponse = await api.UpdateReceiptAsync(mapper.Map<UpdateReceiptRequest>(receipt));
+            if (!_UpdateResponse.IsSuccessStatusCode)
             {
-                Snackbar.Add($"Error {(int)_UpsertResponse.StatusCode}: {await _UpsertResponse.GetErrorBodyAsync()}", Severity.Error);
+                Snackbar.Add($"Error {(int)_UpdateResponse.StatusCode}: {await _UpdateResponse.GetErrorBodyAsync()}", Severity.Error);
                 return;
             }
-        }
 
-        foreach (var item in receiptItemsToDelete)
-        {
-            var _DeleteResponse = await api.DeleteReceiptItemAsync(item.ReceiptItemID);
-            if (!_DeleteResponse.IsSuccessStatusCode)
+            foreach (var item in receiptItems)
             {
-                Snackbar.Add($"Error {(int)_DeleteResponse.StatusCode}: {await _DeleteResponse.GetErrorBodyAsync()}", Severity.Error);
-                return;
-            }
-        }
+                var _UpsertRequest = mapper.Map<UpsertReceiptItemRequest>(item);
+                _UpsertRequest.ReceiptID = receipt.ReceiptID;
 
-        Snackbar.Add("Receipt Updated.", Severity.Success);
-        NavigateToReceipts();
+                var _UpsertResponse = await api.UpsertReceiptItemAsync(_UpsertRequest);
+                if (!_UpsertResponse.IsSuccessStatusCode)
+                {
+                    Snackbar.Add($"Error {(int)_UpsertResponse.StatusCode}: {await _UpsertResponse.GetErrorBodyAsync()}", Severity.Error);
+                    return;
+                }
+            }
+
+            foreach (var item in receiptItemsToDelete)
+            {
+                var _DeleteResponse = await api.DeleteReceiptItemAsync(item.ReceiptItemID);
+                if (!_DeleteResponse.IsSuccessStatusCode)
+                {
+                    Snackbar.Add($"Error {(int)_DeleteResponse.StatusCode}: {await _DeleteResponse.GetErrorBodyAsync()}", Severity.Error);
+                    return;
+                }
+            }
+
+            Snackbar.Add("Receipt Updated.", Severity.Success);
+        }
+        finally
+        {
+            saving = false;
+        }
     }
 }

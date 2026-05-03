@@ -6,9 +6,9 @@
 @using MacsBusinessManagementWebApp.Data.Services.CreateService
 @using MacsBusinessManagementWebApp.Data.Services.UpdateService
 @using MacsBusinessManagementWebApp.Data.Services.UpsertServiceActivity
-@rendermode InteractiveServer
 
 @inject ApiClient api
+@inject IJSRuntime JS
 @inject IMapper mapper
 @inject NavigationManager NavigationManager
 @inject ISnackbar Snackbar
@@ -21,7 +21,7 @@
             <MudButton Variant="Variant.Text"
                        Color="Color.Default"
                        StartIcon="@Icons.Material.Filled.ArrowBack"
-                       OnClick="NavigateToServices"
+                       OnClick="GoBack"
                        Class="mr-2"
                        Style="min-width: 0;">Back</MudButton>
             <MudDivider Vertical="true" FlexItem="true" Class="mx-2" Style="height: 32px; align-self: center;" />
@@ -210,6 +210,8 @@
     [Parameter] public long serviceID { get; set; }
 
     private bool IsNew => serviceID == 0;
+
+    private async Task GoBack() => await JS.InvokeVoidAsync("history.back");
 
     private void NavigateToServices() => NavigationManager.NavigateTo("/services");
 

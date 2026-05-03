@@ -9,6 +9,7 @@
 
 @inject ApiClient api
 @inject IDialogService DialogService
+@inject IJSRuntime JS
 @inject IMapper mapper
 @inject NavigationManager NavigationManager
 @inject ISnackbar Snackbar
@@ -29,7 +30,7 @@ else
             <MudButton Variant="Variant.Text"
                        Color="Color.Default"
                        StartIcon="@Icons.Material.Filled.ArrowBack"
-                       OnClick="NavigateToClients"
+                       OnClick="GoBack"
                        Class="mr-2"
                        Style="min-width: 0;">Back</MudButton>
             <MudDivider Vertical="true" FlexItem="true" Class="mx-2" Style="height: 32px; align-self: center;" />
@@ -42,7 +43,14 @@ else
                 <MudButton Color="Color.Primary"
                            OnClick="OnSave"
                            StartIcon="@Icons.Material.Filled.Save"
-                           Variant="Variant.Filled">Save</MudButton>
+                           Variant="Variant.Filled"
+                           Disabled="@saving">
+                    @if (saving)
+                    {
+                        <MudProgressCircular Size="Size.Small" Color="Color.Inherit" Indeterminate="true" Class="mr-2" />
+                    }
+                    Save
+                </MudButton>
                 <MudButton Color="Color.Error"
                            OnClick="OnDelete"
                            StartIcon="@Icons.Material.Filled.Delete"
@@ -180,9 +188,9 @@ else
 @code {
     private Client client = default!;
     private MudMessageBox deleteConfirmationMessage = default!;
-    private string deleteState = string.Empty;
     private List<Invoice> invoices = [];
     private bool isLoading = true;
+    private bool saving;
     private List<PaymentTerm> paymentTerms = [];
     private List<Receipt> receipts = [];
 
@@ -243,32 +251,31 @@ else
             NavigationManager.NavigateTo($"/invoices/{args.Item.InvoiceID}");
     }
 
+    private async Task GoBack() => await JS.InvokeVoidAsync("history.back");
+
     private void NavigateToClients()
         => NavigationManager.NavigateTo("clients");
 
     private async Task OnDelete()
     {
         bool? result = await deleteConfirmationMessage.ShowAsync();
-        deleteState = result is null ? "Canceled" : "Deleted!";
+        if (result is null) return;
 
-        if (deleteState == "Deleted!")
+        var _Response = await api.DeleteClientAsync(client.ClientID);
+        if (_Response.IsSuccessStatusCode)
         {
-            var _Response = await api.DeleteClientAsync(client.ClientID);
-            if (_Response.IsSuccessStatusCode)
-            {
-                Snackbar.Add($"{client.ClientName} Deleted.", Severity.Warning);
-                NavigateToClients();
-            }
-            else
-                Snackbar.Add($"Error {(int)_Response.StatusCode}: {await _Response.GetErrorBodyAsync()}", Severity.Error);
+            Snackbar.Add($"{client.ClientName} Deleted.", Severity.Warning);
+            NavigateToClients();
         }
+        else
+            Snackbar.Add($"Error {(int)_Response.StatusCode}: {await _Response.GetErrorBodyAsync()}", Severity.Error);
     }
 
     protected override async Task OnInitializedAsync()
     {
         await GetClientData();
         isLoading = false;
-        this.StateHasChanged();
+        StateHasChanged();
     }
 
     private async Task OnSave()
@@ -279,17 +286,24 @@ else
             return;
         }
 
-        var _Request = mapper.Map<UpdateClientRequest>(client);
-        var _Response = await api.UpdateClientAsync(_Request);
-
-        if (!_Response.IsSuccessStatusCode)
+        saving = true;
+        try
         {
-            Snackbar.Add($"Error {(int)_Response.StatusCode}: {await _Response.GetErrorBodyAsync()}", Severity.Error);
-            return;
-        }
+            var _Request = mapper.Map<UpdateClientRequest>(client);
+            var _Response = await api.UpdateClientAsync(_Request);
 
-        Snackbar.Add("Client Updated.", Severity.Success);
-        NavigationManager.NavigateTo("clients");
+            if (!_Response.IsSuccessStatusCode)
+            {
+                Snackbar.Add($"Error {(int)_Response.StatusCode}: {await _Response.GetErrorBodyAsync()}", Severity.Error);
+                return;
+            }
+
+            Snackbar.Add("Client Updated.", Severity.Success);
+        }
+        finally
+        {
+            saving = false;
+        }
     }
 
     private void ReceiptSelected(DataGridRowClickEventArgs<Receipt> args)

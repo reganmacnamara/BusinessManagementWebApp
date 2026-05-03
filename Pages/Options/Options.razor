@@ -1,14 +1,11 @@
 @page "/options"
 @using AutoMapper
 @using MacsBusinessManagementWebApp.Data
-@using AutoMapper
-@using MacsBusinessManagementWebApp.Data
 @using MacsBusinessManagementWebApp.Data.Companies.UpdateCompany
 @using MacsBusinessManagementWebApp.Data.CompanySettings.UpsertCompanySettings
 @using MacsBusinessManagementWebApp.Data.Entities
 @using MacsBusinessManagementWebApp.Data.PaymentTerms.UpdatePaymentTerm
 @using MudBlazor
-@rendermode InteractiveServer
 
 @inject ApiClient api
 @inject IDialogService DialogService
@@ -368,7 +365,6 @@
     #region Payment Terms
 
     private MudMessageBox deleteConfirmationMessage = default!;
-    private string deleteState = string.Empty;
     private bool termsLoading;
     private List<PaymentTerm> paymentTerms = [];
     private HashSet<PaymentTerm> selectedTerms = [];
@@ -387,21 +383,18 @@
 
         int deleted = 0;
         bool? result = await deleteConfirmationMessage.ShowAsync();
-        deleteState = result is null ? "Canceled" : "Deleted!";
+        if (result is null) return;
 
-        if (deleteState == "Deleted!")
+        foreach (var term in selectedTerms)
         {
-            foreach (var term in selectedTerms)
+            var response = await api.DeletePaymentTermAsync(term.PaymentTermID);
+            if (response.IsSuccessStatusCode)
             {
-                var response = await api.DeletePaymentTermAsync(term.PaymentTermID);
-                if (response.IsSuccessStatusCode)
-                {
-                    paymentTerms.Remove(term);
-                    deleted++;
-                }
-                else
-                    Snackbar.Add($"Error {(int)response.StatusCode}: {await response.GetErrorBodyAsync()}", Severity.Error);
+                paymentTerms.Remove(term);
+                deleted++;
             }
+            else
+                Snackbar.Add($"Error {(int)response.StatusCode}: {await response.GetErrorBodyAsync()}", Severity.Error);
         }
 
         if (deleted > 0)

@@ -30,7 +30,7 @@ else
                 <MudButton Variant="Variant.Text"
                            Color="Color.Default"
                            StartIcon="@Icons.Material.Filled.ArrowBack"
-                           OnClick="NavigateToInvoices"
+                           OnClick="GoBack"
                            Class="mr-2"
                            Style="min-width: 0;">Back</MudButton>
                 <MudDivider Vertical="true" FlexItem="true" Class="mx-2" Style="height: 32px; align-self: center;" />
@@ -47,7 +47,14 @@ else
                     <MudButton Color="Color.Primary"
                                OnClick="OnSave"
                                StartIcon="@Icons.Material.Filled.Save"
-                               Variant="Variant.Filled">Save</MudButton>
+                               Variant="Variant.Filled"
+                               Disabled="@saving">
+                        @if (saving)
+                        {
+                            <MudProgressCircular Size="Size.Small" Color="Color.Inherit" Indeterminate="true" Class="mr-2" />
+                        }
+                        Save
+                    </MudButton>
                     <MudButton Color="Color.Error"
                                OnClick="OnDelete"
                                StartIcon="@Icons.Material.Filled.Delete"
@@ -165,8 +172,8 @@ else
 
 @code {
     private MudMessageBox deleteConfirmationMessage = default!;
-    private string deleteState = string.Empty;
     private bool isLoading = true;
+    private bool saving;
     private HashSet<InvoiceItem> selectedInvoiceItems = [];
     private Invoice invoice = new();
     private List<InvoiceItem> invoiceItems = [];
@@ -246,6 +253,8 @@ else
         await JS.InvokeVoidAsync("downloadPdf", $"Invoice_{invoice.InvoiceRef}.pdf", bytes);
     }
 
+    private async Task GoBack() => await JS.InvokeVoidAsync("history.back");
+
     private void NavigateToInvoices()
         => NavigationManager.NavigateTo("invoices");
 
@@ -260,19 +269,16 @@ else
     private async Task OnDelete()
     {
         bool? result = await deleteConfirmationMessage.ShowAsync();
-        deleteState = result is null ? "Canceled" : "Deleted!";
+        if (result is null) return;
 
-        if (deleteState == "Deleted!")
+        var _Response = await api.DeleteInvoiceAsync(invoice.InvoiceID);
+        if (_Response.IsSuccessStatusCode)
         {
-            var _Response = await api.DeleteInvoiceAsync(invoice.InvoiceID);
-            if (_Response.IsSuccessStatusCode)
-            {
-                Snackbar.Add($"{invoice.InvoiceRef} Deleted.", Severity.Warning);
-                NavigateToInvoices();
-            }
-            else
-                Snackbar.Add($"Error {(int)_Response.StatusCode}: {await _Response.GetErrorBodyAsync()}", Severity.Error);
+            Snackbar.Add($"{invoice.InvoiceRef} Deleted.", Severity.Warning);
+            NavigateToInvoices();
         }
+        else
+            Snackbar.Add($"Error {(int)_Response.StatusCode}: {await _Response.GetErrorBodyAsync()}", Severity.Error);
     }
 
     private async Task OnDueDateChanged(DateTime? dateTime)
@@ -300,45 +306,52 @@ else
             return;
         }
 
-        RecalculateTransactionValues();
-        var _UpdateTransactionRequest = mapper.Map<UpdateInvoiceRequest>(invoice);
-        var _UpdateTransactionResponse = await api.UpdateInvoiceAsync(_UpdateTransactionRequest);
-
-        if (!_UpdateTransactionResponse.IsSuccessStatusCode)
+        saving = true;
+        try
         {
-            Snackbar.Add($"Error {(int)_UpdateTransactionResponse.StatusCode}: {await _UpdateTransactionResponse.GetErrorBodyAsync()}", Severity.Error);
-            return;
-        }
+            RecalculateTransactionValues();
+            var _UpdateTransactionRequest = mapper.Map<UpdateInvoiceRequest>(invoice);
+            var _UpdateTransactionResponse = await api.UpdateInvoiceAsync(_UpdateTransactionRequest);
 
-        var _ResponseData = Newtonsoft.Json.JsonConvert.DeserializeObject<UpdateInvoiceResponse>(await _UpdateTransactionResponse.Content.ReadAsStringAsync());
-
-        foreach (var _Item in invoiceItems)
-        {
-            if (_ResponseData is not null && _ResponseData.InvoiceID != 0)
-                _Item.InvoiceID = _ResponseData.InvoiceID;
-
-            var _TransactionItemRequest = mapper.Map<UpsertInvoiceItemRequest>(_Item);
-            var _TransactionItemResponse = await api.UpsertInvoiceItemAsync(_TransactionItemRequest);
-
-            if (!_TransactionItemResponse.IsSuccessStatusCode)
+            if (!_UpdateTransactionResponse.IsSuccessStatusCode)
             {
-                Snackbar.Add($"Error {(int)_TransactionItemResponse.StatusCode}: {await _TransactionItemResponse.GetErrorBodyAsync()}", Severity.Error);
+                Snackbar.Add($"Error {(int)_UpdateTransactionResponse.StatusCode}: {await _UpdateTransactionResponse.GetErrorBodyAsync()}", Severity.Error);
                 return;
             }
-        }
 
-        foreach (var _Item in invoiceItemsToBeDeleted)
-        {
-            var _Response = await api.DeleteInvoiceItemAsync(_Item.InvoiceItemID);
-            if (!_Response.IsSuccessStatusCode)
+            var _ResponseData = Newtonsoft.Json.JsonConvert.DeserializeObject<UpdateInvoiceResponse>(await _UpdateTransactionResponse.Content.ReadAsStringAsync());
+
+            foreach (var _Item in invoiceItems)
             {
-                Snackbar.Add($"Error {(int)_Response.StatusCode}: {await _Response.GetErrorBodyAsync()}", Severity.Error);
-                return;
-            }
-        }
+                if (_ResponseData is not null && _ResponseData.InvoiceID != 0)
+                    _Item.InvoiceID = _ResponseData.InvoiceID;
 
-        Snackbar.Add("Invoice Updated.", Severity.Success);
-        NavigateToInvoices();
+                var _TransactionItemRequest = mapper.Map<UpsertInvoiceItemRequest>(_Item);
+                var _TransactionItemResponse = await api.UpsertInvoiceItemAsync(_TransactionItemRequest);
+
+                if (!_TransactionItemResponse.IsSuccessStatusCode)
+                {
+                    Snackbar.Add($"Error {(int)_TransactionItemResponse.StatusCode}: {await _TransactionItemResponse.GetErrorBodyAsync()}", Severity.Error);
+                    return;
+                }
+            }
+
+            foreach (var _Item in invoiceItemsToBeDeleted)
+            {
+                var _Response = await api.DeleteInvoiceItemAsync(_Item.InvoiceItemID);
+                if (!_Response.IsSuccessStatusCode)
+                {
+                    Snackbar.Add($"Error {(int)_Response.StatusCode}: {await _Response.GetErrorBodyAsync()}", Severity.Error);
+                    return;
+                }
+            }
+
+            Snackbar.Add("Invoice Updated.", Severity.Success);
+        }
+        finally
+        {
+            saving = false;
+        }
     }
 
     private async Task OpenCreateInvoiceItemDialogAsync()

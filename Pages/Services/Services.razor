@@ -1,7 +1,6 @@
 @page "/services"
 @using MacsBusinessManagementWebApp.Data
 @using MacsBusinessManagementWebApp.Data.Entities
-@rendermode InteractiveServer
 
 @inject ApiClient api
 @inject NavigationManager NavigationManager
@@ -54,10 +53,21 @@
                      Loading="@loading"
                      LoadingProgressColor="Color.Primary"
                      MultiSelection="true"
+                     QuickFilter="@FilterService"
                      RowClass="cursor-pointer"
                      RowClick="OnRowClick"
                      SelectOnRowClick="false"
                      T="Service">
+            <ToolBarContent>
+                <MudSpacer />
+                <MudTextField @bind-Value="searchString"
+                              Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Search"
+                              Class="mt-0"
+                              IconSize="Size.Medium"
+                              Immediate="true"
+                              Placeholder="Search..." />
+            </ToolBarContent>
             <Columns>
                 <SelectColumn T="Service" />
                 <PropertyColumn Property="x => x.ServiceName" Title="Name" />
@@ -100,7 +110,15 @@
     private MudMessageBox deleteBox = default!;
     private bool loading;
     private List<Service> services = [];
+    private string searchString = string.Empty;
     private HashSet<Service> selectedServices = [];
+
+    private bool FilterService(Service s)
+    {
+        if (string.IsNullOrWhiteSpace(searchString)) return true;
+        return s.ServiceName.Contains(searchString, StringComparison.OrdinalIgnoreCase)
+            || (s.ServiceDescription?.Contains(searchString, StringComparison.OrdinalIgnoreCase) ?? false);
+    }
 
     private async Task LoadServices()
     {

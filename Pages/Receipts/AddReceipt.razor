@@ -9,6 +9,7 @@
 @using MacsBusinessManagementWebApp.Infrastructure.Services.Settings
 
 @inject ApiClient api
+@inject IJSRuntime JS
 @inject IMapper mapper
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
@@ -23,7 +24,7 @@
             <MudButton Variant="Variant.Text"
                        Color="Color.Default"
                        StartIcon="@Icons.Material.Filled.ArrowBack"
-                       OnClick="NavigateToReceipts"
+                       OnClick="GoBack"
                        Class="mr-2"
                        Style="min-width: 0;">Back</MudButton>
             <MudDivider Vertical="true" FlexItem="true" Class="mx-2" Style="height: 32px; align-self: center;" />
@@ -227,7 +228,7 @@
     {
         var _Response = await api.GetClientsAsync();
         clients = _Response.Clients ?? [];
-        this.StateHasChanged();
+        StateHasChanged();
     }
 
     private async Task GetClientInvoices()
@@ -236,6 +237,8 @@
         clientInvoices = _Response.Invoices.Where(t => t.Outstanding == true).ToList() ?? [];
         StateHasChanged();
     }
+
+    private async Task GoBack() => await JS.InvokeVoidAsync("history.back");
 
     private void NavigateToReceipts()
         => NavigationManager.NavigateTo("receipts");

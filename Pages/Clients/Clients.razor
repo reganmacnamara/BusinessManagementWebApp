@@ -7,7 +7,6 @@
 @using MacsBusinessManagementWebApp.Data.Entities
 @using Microsoft.AspNetCore.Components.Web
 @using MudBlazor
-@rendermode InteractiveServer
 
 @inject ApiClient api
 @inject IDialogService DialogService
@@ -62,10 +61,21 @@
                      Loading="@loading"
                      LoadingProgressColor="Color.Primary"
                      MultiSelection="true"
+                     QuickFilter="@FilterClient"
                      RowClass="cursor-pointer"
                      RowClick="ClientSelected"
                      SelectOnRowClick="false"
                      T="Client">
+            <ToolBarContent>
+                <MudSpacer />
+                <MudTextField @bind-Value="searchString"
+                              Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Search"
+                              Class="mt-0"
+                              IconSize="Size.Medium"
+                              Immediate="true"
+                              Placeholder="Search..." />
+            </ToolBarContent>
             <Columns>
                 <SelectColumn T="Client" />
                 <PropertyColumn Property="x => x.ClientName" Title="Name" />
@@ -95,10 +105,18 @@
 
 @code {
     private List<Client> clients = [];
-    private string deleteState = string.Empty;
     private MudMessageBox deleteConfirmationMessage = default!;
     private bool loading;
+    private string searchString = string.Empty;
     private HashSet<Client> selectedClients = [];
+
+    private bool FilterClient(Client c)
+    {
+        if (string.IsNullOrWhiteSpace(searchString)) return true;
+        return c.ClientName.Contains(searchString, StringComparison.OrdinalIgnoreCase)
+            || (c.ClientEmail?.Contains(searchString, StringComparison.OrdinalIgnoreCase) ?? false)
+            || (c.ClientPhone?.Contains(searchString, StringComparison.OrdinalIgnoreCase) ?? false);
+    }
 
     private void ClientSelected(DataGridRowClickEventArgs<Client> args)
     {
@@ -112,7 +130,7 @@
         var _Response = await api.GetClientsAsync();
         clients = _Response.Clients ?? [];
         loading = false;
-        this.StateHasChanged();
+        StateHasChanged();
     }
 
     private async Task OnDelete()
@@ -121,21 +139,18 @@
         {
             int clientsDeleted = 0;
             bool? result = await deleteConfirmationMessage.ShowAsync();
-            deleteState = result is null ? "Canceled" : "Deleted!";
+            if (result is null) return;
 
-            if (deleteState == "Deleted!")
+            foreach (var client in selectedClients)
             {
-                foreach (var client in selectedClients)
+                var _Response = await api.DeleteClientAsync(client.ClientID);
+                if (_Response.IsSuccessStatusCode)
                 {
-                    var _Response = await api.DeleteClientAsync(client.ClientID);
-                    if (_Response.IsSuccessStatusCode)
-                    {
-                        clients.Remove(client);
-                        clientsDeleted++;
-                    }
-                    else
-                        Snackbar.Add($"Error {(int)_Response.StatusCode}: {await _Response.GetErrorBodyAsync()}", Severity.Error);
+                    clients.Remove(client);
+                    clientsDeleted++;
                 }
+                else
+                    Snackbar.Add($"Error {(int)_Response.StatusCode}: {await _Response.GetErrorBodyAsync()}", Severity.Error);
             }
 
             if (clientsDeleted > 0)

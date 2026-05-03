@@ -17,7 +17,7 @@
     @if (isLoading)
     {
         <MudGrid Spacing="3">
-            @for (int i = 0; i < 4; i++)
+            @for (int i = 0; i < 5; i++)
             {
                 <MudItem xs="12" sm="6" md="3">
                     <MudSkeleton Height="110px" Style="border-radius: 12px;" />
@@ -84,6 +84,21 @@
                             <MudText Typo="Typo.caption" Class="stat-label">Products</MudText>
                             <MudText Typo="Typo.h4" Class="stat-value">@products.Count</MudText>
                             <MudText Typo="Typo.caption" Class="stat-hint">Total products</MudText>
+                        </div>
+                    </div>
+                </div>
+            </MudItem>
+
+            <MudItem xs="12" sm="6" md="3">
+                <div class="stat-card" @onclick='() => NavigationManager.NavigateTo("/services")' style="cursor: pointer;">
+                    <div class="d-flex align-center" style="gap: 16px;">
+                        <div class="stat-icon-wrap stat-icon-wrap--lg" style="background: #F0FDF4;">
+                            <MudIcon Icon="@Icons.Material.Filled.MiscellaneousServices" Style="color: #22C55E; font-size: 1.5rem;" />
+                        </div>
+                        <div>
+                            <MudText Typo="Typo.caption" Class="stat-label">Services</MudText>
+                            <MudText Typo="Typo.h4" Class="stat-value">@services.Count</MudText>
+                            <MudText Typo="Typo.caption" Class="stat-hint">Total services</MudText>
                         </div>
                     </div>
                 </div>
@@ -174,6 +189,7 @@
     private List<Receipt> receipts = [];
     private List<Client> clients = [];
     private List<Data.Entities.Product> products = [];
+    private List<Service> services = [];
 
     private decimal totalOutstanding;
     private decimal totalReceived;
@@ -185,13 +201,15 @@
         var receiptsTask = api.GetReceiptsAsync();
         var clientsTask = api.GetClientsAsync();
         var productsTask = api.GetProductsAsync();
+        var servicesTask = api.GetServicesAsync();
 
-        await Task.WhenAll(invoicesTask, receiptsTask, clientsTask, productsTask);
+        await Task.WhenAll(invoicesTask, receiptsTask, clientsTask, productsTask, servicesTask);
 
         invoices = (await invoicesTask).Invoices ?? [];
         receipts = (await receiptsTask).Receipts ?? [];
         clients = (await clientsTask).Clients ?? [];
         products = (await productsTask).Products ?? [];
+        services = (await servicesTask).Services ?? [];
 
         totalOutstanding = invoices.Sum(x => Math.Max(0m, x.NetValue - x.OffsetValue));
         totalReceived = receipts.Sum(x => x.NetValue);

@@ -7,6 +7,7 @@
 @using MacsBusinessManagementWebApp.Data.Products.UpdateProduct
 
 @inject ApiClient api
+@inject IJSRuntime JS
 @inject IMapper mapper
 @inject NavigationManager NavigationManager
 @inject ISnackbar Snackbar
@@ -27,7 +28,7 @@ else
             <MudButton Variant="Variant.Text"
                        Color="Color.Default"
                        StartIcon="@Icons.Material.Filled.ArrowBack"
-                       OnClick="NavigateToProducts"
+                       OnClick="GoBack"
                        Class="mr-2"
                        Style="min-width: 0;">Back</MudButton>
             <MudDivider Vertical="true" FlexItem="true" Class="mx-2" Style="height: 32px; align-self: center;" />
@@ -40,7 +41,14 @@ else
                 <MudButton Color="Color.Primary"
                            OnClick="OnSave"
                            StartIcon="@Icons.Material.Filled.Save"
-                           Variant="Variant.Filled">Save</MudButton>
+                           Variant="Variant.Filled"
+                           Disabled="@saving">
+                    @if (saving)
+                    {
+                        <MudProgressCircular Size="Size.Small" Color="Color.Inherit" Indeterminate="true" Class="mr-2" />
+                    }
+                    Save
+                </MudButton>
                 <MudButton Color="Color.Error"
                            OnClick="OnDelete"
                            StartIcon="@Icons.Material.Filled.Delete"
@@ -51,56 +59,50 @@ else
     </div>
 
     <MudContainer MaxWidth="MaxWidth.Large" Class="pa-6">
-        <MudTabs Elevation="0" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pt-4">
-
-            <MudTabPanel Text="Details" Icon="@Icons.Material.Filled.Inventory2">
-                <MudPaper Elevation="0" Class="table-card pa-6">
-                    <MudGrid Spacing="3">
-                        <MudItem xs="12" sm="6">
-                            <MudTextField @bind-Value="product.ProductCode"
-                                          Label="Code"
-                                          Variant="Variant.Outlined"
-                                          Required="true"
-                                          RequiredError="Product Code Required" />
-                        </MudItem>
-                        <MudItem xs="12" sm="6">
-                            <MudTextField @bind-Value="product.ProductName"
-                                          Label="Name"
-                                          Variant="Variant.Outlined"
-                                          Required="true"
-                                          RequiredError="Product Name Required" />
-                        </MudItem>
-                        <MudItem xs="12">
-                            <MudTextField @bind-Value="product.ProductDescription"
-                                          Label="Description"
-                                          Lines="3"
-                                          Variant="Variant.Outlined" />
-                        </MudItem>
-                        <MudItem xs="12" sm="4">
-                            <MudNumericField @bind-Value="product.UnitCost"
-                                             Label="Unit Cost"
-                                             Format="C"
-                                             T="decimal"
-                                             Variant="Variant.Outlined" />
-                        </MudItem>
-                        <MudItem xs="12" sm="4">
-                            <MudNumericField @bind-Value="product.UnitPrice"
-                                             Label="Unit Price"
-                                             Format="C"
-                                             T="decimal"
-                                             Variant="Variant.Outlined" />
-                        </MudItem>
-                        <MudItem xs="12" sm="4">
-                            <MudNumericField @bind-Value="product.QuantityOnHand"
-                                             Label="Quantity on Hand"
-                                             T="long"
-                                             Variant="Variant.Outlined" />
-                        </MudItem>
-                    </MudGrid>
-                </MudPaper>
-            </MudTabPanel>
-
-        </MudTabs>
+        <MudPaper Elevation="0" Class="table-card pa-6">
+            <MudGrid Spacing="3">
+                <MudItem xs="12" sm="6">
+                    <MudTextField @bind-Value="product.ProductCode"
+                                  Label="Code"
+                                  Variant="Variant.Outlined"
+                                  Required="true"
+                                  RequiredError="Product Code Required" />
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudTextField @bind-Value="product.ProductName"
+                                  Label="Name"
+                                  Variant="Variant.Outlined"
+                                  Required="true"
+                                  RequiredError="Product Name Required" />
+                </MudItem>
+                <MudItem xs="12">
+                    <MudTextField @bind-Value="product.ProductDescription"
+                                  Label="Description"
+                                  Lines="3"
+                                  Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12" sm="4">
+                    <MudNumericField @bind-Value="product.UnitCost"
+                                     Label="Unit Cost"
+                                     Format="C"
+                                     T="decimal"
+                                     Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12" sm="4">
+                    <MudNumericField @bind-Value="product.UnitPrice"
+                                     Label="Unit Price"
+                                     Format="C"
+                                     T="decimal"
+                                     Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12" sm="4">
+                    <MudNumericField @bind-Value="product.QuantityOnHand"
+                                     Label="Quantity on Hand"
+                                     T="long"
+                                     Variant="Variant.Outlined" />
+                </MudItem>
+            </MudGrid>
+        </MudPaper>
     </MudContainer>
 }
 
@@ -117,9 +119,9 @@ else
 
 @code {
     private MudMessageBox deleteConfirmationMessage = default!;
-    private string deleteState = string.Empty;
     private Product product = default!;
     private bool isLoading = true;
+    private bool saving;
 
     [Parameter]
     public long id { get; set; }
@@ -130,32 +132,31 @@ else
         product = _Product.Product;
     }
 
+    private async Task GoBack() => await JS.InvokeVoidAsync("history.back");
+
     private void NavigateToProducts()
         => NavigationManager.NavigateTo("products");
 
     private async Task OnDelete()
     {
         bool? result = await deleteConfirmationMessage.ShowAsync();
-        deleteState = result is null ? "Canceled" : "Deleted!";
+        if (result is null) return;
 
-        if (deleteState == "Deleted!")
+        var _Response = await api.DeleteProductAsync(product.ProductID);
+        if (_Response.IsSuccessStatusCode)
         {
-            var _Response = await api.DeleteProductAsync(product.ProductID);
-            if (_Response.IsSuccessStatusCode)
-            {
-                Snackbar.Add($"{product.ProductCode} Deleted.", Severity.Warning);
-                NavigateToProducts();
-            }
-            else
-                Snackbar.Add($"Error {(int)_Response.StatusCode}: {await _Response.GetErrorBodyAsync()}", Severity.Error);
+            Snackbar.Add($"{product.ProductCode} Deleted.", Severity.Warning);
+            NavigateToProducts();
         }
+        else
+            Snackbar.Add($"Error {(int)_Response.StatusCode}: {await _Response.GetErrorBodyAsync()}", Severity.Error);
     }
 
     protected override async Task OnInitializedAsync()
     {
         await GetProductData();
         isLoading = false;
-        this.StateHasChanged();
+        StateHasChanged();
     }
 
     private async Task OnSave()
@@ -172,16 +173,23 @@ else
             return;
         }
 
-        var _Request = mapper.Map<UpdateProductRequest>(product);
-        var _Response = await api.UpdateProductAsync(_Request);
-
-        if (!_Response.IsSuccessStatusCode)
+        saving = true;
+        try
         {
-            Snackbar.Add($"Error {(int)_Response.StatusCode}: {await _Response.GetErrorBodyAsync()}", Severity.Error);
-            return;
-        }
+            var _Request = mapper.Map<UpdateProductRequest>(product);
+            var _Response = await api.UpdateProductAsync(_Request);
 
-        Snackbar.Add("Product Updated.", Severity.Success);
-        NavigateToProducts();
+            if (!_Response.IsSuccessStatusCode)
+            {
+                Snackbar.Add($"Error {(int)_Response.StatusCode}: {await _Response.GetErrorBodyAsync()}", Severity.Error);
+                return;
+            }
+
+            Snackbar.Add("Product Updated.", Severity.Success);
+        }
+        finally
+        {
+            saving = false;
+        }
     }
 }

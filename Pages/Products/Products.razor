@@ -7,7 +7,6 @@
 @using MacsBusinessManagementWebApp.Data.Products.DeleteProduct
 @using Microsoft.AspNetCore.Components.Web
 @using MudBlazor
-@rendermode InteractiveServer
 
 @inject ApiClient api
 @inject IDialogService DialogService
@@ -76,10 +75,21 @@
                      Loading="@loading"
                      LoadingProgressColor="Color.Primary"
                      MultiSelection="true"
+                     QuickFilter="@FilterProduct"
                      RowClass="cursor-pointer"
                      RowClick="ProductSelected"
                      SelectOnRowClick="false"
                      T="Product">
+            <ToolBarContent>
+                <MudSpacer />
+                <MudTextField @bind-Value="searchString"
+                              Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Search"
+                              Class="mt-0"
+                              IconSize="Size.Medium"
+                              Immediate="true"
+                              Placeholder="Search..." />
+            </ToolBarContent>
             <Columns>
                 <SelectColumn T="Product" />
                 <PropertyColumn Property="x => x.ProductCode" Title="Code" />
@@ -117,10 +127,10 @@
 </MudMessageBox>
 
 @code {
-    private string deleteState = string.Empty;
     private MudMessageBox deleteConfirmationMessage = default!;
     private bool loading;
     private List<Product> products = [];
+    private string searchString = string.Empty;
     private HashSet<Product> selectedProducts = [];
 
     private async Task GetProducts()
@@ -129,7 +139,7 @@
         var _Response = await api.GetProductsAsync();
         products = _Response.Products ?? [];
         loading = false;
-        this.StateHasChanged();
+        StateHasChanged();
     }
 
     private async Task OnDelete()
@@ -138,21 +148,18 @@
         {
             int productsDeleted = 0;
             bool? result = await deleteConfirmationMessage.ShowAsync();
-            deleteState = result is null ? "Canceled" : "Deleted!";
+            if (result is null) return;
 
-            if (deleteState == "Deleted!")
+            foreach (var product in selectedProducts)
             {
-                foreach (var product in selectedProducts)
+                var _Response = await api.DeleteProductAsync(product.ProductID);
+                if (_Response.IsSuccessStatusCode)
                 {
-                    var _Response = await api.DeleteProductAsync(product.ProductID);
-                    if (_Response.IsSuccessStatusCode)
-                    {
-                        products.Remove(product);
-                        productsDeleted++;
-                    }
-                    else
-                        Snackbar.Add($"Error {(int)_Response.StatusCode}: {await _Response.GetErrorBodyAsync()}", Severity.Error);
+                    products.Remove(product);
+                    productsDeleted++;
                 }
+                else
+                    Snackbar.Add($"Error {(int)_Response.StatusCode}: {await _Response.GetErrorBodyAsync()}", Severity.Error);
             }
 
             if (productsDeleted > 0)
@@ -160,8 +167,16 @@
 
             await GetProducts();
             selectedProducts.Clear();
-            this.StateHasChanged();
+            StateHasChanged();
         }
+    }
+
+    private bool FilterProduct(Product p)
+    {
+        if (string.IsNullOrWhiteSpace(searchString)) return true;
+        return p.ProductCode.Contains(searchString, StringComparison.OrdinalIgnoreCase)
+            || p.ProductName.Contains(searchString, StringComparison.OrdinalIgnoreCase)
+            || (p.ProductDescription?.Contains(searchString, StringComparison.OrdinalIgnoreCase) ?? false);
     }
 
     protected override async Task OnInitializedAsync()

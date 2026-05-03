@@ -105,10 +105,26 @@
                      Loading="@loading"
                      LoadingProgressColor="Color.Primary"
                      MultiSelection="true"
+                     QuickFilter="@FilterInvoice"
                      RowClass="cursor-pointer"
                      RowClick="InvoiceSelected"
                      SelectOnRowClick="false"
                      T="Invoice">
+            <ToolBarContent>
+                <MudToggleGroup @bind-Value="statusFilter" T="string?" Color="Color.Primary" Outline="true" Rounded="true" Class="ml-2">
+                    <MudToggleItem Value="@((string?)null)">All</MudToggleItem>
+                    <MudToggleItem Value="@("outstanding")">Outstanding</MudToggleItem>
+                    <MudToggleItem Value="@("paid")">Paid</MudToggleItem>
+                </MudToggleGroup>
+                <MudSpacer />
+                <MudTextField @bind-Value="searchString"
+                              Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Search"
+                              Class="mt-0"
+                              IconSize="Size.Medium"
+                              Immediate="true"
+                              Placeholder="Search..." />
+            </ToolBarContent>
             <Columns>
                 <SelectColumn T="Invoice" />
                 <PropertyColumn Property="x => x.InvoiceDate" Title="Date" Format="dd/MM/yyyy" />
@@ -146,10 +162,24 @@
 
 @code {
     private MudMessageBox deleteConfirmationMessage = default!;
-    private string deleteState = string.Empty;
     private bool loading;
+    private string searchString = string.Empty;
+    private string? statusFilter = null;
     HashSet<Invoice> selectedInvoices = [];
     List<Invoice> invoices = [];
+
+    private bool FilterInvoice(Invoice i)
+    {
+        var matchesSearch = string.IsNullOrWhiteSpace(searchString)
+            || i.InvoiceRef.Contains(searchString, StringComparison.OrdinalIgnoreCase)
+            || (i.Client?.ClientName?.Contains(searchString, StringComparison.OrdinalIgnoreCase) ?? false);
+
+        var matchesStatus = statusFilter is null
+            || (statusFilter == "outstanding" && i.Outstanding)
+            || (statusFilter == "paid" && !i.Outstanding);
+
+        return matchesSearch && matchesStatus;
+    }
 
     private async Task GetTransactionsDataAsync()
     {
@@ -184,22 +214,20 @@
         {
             int transactionsDeleted = 0;
             bool? result = await deleteConfirmationMessage.ShowAsync();
-            deleteState = result is null ? "Canceled" : "Deleted!";
+            if (result is null) return;
 
-            if (deleteState == "Deleted!")
+            foreach (var transaction in selectedInvoices)
             {
-                foreach (var transaction in selectedInvoices)
+                var _Response = await api.DeleteInvoiceAsync(transaction.InvoiceID);
+                if (_Response.IsSuccessStatusCode)
                 {
-                    var _Response = await api.DeleteInvoiceAsync(transaction.InvoiceID);
-                    if (_Response.IsSuccessStatusCode)
-                    {
-                        invoices.Remove(transaction);
-                        transactionsDeleted++;
-                    }
-                    else
-                        Snackbar.Add($"Error {(int)_Response.StatusCode}: {await _Response.GetErrorBodyAsync()}", Severity.Error);
+                    invoices.Remove(transaction);
+                    transactionsDeleted++;
                 }
+                else
+                    Snackbar.Add($"Error {(int)_Response.StatusCode}: {await _Response.GetErrorBodyAsync()}", Severity.Error);
             }
+
             if (transactionsDeleted > 0)
                 Snackbar.Add($"{transactionsDeleted} Invoices Deleted.", Severity.Warning);
 
