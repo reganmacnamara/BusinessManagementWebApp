@@ -1,0 +1,155 @@
+@page "/services"
+@using MacsBusinessManagementWebApp.Data
+@using MacsBusinessManagementWebApp.Data.Entities
+@rendermode InteractiveServer
+
+@inject ApiClient api
+@inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
+
+<PageTitle>Services</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pa-6">
+
+    <div class="d-flex align-center mb-6">
+        <div>
+            <MudText Typo="Typo.h5" Class="page-title">Services</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">Manage reusable service offerings</MudText>
+        </div>
+        <MudSpacer />
+        <MudStack Row="true" Spacing="2">
+            <MudButton Color="Color.Error"
+                       Disabled="@(!selectedServices.Any())"
+                       OnClick="OnDelete"
+                       StartIcon="@Icons.Material.Filled.Delete"
+                       Variant="Variant.Outlined">Delete</MudButton>
+            <MudButton Color="Color.Primary"
+                       OnClick="NavigateToCreate"
+                       StartIcon="@Icons.Material.Filled.Add"
+                       Variant="Variant.Filled">New Service</MudButton>
+        </MudStack>
+    </div>
+
+    <MudGrid Spacing="3" Class="mb-5">
+        <MudItem xs="12" sm="4">
+            <div class="stat-card">
+                <div class="d-flex align-center" style="gap: 16px;">
+                    <div class="stat-icon-wrap stat-icon-wrap--lg" style="background: #F0FDF4;">
+                        <MudIcon Icon="@Icons.Material.Filled.MiscellaneousServices" Style="color: #22C55E; font-size: 1.5rem;" />
+                    </div>
+                    <div>
+                        <MudText Typo="Typo.caption" Class="stat-label">Total Services</MudText>
+                        <MudText Typo="Typo.h4" Class="stat-value">@services.Count</MudText>
+                    </div>
+                </div>
+            </div>
+        </MudItem>
+    </MudGrid>
+
+    <MudPaper Elevation="0" Class="table-card">
+        <MudDataGrid @bind-SelectedItems="selectedServices"
+                     Breakpoint="Breakpoint.Sm"
+                     Items="@services"
+                     Hover="true"
+                     Loading="@loading"
+                     LoadingProgressColor="Color.Primary"
+                     MultiSelection="true"
+                     RowClass="cursor-pointer"
+                     RowClick="OnRowClick"
+                     SelectOnRowClick="false"
+                     T="Service">
+            <Columns>
+                <SelectColumn T="Service" />
+                <PropertyColumn Property="x => x.ServiceName" Title="Name" />
+                <PropertyColumn Property="x => x.ServiceDescription" Title="Description" />
+                <TemplateColumn Title="Duration">
+                    <CellTemplate>
+                        @if (context.Item.EstimatedDuration > 0)
+                        {
+                            <span>@context.Item.EstimatedDuration @context.Item.DurationUnit</span>
+                        }
+                    </CellTemplate>
+                </TemplateColumn>
+                <PropertyColumn Property="x => x.UnitPrice" Title="Unit Price" Format="C" />
+                <TemplateColumn>
+                    <CellTemplate>
+                        <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                       Size="Size.Small"
+                                       Color="Color.Primary"
+                                       OnClick="@(() => NavigateToEdit(context.Item.ServiceID))" />
+                    </CellTemplate>
+                </TemplateColumn>
+            </Columns>
+        </MudDataGrid>
+    </MudPaper>
+
+</MudContainer>
+
+<MudMessageBox @ref="deleteBox" Title="Warning" CancelText="Cancel">
+    <MessageContent>
+        Are you sure you want to delete @(selectedServices.Count > 1
+            ? $"{selectedServices.Count} Services"
+            : selectedServices.FirstOrDefault()?.ServiceName)?
+    </MessageContent>
+    <YesButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.DeleteForever">Delete!</MudButton>
+    </YesButton>
+</MudMessageBox>
+
+@code {
+    private MudMessageBox deleteBox = default!;
+    private bool loading;
+    private List<Service> services = [];
+    private HashSet<Service> selectedServices = [];
+
+    private async Task LoadServices()
+    {
+        loading = true;
+        var response = await api.GetServicesAsync();
+        services = response.Services ?? [];
+        loading = false;
+        StateHasChanged();
+    }
+
+    private void NavigateToCreate()
+        => NavigationManager.NavigateTo("/services/new");
+
+    private void NavigateToEdit(long serviceID)
+        => NavigationManager.NavigateTo($"/services/{serviceID}/edit");
+
+    private void OnRowClick(DataGridRowClickEventArgs<Service> args)
+    {
+        if (args.Item is not null)
+            NavigationManager.NavigateTo($"/services/{args.Item.ServiceID}/edit");
+    }
+
+    private async Task OnDelete()
+    {
+        if (selectedServices.Count == 0) return;
+
+        bool? result = await deleteBox.ShowAsync();
+        if (result is null) return;
+
+        int deleted = 0;
+        foreach (var service in selectedServices)
+        {
+            var response = await api.DeleteServiceAsync(service.ServiceID);
+            if (response.IsSuccessStatusCode)
+            {
+                services.Remove(service);
+                deleted++;
+            }
+            else
+                Snackbar.Add($"Error {(int)response.StatusCode}: {await response.GetErrorBodyAsync()}", Severity.Error);
+        }
+
+        if (deleted > 0)
+            Snackbar.Add($"{deleted} Service(s) deleted.", Severity.Warning);
+
+        selectedServices.Clear();
+        StateHasChanged();
+    }
+
+    protected override async Task OnInitializedAsync()
+        => await LoadServices();
+}

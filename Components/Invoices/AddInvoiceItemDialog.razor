@@ -1,9 +1,8 @@
-﻿@using AutoMapper
+@using AutoMapper
 @using MacsBusinessManagementWebApp.Data
 @using MacsBusinessManagementWebApp.Data.Entities
 
 @inject ApiClient api
-@inject IDialogService DialogService
 @inject IMapper mapper
 @inject ISnackbar Snackbar
 
@@ -11,38 +10,90 @@
     <TitleContent>
         <MudText Typo="Typo.h6">
             <MudIcon Icon="@Icons.Material.Filled.AddShoppingCart" Class="mr-3" />
-            Add Product
+            Add Line Item
         </MudText>
     </TitleContent>
     <DialogContent>
-        <MudDataGrid @bind-SelectedItems="selectedProducts"
-                     Hover="true"
-                     Items="@products"
-                     MultiSelection="true"
-                     QuickFilter="new Func<Product, bool>(FilterFunc)"
-                     RowClass="cursor-pointer">
+        <MudToggleGroup @bind-Value="lineItemType" T="LineItemType" Color="Color.Primary"
+                        Outline="true" Rounded="true" Class="mb-4">
+            <MudToggleItem Value="LineItemType.Product">
+                <MudIcon Icon="@Icons.Material.Filled.Inventory2" Class="mr-1" Size="Size.Small" />
+                Product
+            </MudToggleItem>
+            <MudToggleItem Value="LineItemType.Service">
+                <MudIcon Icon="@Icons.Material.Filled.MiscellaneousServices" Class="mr-1" Size="Size.Small" />
+                Service
+            </MudToggleItem>
+        </MudToggleGroup>
 
-            <ToolBarContent>
-                <MudTextField @bind-Value="searchString"
-                              Adornment="Adornment.Start"
-                              AdornmentIcon="@Icons.Material.Filled.Search"
-                              Class="mt-0"
-                              IconSize="Size.Medium"
-                              Placeholder="Search" />
-            </ToolBarContent>
-
-            <Columns>
-                <SelectColumn T="Product" />
-                <PropertyColumn Property="x => x.ProductCode" Title="Code" />
-                <PropertyColumn Property="x => x.ProductName" Title="Name" />
-                <PropertyColumn Property="x => x.ProductDescription" Title="Description" />
-                <PropertyColumn Property="x => x.QuantityOnHand" Title="In Stock" />
-            </Columns>
-
-            <PagerContent>
-                <MudDataGridPager T="Product" />
-            </PagerContent>
-        </MudDataGrid>
+        @if (lineItemType == LineItemType.Product)
+        {
+            <MudDataGrid @bind-SelectedItems="selectedProducts"
+                         Hover="true"
+                         Items="@products"
+                         Loading="@loadingProducts"
+                         LoadingProgressColor="Color.Primary"
+                         MultiSelection="true"
+                         QuickFilter="new Func<Product, bool>(FilterProduct)"
+                         RowClass="cursor-pointer">
+                <ToolBarContent>
+                    <MudTextField @bind-Value="searchString"
+                                  Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Filled.Search"
+                                  Class="mt-0"
+                                  IconSize="Size.Medium"
+                                  Placeholder="Search products" />
+                </ToolBarContent>
+                <Columns>
+                    <SelectColumn T="Product" />
+                    <PropertyColumn Property="x => x.ProductCode" Title="Code" />
+                    <PropertyColumn Property="x => x.ProductName" Title="Name" />
+                    <PropertyColumn Property="x => x.ProductDescription" Title="Description" />
+                    <PropertyColumn Property="x => x.QuantityOnHand" Title="In Stock" />
+                    <PropertyColumn Property="x => x.UnitPrice" Title="Price" Format="C" />
+                </Columns>
+                <PagerContent>
+                    <MudDataGridPager T="Product" />
+                </PagerContent>
+            </MudDataGrid>
+        }
+        else
+        {
+            <MudDataGrid @bind-SelectedItems="selectedServices"
+                         Hover="true"
+                         Items="@services"
+                         Loading="@loadingServices"
+                         LoadingProgressColor="Color.Primary"
+                         MultiSelection="true"
+                         QuickFilter="new Func<Service, bool>(FilterService)"
+                         RowClass="cursor-pointer">
+                <ToolBarContent>
+                    <MudTextField @bind-Value="searchString"
+                                  Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Filled.Search"
+                                  Class="mt-0"
+                                  IconSize="Size.Medium"
+                                  Placeholder="Search services" />
+                </ToolBarContent>
+                <Columns>
+                    <SelectColumn T="Service" />
+                    <PropertyColumn Property="x => x.ServiceName" Title="Name" />
+                    <PropertyColumn Property="x => x.ServiceDescription" Title="Description" />
+                    <TemplateColumn Title="Duration">
+                        <CellTemplate>
+                            @if (context.Item.EstimatedDuration > 0)
+                            {
+                                <span>@context.Item.EstimatedDuration @context.Item.DurationUnit</span>
+                            }
+                        </CellTemplate>
+                    </TemplateColumn>
+                    <PropertyColumn Property="x => x.UnitPrice" Title="Price" Format="C" />
+                </Columns>
+                <PagerContent>
+                    <MudDataGridPager T="Service" />
+                </PagerContent>
+            </MudDataGrid>
+        }
     </DialogContent>
     <DialogActions>
         <MudButton Class="px-10"
@@ -55,51 +106,76 @@
 </MudDialog>
 
 @code {
-    private bool loading;
-    private List<Product> products = [];
-    public string searchString = string.Empty;
-    private HashSet<Product> selectedProducts = default!;
+    public enum LineItemType { Product, Service }
 
     [CascadingParameter]
     private IMudDialogInstance MudDialog { get; set; } = default!;
 
-    private bool FilterFunc(Product entity)
-    {
-        if (string.IsNullOrWhiteSpace(searchString))
-            return true;
-        if (entity.ProductCode.Contains(searchString, StringComparison.OrdinalIgnoreCase))
-            return true;
-        if (entity.ProductName.Contains(searchString, StringComparison.OrdinalIgnoreCase))
-            return true;
-        if (entity.ProductDescription.Contains(searchString, StringComparison.OrdinalIgnoreCase))
-            return true;
+    private LineItemType lineItemType = LineItemType.Product;
+    private string searchString = string.Empty;
 
-        return false;
-    }
-
-    private async Task GetProducts()
-    {
-        loading = true;
-        var _Response = await api.GetProductsAsync();
-
-        products = _Response.Products ?? [];
-        loading = false;
-        this.StateHasChanged();
-    }
+    private bool loadingProducts;
+    private bool loadingServices;
+    private List<Product> products = [];
+    private List<Service> services = [];
+    private HashSet<Product> selectedProducts = [];
+    private HashSet<Service> selectedServices = [];
 
     protected override async Task OnInitializedAsync()
     {
-        await GetProducts();
+        loadingProducts = true;
+        loadingServices = true;
+
+        var productsTask = api.GetProductsAsync();
+        var servicesTask = api.GetServicesAsync();
+
+        await Task.WhenAll(productsTask, servicesTask);
+
+        products = productsTask.Result.Products ?? [];
+        services = servicesTask.Result.Services ?? [];
+
+        loadingProducts = false;
+        loadingServices = false;
     }
 
-    private async Task OnAdd()
+    private bool FilterProduct(Product p)
     {
-        if (selectedProducts.Count() == 0)
-        {
-            Snackbar.Add("Please select a product.", Severity.Error);
-            return;
-        }
-
-        MudDialog.Close(DialogResult.Ok(selectedProducts));
+        if (string.IsNullOrWhiteSpace(searchString)) return true;
+        return p.ProductCode.Contains(searchString, StringComparison.OrdinalIgnoreCase)
+            || p.ProductName.Contains(searchString, StringComparison.OrdinalIgnoreCase)
+            || p.ProductDescription.Contains(searchString, StringComparison.OrdinalIgnoreCase);
     }
+
+    private bool FilterService(Service s)
+    {
+        if (string.IsNullOrWhiteSpace(searchString)) return true;
+        return s.ServiceName.Contains(searchString, StringComparison.OrdinalIgnoreCase)
+            || s.ServiceDescription.Contains(searchString, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private void OnAdd()
+    {
+        if (lineItemType == LineItemType.Product)
+        {
+            if (!selectedProducts.Any())
+            {
+                Snackbar.Add("Please select at least one product.", Severity.Error);
+                return;
+            }
+            MudDialog.Close(DialogResult.Ok(new InvoiceItemDialogResult(selectedProducts, null)));
+        }
+        else
+        {
+            if (!selectedServices.Any())
+            {
+                Snackbar.Add("Please select at least one service.", Severity.Error);
+                return;
+            }
+            MudDialog.Close(DialogResult.Ok(new InvoiceItemDialogResult(null, selectedServices)));
+        }
+    }
+
+    public record InvoiceItemDialogResult(
+        HashSet<Product>? Products,
+        HashSet<Service>? Services);
 }

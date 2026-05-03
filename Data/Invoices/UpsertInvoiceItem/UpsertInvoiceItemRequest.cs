@@ -1,10 +1,11 @@
-﻿namespace MacsBusinessManagementWebApp.Data.Invoices.UpsertInvoiceItem;
+namespace MacsBusinessManagementWebApp.Data.Invoices.UpsertInvoiceItem;
 
 public class UpsertInvoiceItemRequest
 {
     public long InvoiceItemID { get; set; }
     public long InvoiceID { get; set; }
-    public long ProductID { get; set; }
+    public long? ProductID { get; set; }
+    public long? ServiceID { get; set; }
     public string Description { get; set; } = string.Empty;
     public decimal Quantity { get; set; }
     public decimal PricePerUnit { get; set; }

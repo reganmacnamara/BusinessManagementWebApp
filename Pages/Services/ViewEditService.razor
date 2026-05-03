@@ -1,0 +1,358 @@
+@page "/services/new"
+@page "/services/{serviceID:long}/edit"
+@using AutoMapper
+@using MacsBusinessManagementWebApp.Data
+@using MacsBusinessManagementWebApp.Data.Entities
+@using MacsBusinessManagementWebApp.Data.Services.CreateService
+@using MacsBusinessManagementWebApp.Data.Services.UpdateService
+@using MacsBusinessManagementWebApp.Data.Services.UpsertServiceActivity
+@rendermode InteractiveServer
+
+@inject ApiClient api
+@inject IMapper mapper
+@inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
+
+<PageTitle>@(IsNew ? "New Service" : service.ServiceName)</PageTitle>
+
+<div class="page-header">
+    <MudContainer MaxWidth="MaxWidth.Large" Class="pa-0">
+        <div class="d-flex align-center">
+            <MudButton Variant="Variant.Text"
+                       Color="Color.Default"
+                       StartIcon="@Icons.Material.Filled.ArrowBack"
+                       OnClick="NavigateToServices"
+                       Class="mr-2"
+                       Style="min-width: 0;">Back</MudButton>
+            <MudDivider Vertical="true" FlexItem="true" Class="mx-2" Style="height: 32px; align-self: center;" />
+            <div>
+                <MudText Typo="Typo.h6" Style="font-weight: 700; line-height: 1.2;">
+                    @(IsNew ? "New Service" : service.ServiceName)
+                </MudText>
+                <MudText Typo="Typo.caption" Color="Color.Secondary">
+                    @(IsNew ? "Create a new service offering" : "Edit service details and activities")
+                </MudText>
+            </div>
+            <MudSpacer />
+            <MudButton Color="Color.Primary"
+                       OnClick="OnSave"
+                       StartIcon="@Icons.Material.Filled.Save"
+                       Variant="Variant.Filled"
+                       Disabled="@saving">
+                @if (saving)
+                {
+                    <MudProgressCircular Size="Size.Small" Color="Color.Inherit" Indeterminate="true" Class="mr-2" />
+                }
+                @(IsNew ? "Create" : "Save")
+            </MudButton>
+        </div>
+    </MudContainer>
+</div>
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="pa-6">
+
+    @* ── Service Details ── *@
+    <MudPaper Elevation="0" Class="table-card pa-6 mb-4">
+        <MudText Typo="Typo.subtitle1" Style="font-weight: 600;" Class="mb-4">Service Details</MudText>
+        <MudGrid Spacing="3">
+            <MudItem xs="12" sm="8">
+                <MudTextField @bind-Value="service.ServiceName"
+                              Label="Service Name"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              RequiredError="Service name is required" />
+            </MudItem>
+            <MudItem xs="12" sm="4">
+                <MudSelect @bind-Value="service.DurationUnit"
+                           Label="Duration Unit"
+                           Variant="Variant.Outlined"
+                           T="DurationUnit">
+                    @foreach (DurationUnit unit in Enum.GetValues<DurationUnit>())
+                    {
+                        <MudSelectItem Value="unit">@unit</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12">
+                <MudTextField @bind-Value="service.ServiceDescription"
+                              Label="Description"
+                              Variant="Variant.Outlined"
+                              Lines="3" />
+            </MudItem>
+            <MudItem xs="12" sm="4">
+                <MudNumericField @bind-Value="service.EstimatedDuration"
+                                 Label="Estimated Duration"
+                                 Variant="Variant.Outlined"
+                                 Min="0m"
+                                 Format="0.##" />
+            </MudItem>
+            <MudItem xs="12" sm="4">
+                <MudNumericField @bind-Value="service.UnitCost"
+                                 Label="Unit Cost"
+                                 Variant="Variant.Outlined"
+                                 Format="C"
+                                 Min="0m" />
+            </MudItem>
+            <MudItem xs="12" sm="4">
+                <MudNumericField @bind-Value="service.UnitPrice"
+                                 Label="Unit Price"
+                                 Variant="Variant.Outlined"
+                                 Format="C"
+                                 Min="0m" />
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+
+    @* ── Activities (only shown after service is created) ── *@
+    @if (!IsNew)
+    {
+        <MudPaper Elevation="0" Class="table-card">
+            <div class="d-flex align-center pa-4" style="border-bottom: 1px solid #E2E8F0;">
+                <MudText Typo="Typo.subtitle1" Style="font-weight: 600;">Activities</MudText>
+                <MudText Typo="Typo.caption" Color="Color.Secondary" Class="ml-2">(ordered checklist of tasks)</MudText>
+                <MudSpacer />
+                <MudButton Color="Color.Primary"
+                           OnClick="OpenAddActivity"
+                           StartIcon="@Icons.Material.Filled.Add"
+                           Variant="Variant.Filled"
+                           Size="Size.Small">Add Activity</MudButton>
+            </div>
+
+            @if (activities.Count == 0)
+            {
+                <div class="d-flex justify-center pa-8">
+                    <MudText Color="Color.Secondary">No activities yet. Add one to get started.</MudText>
+                </div>
+            }
+            else
+            {
+                <MudDataGrid Items="@activities"
+                             Hover="true"
+                             T="ServiceActivity"
+                             SortMode="SortMode.None">
+                    <Columns>
+                        <PropertyColumn Property="x => x.SortOrder" Title="#" />
+                        <PropertyColumn Property="x => x.ActivityName" Title="Activity" />
+                        <PropertyColumn Property="x => x.Description" Title="Description" />
+                        <TemplateColumn>
+                            <CellTemplate>
+                                <MudStack Row="true" Spacing="1">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                                   Size="Size.Small"
+                                                   Color="Color.Primary"
+                                                   OnClick="() => OpenEditActivity(context.Item)" />
+                                    <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                                   Size="Size.Small"
+                                                   Color="Color.Error"
+                                                   OnClick="() => DeleteActivity(context.Item)" />
+                                </MudStack>
+                            </CellTemplate>
+                        </TemplateColumn>
+                    </Columns>
+                </MudDataGrid>
+            }
+        </MudPaper>
+    }
+    else
+    {
+        <MudAlert Severity="Severity.Info" Dense="true">
+            Save the service first to start adding activities.
+        </MudAlert>
+    }
+
+</MudContainer>
+
+@* ── Activity Dialog ── *@
+<MudDialog @bind-Visible="activityDialogOpen" Options="dialogOptions">
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.Checklist" Class="mr-2" />
+            @(editingActivity.ServiceActivityID == 0 ? "Add Activity" : "Edit Activity")
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudGrid Spacing="2">
+            <MudItem xs="12" sm="8">
+                <MudTextField @bind-Value="editingActivity.ActivityName"
+                              Label="Activity Name"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              RequiredError="Activity name is required" />
+            </MudItem>
+            <MudItem xs="12" sm="4">
+                <MudNumericField @bind-Value="editingActivity.SortOrder"
+                                 Label="Sort Order"
+                                 Variant="Variant.Outlined"
+                                 Min="0" />
+            </MudItem>
+            <MudItem xs="12">
+                <MudTextField @bind-Value="editingActivity.Description"
+                              Label="Description"
+                              Variant="Variant.Outlined"
+                              Lines="2" />
+            </MudItem>
+        </MudGrid>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="() => activityDialogOpen = false" Variant="Variant.Text">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SaveActivity" Class="px-8">Save</MudButton>
+    </DialogActions>
+</MudDialog>
+
+<MudMessageBox @ref="deleteActivityBox" Title="Warning" CancelText="Cancel">
+    <MessageContent>Delete activity <strong>@activityToDelete?.ActivityName</strong>?</MessageContent>
+    <YesButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.DeleteForever">Delete!</MudButton>
+    </YesButton>
+</MudMessageBox>
+
+@code {
+    [Parameter] public long serviceID { get; set; }
+
+    private bool IsNew => serviceID == 0;
+
+    private void NavigateToServices() => NavigationManager.NavigateTo("/services");
+
+    private Service service = new();
+    private List<ServiceActivity> activities = [];
+    private bool saving;
+
+    // Activity dialog state
+    private bool activityDialogOpen;
+    private ServiceActivity editingActivity = new();
+    private ServiceActivity? activityToDelete;
+    private MudMessageBox deleteActivityBox = default!;
+
+    private readonly DialogOptions dialogOptions = new()
+    {
+        MaxWidth = MaxWidth.Small,
+        FullWidth = true,
+        CloseOnEscapeKey = true
+    };
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!IsNew)
+        {
+            var response = await api.GetServiceAsync(serviceID);
+            service = response.Service;
+            activities = service.ServiceActivities.OrderBy(a => a.SortOrder).ToList();
+        }
+    }
+
+    private async Task OnSave()
+    {
+        if (string.IsNullOrWhiteSpace(service.ServiceName))
+        {
+            Snackbar.Add("Service name is required.", Severity.Error);
+            return;
+        }
+
+        saving = true;
+        try
+        {
+            if (IsNew)
+            {
+                var request = mapper.Map<CreateServiceRequest>(service);
+                var response = await api.CreateServiceAsync(request);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    Snackbar.Add($"Error {(int)response.StatusCode}: {await response.GetErrorBodyAsync()}", Severity.Error);
+                    return;
+                }
+
+                var created = Newtonsoft.Json.JsonConvert.DeserializeObject<CreateServiceResponse>(
+                    await response.Content.ReadAsStringAsync());
+
+                Snackbar.Add("Service created.", Severity.Success);
+                NavigationManager.NavigateTo($"/services/{created!.ServiceID}/edit");
+            }
+            else
+            {
+                var request = mapper.Map<UpdateServiceRequest>(service);
+                var response = await api.UpdateServiceAsync(request);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    Snackbar.Add($"Error {(int)response.StatusCode}: {await response.GetErrorBodyAsync()}", Severity.Error);
+                    return;
+                }
+
+                Snackbar.Add("Service updated.", Severity.Success);
+            }
+        }
+        finally
+        {
+            saving = false;
+        }
+    }
+
+    // ── Activity helpers ──
+
+    private void OpenAddActivity()
+    {
+        editingActivity = new ServiceActivity
+        {
+            ServiceID = serviceID,
+            SortOrder = activities.Count > 0 ? activities.Max(a => a.SortOrder) + 1 : 1
+        };
+        activityDialogOpen = true;
+    }
+
+    private void OpenEditActivity(ServiceActivity activity)
+    {
+        editingActivity = new ServiceActivity
+        {
+            ServiceActivityID = activity.ServiceActivityID,
+            ServiceID = activity.ServiceID,
+            ActivityName = activity.ActivityName,
+            Description = activity.Description,
+            SortOrder = activity.SortOrder
+        };
+        activityDialogOpen = true;
+    }
+
+    private async Task SaveActivity()
+    {
+        if (string.IsNullOrWhiteSpace(editingActivity.ActivityName))
+        {
+            Snackbar.Add("Activity name is required.", Severity.Error);
+            return;
+        }
+
+        var request = mapper.Map<UpsertServiceActivityRequest>(editingActivity);
+        var response = await api.UpsertServiceActivityAsync(request);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            Snackbar.Add($"Error {(int)response.StatusCode}: {await response.GetErrorBodyAsync()}", Severity.Error);
+            return;
+        }
+
+        activityDialogOpen = false;
+
+        // Refresh activities from API
+        var refreshed = await api.GetServiceAsync(serviceID);
+        activities = refreshed.Service.ServiceActivities.OrderBy(a => a.SortOrder).ToList();
+        Snackbar.Add("Activity saved.", Severity.Success);
+        StateHasChanged();
+    }
+
+    private async Task DeleteActivity(ServiceActivity activity)
+    {
+        activityToDelete = activity;
+        bool? result = await deleteActivityBox.ShowAsync();
+        if (result is null) return;
+
+        var response = await api.DeleteServiceActivityAsync(activity.ServiceActivityID);
+        if (response.IsSuccessStatusCode)
+        {
+            activities.Remove(activity);
+            Snackbar.Add("Activity deleted.", Severity.Warning);
+            StateHasChanged();
+        }
+        else
+            Snackbar.Add($"Error {(int)response.StatusCode}: {await response.GetErrorBodyAsync()}", Severity.Error);
+    }
+}

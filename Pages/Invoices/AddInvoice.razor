@@ -120,11 +120,29 @@
                              T="InvoiceItem">
                     <Columns>
                         <SelectColumn T="InvoiceItem" />
-                        <PropertyColumn Editable="false" Property="x => x.Product.ProductCode" Title="Code" />
-                        <PropertyColumn Editable="false" Property="x => x.Product.ProductName" Title="Name" />
-                        <PropertyColumn Editable="false" Property="x => x.Product.ProductDescription" Title="Description" />
-                        <PropertyColumn Editable="false" Property="x => x.Product.QuantityOnHand" Title="In Stock" />
-                        <PropertyColumn Editable="true" Property="x => x.Quantity" Title="Quantity" />
+                        <TemplateColumn Title="Type" Editable="false">
+                            <CellTemplate>
+                                @if (context.Item.Product is not null)
+                                {
+                                    <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined">Product</MudChip>
+                                }
+                                else
+                                {
+                                    <MudChip T="string" Size="Size.Small" Color="Color.Secondary" Variant="Variant.Outlined">Service</MudChip>
+                                }
+                            </CellTemplate>
+                        </TemplateColumn>
+                        <TemplateColumn Title="Name" Editable="false">
+                            <CellTemplate>
+                                @(context.Item.Product?.ProductName ?? context.Item.Service?.ServiceName ?? "—")
+                            </CellTemplate>
+                        </TemplateColumn>
+                        <TemplateColumn Title="Description" Editable="false">
+                            <CellTemplate>
+                                @(context.Item.Product?.ProductDescription ?? context.Item.Service?.ServiceDescription ?? "")
+                            </CellTemplate>
+                        </TemplateColumn>
+                        <PropertyColumn Editable="true" Property="x => x.Quantity" Title="Qty" />
                         <PropertyColumn Editable="true" Property="x => x.PricePerUnit" Format="C" Title="Each" />
                         <PropertyColumn Editable="false" Property="x => x.GrossValue" Format="C" Title="Gross" />
                         <PropertyColumn Editable="false" Property="x => x.TaxValue" Format="C" Title="Tax" />
@@ -155,7 +173,26 @@
         {
             Product = product,
             ProductID = product.ProductID,
+            Description = product.ProductName,
             PricePerUnit = product.UnitPrice,
+            Quantity = 1,
+            GrossValue = gross,
+            TaxValue = tax,
+            NetValue = gross + tax,
+        });
+        StateHasChanged();
+    }
+
+    private void AddTransactionItemService(Service service)
+    {
+        var gross = service.UnitPrice * 1;
+        var tax = gross * 0.1m;
+        invoiceItems.Add(new()
+        {
+            Service = service,
+            ServiceID = service.ServiceID,
+            Description = service.ServiceName,
+            PricePerUnit = service.UnitPrice,
             Quantity = 1,
             GrossValue = gross,
             TaxValue = tax,
@@ -347,8 +384,15 @@
 
         if (!dialog.Result.IsCanceled && result?.Data is not null)
         {
-            foreach (var _Product in (HashSet<Product>)result.Data)
-                AddTransactionItem(_Product);
+            var selection = (AddInvoiceItemDialog.InvoiceItemDialogResult)result.Data;
+
+            if (selection.Products is not null)
+                foreach (var p in selection.Products)
+                    AddTransactionItem(p);
+
+            if (selection.Services is not null)
+                foreach (var s in selection.Services)
+                    AddTransactionItemService(s);
 
             StateHasChanged();
         }
