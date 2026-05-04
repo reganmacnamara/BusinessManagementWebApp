@@ -16,30 +16,27 @@
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pa-6">
 
-    <div class="d-flex align-center mb-6">
+    <div class="list-header">
         <div>
             <MudText Typo="Typo.h5" Class="page-title">Invoices</MudText>
             <MudText Typo="Typo.body2" Color="Color.Secondary">Manage and track all client invoices</MudText>
         </div>
-        <MudSpacer />
-        <MudStack Row="true" Spacing="2">
+        <div class="list-header-actions">
             <MudButton Color="Color.Info"
                        Disabled="@(!selectedInvoices.Any())"
                        OnClick="ExportSelectedPdfs"
                        StartIcon="@Icons.Material.Filled.PictureAsPdf"
                        Variant="Variant.Outlined">Export PDF</MudButton>
-
             <MudButton Color="Color.Error"
                        Disabled="@(!selectedInvoices.Any())"
                        OnClick="OnDelete"
                        StartIcon="@Icons.Material.Filled.Delete"
                        Variant="Variant.Outlined">Delete</MudButton>
-
             <MudButton Color="Color.Primary"
                        OnClick="NavigateToCreateInvoice"
                        StartIcon="@Icons.Material.Filled.Add"
                        Variant="Variant.Filled">New Invoice</MudButton>
-        </MudStack>
+        </div>
     </div>
 
     <MudGrid Spacing="3" Class="mb-5">

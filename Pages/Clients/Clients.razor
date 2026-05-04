@@ -18,13 +18,12 @@
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pa-6">
 
-    <div class="d-flex align-center mb-6">
+    <div class="list-header">
         <div>
             <MudText Typo="Typo.h5" Class="page-title">Clients</MudText>
             <MudText Typo="Typo.body2" Color="Color.Secondary">Manage your client accounts</MudText>
         </div>
-        <MudSpacer />
-        <MudStack Row="true" Spacing="2">
+        <div class="list-header-actions">
             <MudButton Color="Color.Error"
                        Disabled="@(!selectedClients.Any())"
                        OnClick="OnDelete"
@@ -34,7 +33,7 @@
                        OnClick="OpenCreateClientDialogAsync"
                        StartIcon="@Icons.Material.Filled.Add"
                        Variant="Variant.Filled">New Client</MudButton>
-        </MudStack>
+        </div>
     </div>
 
     <MudGrid Spacing="3" Class="mb-5">

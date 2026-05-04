@@ -15,13 +15,12 @@
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pa-6">
 
-    <div class="d-flex align-center mb-6">
+    <div class="list-header">
         <div>
             <MudText Typo="Typo.h5" Class="page-title">Receipts</MudText>
             <MudText Typo="Typo.body2" Color="Color.Secondary">Track all payments received from clients</MudText>
         </div>
-        <MudSpacer />
-        <MudStack Row="true" Spacing="2">
+        <div class="list-header-actions">
             <MudButton Color="Color.Info"
                        Disabled="@(!selectedReceipts.Any())"
                        OnClick="ExportSelectedPdfs"
@@ -36,7 +35,7 @@
                        OnClick="NavigateToCreateReceipt"
                        StartIcon="@Icons.Material.Filled.Add"
                        Variant="Variant.Filled">New Receipt</MudButton>
-        </MudStack>
+        </div>
     </div>
 
     <MudGrid Spacing="3" Class="mb-5">

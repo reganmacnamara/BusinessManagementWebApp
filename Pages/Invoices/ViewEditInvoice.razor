@@ -40,25 +40,12 @@ else
                 </div>
                 <MudSpacer />
                 <MudStack Row="true" Spacing="2">
-                    <MudButton Color="Color.Info"
-                               OnClick="ExportPdf"
-                               StartIcon="@Icons.Material.Filled.PictureAsPdf"
-                               Variant="Variant.Outlined">Export PDF</MudButton>
-                    <MudButton Color="Color.Primary"
-                               OnClick="OnSave"
-                               StartIcon="@Icons.Material.Filled.Save"
-                               Variant="Variant.Filled"
-                               Disabled="@saving">
-                        @if (saving)
-                        {
-                            <MudProgressCircular Size="Size.Small" Color="Color.Inherit" Indeterminate="true" Class="mr-2" />
-                        }
+                    <MudButton Color="Color.Info" OnClick="ExportPdf" StartIcon="@Icons.Material.Filled.PictureAsPdf" Variant="Variant.Outlined">Export PDF</MudButton>
+                    <MudButton Color="Color.Primary" OnClick="OnSave" StartIcon="@Icons.Material.Filled.Save" Variant="Variant.Filled" Disabled="@saving">
+                        @if (saving) { <MudProgressCircular Size="Size.Small" Color="Color.Inherit" Indeterminate="true" Class="mr-2" /> }
                         Save
                     </MudButton>
-                    <MudButton Color="Color.Error"
-                               OnClick="OnDelete"
-                               StartIcon="@Icons.Material.Filled.Delete"
-                               Variant="Variant.Outlined">Delete</MudButton>
+                    <MudButton Color="Color.Error" OnClick="OnDelete" StartIcon="@Icons.Material.Filled.Delete" Variant="Variant.Outlined">Delete</MudButton>
                 </MudStack>
             </div>
         </MudContainer>

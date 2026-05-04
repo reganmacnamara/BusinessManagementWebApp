@@ -19,7 +19,7 @@
         <MudGrid Spacing="3">
             @for (int i = 0; i < 5; i++)
             {
-                <MudItem xs="12" sm="6" md="3">
+                <MudItem xs="6" sm="6" md="3">
                     <MudSkeleton Height="110px" Style="border-radius: 12px;" />
                 </MudItem>
             }
@@ -29,7 +29,7 @@
     {
         <MudGrid Spacing="3" Class="mb-6">
 
-            <MudItem xs="12" sm="6" md="3">
+            <MudItem xs="6" sm="6" md="3">
                 <div class="stat-card" @onclick='() => NavigationManager.NavigateTo("/clients")' style="cursor: pointer;">
                     <div class="d-flex align-center" style="gap: 16px;">
                         <div class="stat-icon-wrap stat-icon-wrap--lg" style="background: #EFF6FF;">
@@ -44,7 +44,7 @@
                 </div>
             </MudItem>
 
-            <MudItem xs="12" sm="6" md="3">
+            <MudItem xs="6" sm="6" md="3">
                 <div class="stat-card" @onclick='() => NavigationManager.NavigateTo("/invoices")' style="cursor: pointer;">
                     <div class="d-flex align-center" style="gap: 16px;">
                         <div class="stat-icon-wrap stat-icon-wrap--lg" style="background: #FFFBEB;">
@@ -59,7 +59,7 @@
                 </div>
             </MudItem>
 
-            <MudItem xs="12" sm="6" md="3">
+            <MudItem xs="6" sm="6" md="3">
                 <div class="stat-card" @onclick='() => NavigationManager.NavigateTo("/receipts")' style="cursor: pointer;">
                     <div class="d-flex align-center" style="gap: 16px;">
                         <div class="stat-icon-wrap stat-icon-wrap--lg" style="background: #ECFDF5;">
@@ -74,7 +74,7 @@
                 </div>
             </MudItem>
 
-            <MudItem xs="12" sm="6" md="3">
+            <MudItem xs="6" sm="6" md="3">
                 <div class="stat-card" @onclick='() => NavigationManager.NavigateTo("/products")' style="cursor: pointer;">
                     <div class="d-flex align-center" style="gap: 16px;">
                         <div class="stat-icon-wrap stat-icon-wrap--lg" style="background: #F5F3FF;">
@@ -89,7 +89,7 @@
                 </div>
             </MudItem>
 
-            <MudItem xs="12" sm="6" md="3">
+            <MudItem xs="6" sm="6" md="3">
                 <div class="stat-card" @onclick='() => NavigationManager.NavigateTo("/services")' style="cursor: pointer;">
                     <div class="d-flex align-center" style="gap: 16px;">
                         <div class="stat-icon-wrap stat-icon-wrap--lg" style="background: #F0FDF4;">
