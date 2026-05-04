@@ -2,7 +2,6 @@
 @using AutoMapper
 @using MacsBusinessManagementWebApp.Data
 @using MacsBusinessManagementWebApp.Data.Entities
-@using MacsBusinessManagementWebApp.Data.Receipts.DeleteReceiptItem
 @using MacsBusinessManagementWebApp.Data.Receipts.UpdateReceipt
 @using MacsBusinessManagementWebApp.Data.Receipts.UpsertReceiptItem
 
@@ -214,7 +213,6 @@ else
     private bool saving;
     private Receipt receipt = new();
     private List<ReceiptItem> receiptItems = [];
-    private List<ReceiptItem> receiptItemsToDelete = [];
     private HashSet<ReceiptItem> selectedReceiptItems = [];
     private readonly Dictionary<long, decimal> originalReceiptItemNetValues = [];
 
@@ -310,10 +308,28 @@ else
             : 0m;
 
     private decimal GetInvoiceAvailableBeforeAllocation(ReceiptItem item)
-        => Math.Max(0m, item.Invoice.NetValue - item.Invoice.OffsetValue + GetOriginalAllocationValue(item));
+        => Math.Max(0m, GetInvoiceEditableCapacity(item) - GetOtherAllocationsForInvoice(item));
 
     private decimal GetInvoiceOutstandingAfterAllocation(ReceiptItem item)
-        => Math.Max(0m, GetInvoiceAvailableBeforeAllocation(item) - item.NetValue);
+        => Math.Max(0m, GetInvoiceEditableCapacity(item) - GetCurrentAllocationsForInvoice(item.InvoiceID));
+
+    private decimal GetInvoiceEditableCapacity(ReceiptItem item)
+        => Math.Max(0m, item.Invoice.NetValue - item.Invoice.OffsetValue + GetOriginalAllocationsForInvoice(item.InvoiceID));
+
+    private decimal GetOriginalAllocationsForInvoice(long invoiceID)
+        => receiptItems
+            .Where(item => item.InvoiceID == invoiceID)
+            .Sum(GetOriginalAllocationValue);
+
+    private decimal GetCurrentAllocationsForInvoice(long invoiceID)
+        => receiptItems
+            .Where(item => item.InvoiceID == invoiceID)
+            .Sum(item => item.NetValue);
+
+    private decimal GetOtherAllocationsForInvoice(ReceiptItem item)
+        => receiptItems
+            .Where(allocation => !ReferenceEquals(allocation, item) && allocation.InvoiceID == item.InvoiceID)
+            .Sum(allocation => allocation.NetValue);
 
     private async Task RemoveSelectedItems()
     {
@@ -321,12 +337,7 @@ else
             return;
 
         foreach (var item in selectedReceiptItems)
-        {
-            if (item.ReceiptItemID != 0)
-                receiptItemsToDelete.Add(item);
-
             receiptItems.Remove(item);
-        }
 
         selectedReceiptItems.Clear();
         RecalculateOffsets();
@@ -345,7 +356,15 @@ else
         if (!dialog.Result.IsCanceled && result?.Data is not null)
         {
             foreach (var allocation in (HashSet<ReceiptItem>)result.Data)
+            {
+                if (receiptItems.Any(item => item.InvoiceID == allocation.InvoiceID))
+                {
+                    Snackbar.Add($"{allocation.Invoice.InvoiceRef} is already allocated on this receipt.", Severity.Info);
+                    continue;
+                }
+
                 receiptItems.Add(allocation);
+            }
 
             RecalculateOffsets();
             StateHasChanged();
@@ -407,36 +426,24 @@ else
         try
         {
             RecalculateOffsets();
+            if (receipt.OffsetValue > receipt.NetValue)
+            {
+                Snackbar.Add("Receipt allocations cannot exceed the receipt net value.", Severity.Error);
+                return;
+            }
+
             receipt.Outstanding = receipt.OffsetValue < receipt.NetValue;
 
-            var _UpdateResponse = await api.UpdateReceiptAsync(mapper.Map<UpdateReceiptRequest>(receipt));
+            var _UpdateRequest = mapper.Map<UpdateReceiptRequest>(receipt);
+            _UpdateRequest.ReceiptItems = receiptItems
+                .Select(mapper.Map<UpsertReceiptItemRequest>)
+                .ToList();
+
+            var _UpdateResponse = await api.UpdateReceiptAsync(_UpdateRequest);
             if (!_UpdateResponse.IsSuccessStatusCode)
             {
                 Snackbar.Add($"Error {(int)_UpdateResponse.StatusCode}: {await _UpdateResponse.GetErrorBodyAsync()}", Severity.Error);
                 return;
-            }
-
-            foreach (var item in receiptItems)
-            {
-                var _UpsertRequest = mapper.Map<UpsertReceiptItemRequest>(item);
-                _UpsertRequest.ReceiptID = receipt.ReceiptID;
-
-                var _UpsertResponse = await api.UpsertReceiptItemAsync(_UpsertRequest);
-                if (!_UpsertResponse.IsSuccessStatusCode)
-                {
-                    Snackbar.Add($"Error {(int)_UpsertResponse.StatusCode}: {await _UpsertResponse.GetErrorBodyAsync()}", Severity.Error);
-                    return;
-                }
-            }
-
-            foreach (var item in receiptItemsToDelete)
-            {
-                var _DeleteResponse = await api.DeleteReceiptItemAsync(item.ReceiptItemID);
-                if (!_DeleteResponse.IsSuccessStatusCode)
-                {
-                    Snackbar.Add($"Error {(int)_DeleteResponse.StatusCode}: {await _DeleteResponse.GetErrorBodyAsync()}", Severity.Error);
-                    return;
-                }
             }
 
             Snackbar.Add("Receipt updated.", Severity.Success);

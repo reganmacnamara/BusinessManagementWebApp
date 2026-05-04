@@ -1,4 +1,6 @@
-﻿namespace MacsBusinessManagementWebApp.Data.Invoices.UpdateInvoice;
+using MacsBusinessManagementWebApp.Data.Invoices.UpsertInvoiceItem;
+
+namespace MacsBusinessManagementWebApp.Data.Invoices.UpdateInvoice;
 
 public class UpdateInvoiceRequest
 {
@@ -21,4 +23,6 @@ public class UpdateInvoiceRequest
     public decimal OffsetValue { get; set; }
 
     public int? PaymentTermID { get; set; }
+
+    public List<UpsertInvoiceItemRequest>? InvoiceItems { get; set; }
 }

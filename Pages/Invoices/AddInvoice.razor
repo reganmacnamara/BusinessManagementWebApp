@@ -318,29 +318,16 @@
         RecalculateTransactionValues();
 
         var _Request = mapper.Map<CreateInvoiceRequest>(invoice);
+        _Request.InvoiceItems = invoiceItems
+            .Select(mapper.Map<UpsertInvoiceItemRequest>)
+            .ToList();
+
         var _Response = await api.CreateInvoiceAsync(_Request);
 
         if (!_Response.IsSuccessStatusCode)
         {
             Snackbar.Add($"Error {(int)_Response.StatusCode}: {await _Response.GetErrorBodyAsync()}", Severity.Error);
             return;
-        }
-
-        var _ResponseData = Newtonsoft.Json.JsonConvert.DeserializeObject<CreateInvoiceResponse>(await _Response.Content.ReadAsStringAsync());
-
-        foreach (var _Item in invoiceItems)
-        {
-            if (_ResponseData is not null && _ResponseData.InvoiceID != 0)
-                _Item.InvoiceID = _ResponseData.InvoiceID;
-
-            var _TransactionItemRequest = mapper.Map<UpsertInvoiceItemRequest>(_Item);
-            var _TransactionItemResponse = await api.UpsertInvoiceItemAsync(_TransactionItemRequest);
-
-            if (!_TransactionItemResponse.IsSuccessStatusCode)
-            {
-                Snackbar.Add($"Error {(int)_TransactionItemResponse.StatusCode}: {await _TransactionItemResponse.GetErrorBodyAsync()}", Severity.Error);
-                return;
-            }
         }
 
         await settingsService.IncrementInvoiceNumberAsync();

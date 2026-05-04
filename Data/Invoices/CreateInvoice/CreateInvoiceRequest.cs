@@ -1,4 +1,6 @@
-﻿namespace MacsBusinessManagementWebApp.Data.Invoices.CreateInvoice;
+using MacsBusinessManagementWebApp.Data.Invoices.UpsertInvoiceItem;
+
+namespace MacsBusinessManagementWebApp.Data.Invoices.CreateInvoice;
 
 public class CreateInvoiceRequest
 {
@@ -17,4 +19,6 @@ public class CreateInvoiceRequest
     public decimal NetValue { get; set; }
 
     public decimal OffsetValue { get; set; }
+
+    public List<UpsertInvoiceItemRequest> InvoiceItems { get; set; } = [];
 }

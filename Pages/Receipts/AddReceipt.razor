@@ -296,29 +296,25 @@
         }
 
         RecalculateOffsets();
+        if (receipt.OffsetValue > receipt.NetValue)
+        {
+            Snackbar.Add("Receipt allocations cannot exceed the receipt net value.", Severity.Error);
+            return;
+        }
+
         receipt.Outstanding = receipt.OffsetValue < receipt.NetValue;
 
-        var _Response = await api.CreateReceiptAsync(mapper.Map<CreateReceiptRequest>(receipt));
+        var _Request = mapper.Map<CreateReceiptRequest>(receipt);
+        _Request.ReceiptItems = receiptItems
+            .Select(mapper.Map<UpsertReceiptItemRequest>)
+            .ToList();
+
+        var _Response = await api.CreateReceiptAsync(_Request);
 
         if (!_Response.IsSuccessStatusCode)
         {
             Snackbar.Add($"Error {(int)_Response.StatusCode}: {await _Response.GetErrorBodyAsync()}", Severity.Error);
             return;
-        }
-
-        var _ResponseData = Newtonsoft.Json.JsonConvert.DeserializeObject<CreateReceiptResponse>(await _Response.Content.ReadAsStringAsync());
-
-        foreach (var _Allocation in receiptItems)
-        {
-            var _UpsertRequest = mapper.Map<UpsertReceiptItemRequest>(_Allocation);
-            _UpsertRequest.ReceiptID = _ResponseData!.ReceiptID;
-
-            var _UpsertResponse = await api.UpsertReceiptItemAsync(_UpsertRequest);
-            if (!_UpsertResponse.IsSuccessStatusCode)
-            {
-                Snackbar.Add($"Error {(int)_UpsertResponse.StatusCode}: {await _UpsertResponse.GetErrorBodyAsync()}", Severity.Error);
-                return;
-            }
         }
 
         await settingsService.IncrementReceiptNumberAsync();
@@ -341,6 +337,13 @@
 
     private async Task OnClientChanged(Client client)
     {
+        if (receipt.ClientID != 0 && receipt.ClientID != client.ClientID)
+        {
+            receiptItems.Clear();
+            selectedReceiptItems.Clear();
+            RecalculateOffsets();
+        }
+
         receipt.Client = client;
         receipt.ClientID = client.ClientID;
         await GetClientInvoices();
@@ -379,7 +382,15 @@
         if (!dialog.Result.IsCanceled && result?.Data is not null)
         {
             foreach (var _Allocation in (HashSet<ReceiptItem>)result.Data)
+            {
+                if (receiptItems.Any(item => item.InvoiceID == _Allocation.InvoiceID))
+                {
+                    Snackbar.Add($"{_Allocation.Invoice.InvoiceRef} is already allocated on this receipt.", Severity.Info);
+                    continue;
+                }
+
                 receiptItems.Add(_Allocation);
+            }
 
             RecalculateOffsets();
             StateHasChanged();
@@ -390,10 +401,23 @@
         => receipt.OffsetValue = receiptItems.Sum(a => a.NetValue);
 
     private decimal GetInvoiceAvailableBeforeAllocation(ReceiptItem item)
-        => Math.Max(0m, item.Invoice.NetValue - item.Invoice.OffsetValue);
+        => Math.Max(0m, GetInvoiceEditableCapacity(item) - GetOtherAllocationsForInvoice(item));
 
     private decimal GetInvoiceOutstandingAfterAllocation(ReceiptItem item)
-        => Math.Max(0m, GetInvoiceAvailableBeforeAllocation(item) - item.NetValue);
+        => Math.Max(0m, GetInvoiceEditableCapacity(item) - GetCurrentAllocationsForInvoice(item.InvoiceID));
+
+    private decimal GetInvoiceEditableCapacity(ReceiptItem item)
+        => Math.Max(0m, item.Invoice.NetValue - item.Invoice.OffsetValue);
+
+    private decimal GetCurrentAllocationsForInvoice(long invoiceID)
+        => receiptItems
+            .Where(item => item.InvoiceID == invoiceID)
+            .Sum(item => item.NetValue);
+
+    private decimal GetOtherAllocationsForInvoice(ReceiptItem item)
+        => receiptItems
+            .Where(allocation => !ReferenceEquals(allocation, item) && allocation.InvoiceID == item.InvoiceID)
+            .Sum(allocation => allocation.NetValue);
 
     private void SelectCreatedClient(Client client)
     {

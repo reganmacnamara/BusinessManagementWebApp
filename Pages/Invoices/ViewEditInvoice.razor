@@ -3,7 +3,6 @@
 @using AutoMapper
 @using MacsBusinessManagementWebApp.Data
 @using MacsBusinessManagementWebApp.Data.Entities
-@using MacsBusinessManagementWebApp.Data.Invoices.DeleteInvoiceItem
 @using MacsBusinessManagementWebApp.Data.Invoices.UpdateInvoice
 @using MacsBusinessManagementWebApp.Data.Invoices.UpsertInvoiceItem
 
@@ -172,7 +171,6 @@ else
     private HashSet<InvoiceItem> selectedInvoiceItems = [];
     private Invoice invoice = new();
     private List<InvoiceItem> invoiceItems = [];
-    private List<InvoiceItem> invoiceItemsToBeDeleted = [];
 
     [Parameter]
     public long id { get; set; }
@@ -219,10 +217,7 @@ else
             return;
 
         foreach (var _Item in selectedInvoiceItems)
-        {
-            invoiceItemsToBeDeleted.Add(_Item);
             invoiceItems.Remove(_Item);
-        }
 
         selectedInvoiceItems.Clear();
         StateHasChanged();
@@ -323,40 +318,23 @@ else
         try
         {
             RecalculateTransactionValues();
+            if (invoice.OffsetValue > invoice.NetValue)
+            {
+                Snackbar.Add("Invoice payments cannot exceed the invoice net value.", Severity.Error);
+                return;
+            }
+
             var _UpdateTransactionRequest = mapper.Map<UpdateInvoiceRequest>(invoice);
+            _UpdateTransactionRequest.InvoiceItems = invoiceItems
+                .Select(mapper.Map<UpsertInvoiceItemRequest>)
+                .ToList();
+
             var _UpdateTransactionResponse = await api.UpdateInvoiceAsync(_UpdateTransactionRequest);
 
             if (!_UpdateTransactionResponse.IsSuccessStatusCode)
             {
                 Snackbar.Add($"Error {(int)_UpdateTransactionResponse.StatusCode}: {await _UpdateTransactionResponse.GetErrorBodyAsync()}", Severity.Error);
                 return;
-            }
-
-            var _ResponseData = Newtonsoft.Json.JsonConvert.DeserializeObject<UpdateInvoiceResponse>(await _UpdateTransactionResponse.Content.ReadAsStringAsync());
-
-            foreach (var _Item in invoiceItems)
-            {
-                if (_ResponseData is not null && _ResponseData.InvoiceID != 0)
-                    _Item.InvoiceID = _ResponseData.InvoiceID;
-
-                var _TransactionItemRequest = mapper.Map<UpsertInvoiceItemRequest>(_Item);
-                var _TransactionItemResponse = await api.UpsertInvoiceItemAsync(_TransactionItemRequest);
-
-                if (!_TransactionItemResponse.IsSuccessStatusCode)
-                {
-                    Snackbar.Add($"Error {(int)_TransactionItemResponse.StatusCode}: {await _TransactionItemResponse.GetErrorBodyAsync()}", Severity.Error);
-                    return;
-                }
-            }
-
-            foreach (var _Item in invoiceItemsToBeDeleted)
-            {
-                var _Response = await api.DeleteInvoiceItemAsync(_Item.InvoiceItemID);
-                if (!_Response.IsSuccessStatusCode)
-                {
-                    Snackbar.Add($"Error {(int)_Response.StatusCode}: {await _Response.GetErrorBodyAsync()}", Severity.Error);
-                    return;
-                }
             }
 
             Snackbar.Add("Invoice updated.", Severity.Success);

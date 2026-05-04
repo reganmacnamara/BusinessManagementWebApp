@@ -1,4 +1,6 @@
-﻿namespace MacsBusinessManagementWebApp.Data.Receipts.UpdateReceipt;
+using MacsBusinessManagementWebApp.Data.Receipts.UpsertReceiptItem;
+
+namespace MacsBusinessManagementWebApp.Data.Receipts.UpdateReceipt;
 
 public class UpdateReceiptRequest
 {
@@ -17,4 +19,6 @@ public class UpdateReceiptRequest
     public decimal NetValue { get; set; }
 
     public decimal OffsetValue { get; set; }
+
+    public List<UpsertReceiptItemRequest>? ReceiptItems { get; set; }
 }
