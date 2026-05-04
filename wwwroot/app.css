@@ -47,6 +47,38 @@ html, body {
     overflow: hidden;
 }
 
+.page-header .mud-container > .d-flex.align-center {
+    gap: 10px;
+}
+
+.page-header .mud-stack-row,
+.table-card > .d-flex.align-center,
+.table-card > .d-flex.align-center.justify-space-between,
+.mud-dialog-actions,
+.mud-message-box .mud-dialog-actions {
+    gap: 10px;
+}
+
+.table-card > .d-flex.align-center {
+    flex-wrap: wrap;
+    padding: 16px !important;
+}
+
+.table-card > .d-flex.align-center .mud-button-root.ml-2,
+.table-card > .d-flex.align-center .mud-button-root.mr-2 {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+
+.mud-dialog-actions {
+    padding: 16px 24px 20px !important;
+    flex-wrap: wrap;
+}
+
+.mud-dialog-actions .mud-button-root {
+    margin: 0 !important;
+}
+
 .cursor-pointer {
     cursor: pointer;
 }
@@ -74,6 +106,7 @@ html, body {
 
 .reports-filter {
     align-items: center;
+    gap: 12px;
 }
 
 .reports-filter .mud-picker,
@@ -216,13 +249,13 @@ html, body {
     display: flex;
     align-items: center;
     margin-bottom: 24px;
-    gap: 8px;
+    gap: 16px;
     flex-wrap: nowrap;
 }
 
 .list-header-actions {
     display: flex;
-    gap: 8px;
+    gap: 10px;
     margin-left: auto;
     flex-shrink: 0;
     flex-wrap: nowrap;
@@ -255,9 +288,9 @@ html, body {
 /* DataGrid horizontal scroll on small screens */
 .table-card .mud-table-toolbar {
     align-items: center;
-    gap: 8px;
+    gap: 12px;
     min-height: auto;
-    padding: 12px;
+    padding: 16px;
 }
 
 .table-card .mud-table-toolbar .mud-input-control {
@@ -319,6 +352,26 @@ html, body {
         min-width: 0 !important;
         padding-left: 10px !important;
         padding-right: 10px !important;
+    }
+
+    .page-header .mud-stack-row,
+    .table-card > .d-flex.align-center,
+    .mud-dialog-actions {
+        gap: 8px;
+    }
+
+    .table-card > .d-flex.align-center {
+        padding: 12px !important;
+    }
+
+    .table-card > .d-flex.align-center .mud-button-root,
+    .mud-dialog-actions .mud-button-root {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+
+    .reports-filter {
+        align-items: stretch;
     }
 }
 
