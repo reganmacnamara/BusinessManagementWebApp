@@ -43,11 +43,37 @@
     </MudDrawer>
 
     <MudMainContent>
-        @Body
+        <ErrorBoundary @ref="_errorBoundary">
+            <ChildContent>
+                @Body
+            </ChildContent>
+            <ErrorContent Context="ex">
+                <MudContainer MaxWidth="MaxWidth.Medium" Class="pa-6">
+                    <MudPaper Elevation="0" Class="pa-10 d-flex flex-column align-center"
+                              Style="border:1px solid #FEE2E2; border-radius:12px; background:#FFF5F5; text-align:center;">
+                        <MudIcon Icon="@Icons.Material.Filled.ErrorOutline"
+                                 Style="color:#EF4444; font-size:3.5rem;" Class="mb-3" />
+                        <MudText Typo="Typo.h5" Style="color:#991B1B; font-weight:700;" Class="mb-2">
+                            An unexpected error occurred
+                        </MudText>
+                        <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-5" Style="max-width:520px;">
+                            @ex.Message
+                        </MudText>
+                        <MudButton Color="Color.Primary"
+                                   Variant="Variant.Outlined"
+                                   StartIcon="@Icons.Material.Filled.Refresh"
+                                   OnClick="@(() => _errorBoundary?.Recover())">
+                            Recover
+                        </MudButton>
+                    </MudPaper>
+                </MudContainer>
+            </ErrorContent>
+        </ErrorBoundary>
     </MudMainContent>
 </MudLayout>
 
 @code {
+    private ErrorBoundary? _errorBoundary;
     private bool _drawerOpen = true;
 
     private readonly MudTheme _theme = new()

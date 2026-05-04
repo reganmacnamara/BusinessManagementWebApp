@@ -1,0 +1,29 @@
+@* Reusable error card shown when a page or section fails to load. *@
+
+<MudPaper Elevation="0" Class="pa-10 d-flex flex-column align-center"
+          Style="border:1px solid #FEE2E2; border-radius:12px; background:#FFF5F5; text-align:center;">
+    <MudIcon Icon="@Icons.Material.Filled.CloudOff"
+             Style="color:#EF4444; font-size:3rem;"
+             Class="mb-3" />
+    <MudText Typo="Typo.h6" Style="color:#991B1B; font-weight:700;" Class="mb-1">Failed to load</MudText>
+    <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-4" Style="max-width:480px;">
+        @Message
+    </MudText>
+    @if (OnRetry.HasDelegate)
+    {
+        <MudButton Color="Color.Primary"
+                   Variant="Variant.Outlined"
+                   StartIcon="@Icons.Material.Filled.Refresh"
+                   OnClick="OnRetry">
+            Try again
+        </MudButton>
+    }
+</MudPaper>
+
+@code {
+    /// <summary>Human-readable description of what went wrong.</summary>
+    [Parameter] public string Message { get; set; } = "Something went wrong while loading this content. Please try again.";
+
+    /// <summary>If provided, a "Try again" button is shown that fires this callback.</summary>
+    [Parameter] public EventCallback OnRetry { get; set; }
+}

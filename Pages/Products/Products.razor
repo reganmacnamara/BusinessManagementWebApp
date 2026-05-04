@@ -36,6 +36,11 @@
         </div>
     </div>
 
+    @if (loadError is not null)
+    {
+        <PageLoadError Message="@loadError" OnRetry="GetProducts" />
+    }
+
     <MudGrid Spacing="3" Class="mb-5">
         <MudItem xs="12" sm="6" md="4">
             <div class="stat-card">
@@ -128,6 +133,7 @@
 @code {
     private MudMessageBox deleteConfirmationMessage = default!;
     private bool loading;
+    private string? loadError;
     private List<Product> products = [];
     private string searchString = string.Empty;
     private HashSet<Product> selectedProducts = [];
@@ -135,20 +141,33 @@
     private async Task GetProducts()
     {
         loading = true;
-        var _Response = await api.GetProductsAsync();
-        products = _Response.Products ?? [];
-        loading = false;
-        StateHasChanged();
+        loadError = null;
+        try
+        {
+            var _Response = await api.GetProductsAsync();
+            products = _Response.Products ?? [];
+        }
+        catch (Exception ex)
+        {
+            loadError = ex.Message;
+        }
+        finally
+        {
+            loading = false;
+            StateHasChanged();
+        }
     }
 
     private async Task OnDelete()
     {
-        if (selectedProducts.Count != 0)
-        {
-            int productsDeleted = 0;
-            bool? result = await deleteConfirmationMessage.ShowAsync();
-            if (result is null) return;
+        if (selectedProducts.Count == 0) return;
 
+        bool? result = await deleteConfirmationMessage.ShowAsync();
+        if (result is null) return;
+
+        int productsDeleted = 0;
+        try
+        {
             foreach (var product in selectedProducts)
             {
                 var _Response = await api.DeleteProductAsync(product.ProductID);
@@ -162,8 +181,14 @@
             }
 
             if (productsDeleted > 0)
-                Snackbar.Add($"{productsDeleted} Products Deleted.", Severity.Warning);
-
+                Snackbar.Add($"{productsDeleted} Product(s) deleted.", Severity.Warning);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"An unexpected error occurred: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
             await GetProducts();
             selectedProducts.Clear();
             StateHasChanged();

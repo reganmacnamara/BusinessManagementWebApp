@@ -22,6 +22,12 @@
         <MudSkeleton Height="300px" Style="border-radius: 12px;" />
     </MudContainer>
 }
+else if (loadError is not null)
+{
+    <MudContainer MaxWidth="MaxWidth.Large" Class="pa-6">
+        <PageLoadError Message="@loadError" OnRetry="GetTransactionData" />
+    </MudContainer>
+}
 else
 {
     <div class="page-header">
@@ -160,6 +166,7 @@ else
 @code {
     private MudMessageBox deleteConfirmationMessage = default!;
     private bool isLoading = true;
+    private string? loadError;
     private bool saving;
     private HashSet<InvoiceItem> selectedInvoiceItems = [];
     private Invoice invoice = new();
@@ -222,10 +229,21 @@ else
 
     private async Task GetTransactionData()
     {
-        var _Response = await api.GetInvoiceAsync(id);
-        invoice = _Response.Invoice;
-        invoiceItems = _Response.InvoiceItems;
-        isLoading = false;
+        loadError = null;
+        try
+        {
+            var _Response = await api.GetInvoiceAsync(id);
+            invoice = _Response.Invoice;
+            invoiceItems = _Response.InvoiceItems;
+        }
+        catch (Exception ex)
+        {
+            loadError = ex.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
     }
 
     private async Task ExportPdf()
@@ -258,14 +276,21 @@ else
         bool? result = await deleteConfirmationMessage.ShowAsync();
         if (result is null) return;
 
-        var _Response = await api.DeleteInvoiceAsync(invoice.InvoiceID);
-        if (_Response.IsSuccessStatusCode)
+        try
         {
-            Snackbar.Add($"{invoice.InvoiceRef} Deleted.", Severity.Warning);
-            NavigateToInvoices();
+            var _Response = await api.DeleteInvoiceAsync(invoice.InvoiceID);
+            if (_Response.IsSuccessStatusCode)
+            {
+                Snackbar.Add($"{invoice.InvoiceRef} deleted.", Severity.Warning);
+                NavigateToInvoices();
+            }
+            else
+                Snackbar.Add($"Error {(int)_Response.StatusCode}: {await _Response.GetErrorBodyAsync()}", Severity.Error);
         }
-        else
-            Snackbar.Add($"Error {(int)_Response.StatusCode}: {await _Response.GetErrorBodyAsync()}", Severity.Error);
+        catch (Exception ex)
+        {
+            Snackbar.Add($"An unexpected error occurred: {ex.Message}", Severity.Error);
+        }
     }
 
     private async Task OnDueDateChanged(DateTime? dateTime)
@@ -333,7 +358,11 @@ else
                 }
             }
 
-            Snackbar.Add("Invoice Updated.", Severity.Success);
+            Snackbar.Add("Invoice updated.", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"An unexpected error occurred: {ex.Message}", Severity.Error);
         }
         finally
         {

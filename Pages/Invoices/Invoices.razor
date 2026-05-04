@@ -39,6 +39,11 @@
         </div>
     </div>
 
+    @if (loadError is not null)
+    {
+        <PageLoadError Message="@loadError" OnRetry="GetTransactionsDataAsync" />
+    }
+
     <MudGrid Spacing="3" Class="mb-5">
         <MudItem xs="12" sm="6" md="3">
             <div class="stat-card">
@@ -160,6 +165,7 @@
 @code {
     private MudMessageBox deleteConfirmationMessage = default!;
     private bool loading;
+    private string? loadError;
     private string searchString = string.Empty;
     private string? statusFilter = null;
     HashSet<Invoice> selectedInvoices = [];
@@ -181,10 +187,21 @@
     private async Task GetTransactionsDataAsync()
     {
         loading = true;
-        var _Response = await api.GetInvoicesAsync();
-        invoices = _Response.Invoices ?? [];
-        loading = false;
-        await InvokeAsync(StateHasChanged);
+        loadError = null;
+        try
+        {
+            var _Response = await api.GetInvoicesAsync();
+            invoices = _Response.Invoices ?? [];
+        }
+        catch (Exception ex)
+        {
+            loadError = ex.Message;
+        }
+        finally
+        {
+            loading = false;
+            await InvokeAsync(StateHasChanged);
+        }
     }
 
     private async Task ExportSelectedPdfs()
@@ -207,12 +224,14 @@
 
     private async Task OnDelete()
     {
-        if (selectedInvoices.Count != 0)
-        {
-            int transactionsDeleted = 0;
-            bool? result = await deleteConfirmationMessage.ShowAsync();
-            if (result is null) return;
+        if (selectedInvoices.Count == 0) return;
 
+        bool? result = await deleteConfirmationMessage.ShowAsync();
+        if (result is null) return;
+
+        int transactionsDeleted = 0;
+        try
+        {
             foreach (var transaction in selectedInvoices)
             {
                 var _Response = await api.DeleteInvoiceAsync(transaction.InvoiceID);
@@ -226,8 +245,14 @@
             }
 
             if (transactionsDeleted > 0)
-                Snackbar.Add($"{transactionsDeleted} Invoices Deleted.", Severity.Warning);
-
+                Snackbar.Add($"{transactionsDeleted} Invoice(s) deleted.", Severity.Warning);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"An unexpected error occurred: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
             selectedInvoices.Clear();
             await GetTransactionsDataAsync();
             StateHasChanged();

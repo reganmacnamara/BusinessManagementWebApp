@@ -28,6 +28,11 @@
         </div>
     </div>
 
+    @if (loadError is not null)
+    {
+        <PageLoadError Message="@loadError" OnRetry="LoadServices" />
+    }
+
     <MudGrid Spacing="3" Class="mb-5">
         <MudItem xs="12" sm="4">
             <div class="stat-card">
@@ -108,6 +113,7 @@
 @code {
     private MudMessageBox deleteBox = default!;
     private bool loading;
+    private string? loadError;
     private List<Service> services = [];
     private string searchString = string.Empty;
     private HashSet<Service> selectedServices = [];
@@ -122,10 +128,21 @@
     private async Task LoadServices()
     {
         loading = true;
-        var response = await api.GetServicesAsync();
-        services = response.Services ?? [];
-        loading = false;
-        StateHasChanged();
+        loadError = null;
+        try
+        {
+            var response = await api.GetServicesAsync();
+            services = response.Services ?? [];
+        }
+        catch (Exception ex)
+        {
+            loadError = ex.Message;
+        }
+        finally
+        {
+            loading = false;
+            StateHasChanged();
+        }
     }
 
     private void NavigateToCreate()
@@ -148,23 +165,32 @@
         if (result is null) return;
 
         int deleted = 0;
-        foreach (var service in selectedServices)
+        try
         {
-            var response = await api.DeleteServiceAsync(service.ServiceID);
-            if (response.IsSuccessStatusCode)
+            foreach (var service in selectedServices)
             {
-                services.Remove(service);
-                deleted++;
+                var response = await api.DeleteServiceAsync(service.ServiceID);
+                if (response.IsSuccessStatusCode)
+                {
+                    services.Remove(service);
+                    deleted++;
+                }
+                else
+                    Snackbar.Add($"Error {(int)response.StatusCode}: {await response.GetErrorBodyAsync()}", Severity.Error);
             }
-            else
-                Snackbar.Add($"Error {(int)response.StatusCode}: {await response.GetErrorBodyAsync()}", Severity.Error);
+
+            if (deleted > 0)
+                Snackbar.Add($"{deleted} Service(s) deleted.", Severity.Warning);
         }
-
-        if (deleted > 0)
-            Snackbar.Add($"{deleted} Service(s) deleted.", Severity.Warning);
-
-        selectedServices.Clear();
-        StateHasChanged();
+        catch (Exception ex)
+        {
+            Snackbar.Add($"An unexpected error occurred: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            selectedServices.Clear();
+            StateHasChanged();
+        }
     }
 
     protected override async Task OnInitializedAsync()

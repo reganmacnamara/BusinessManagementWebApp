@@ -20,6 +20,12 @@
         <MudSkeleton Height="300px" Style="border-radius: 12px;" />
     </MudContainer>
 }
+else if (loadError is not null)
+{
+    <MudContainer MaxWidth="MaxWidth.Large" Class="pa-6">
+        <PageLoadError Message="@loadError" OnRetry="GetProductData" />
+    </MudContainer>
+}
 else
 {
     <div class="page-header">
@@ -111,6 +117,7 @@ else
     private MudMessageBox deleteConfirmationMessage = default!;
     private Product product = default!;
     private bool isLoading = true;
+    private string? loadError;
     private bool saving;
 
     [Parameter]
@@ -118,8 +125,16 @@ else
 
     private async Task GetProductData()
     {
-        var _Product = await api.GetProductAsync(id);
-        product = _Product.Product;
+        loadError = null;
+        try
+        {
+            var _Product = await api.GetProductAsync(id);
+            product = _Product.Product;
+        }
+        catch (Exception ex)
+        {
+            loadError = ex.Message;
+        }
     }
 
     private async Task GoBack() => await JS.InvokeVoidAsync("history.back");
@@ -132,14 +147,21 @@ else
         bool? result = await deleteConfirmationMessage.ShowAsync();
         if (result is null) return;
 
-        var _Response = await api.DeleteProductAsync(product.ProductID);
-        if (_Response.IsSuccessStatusCode)
+        try
         {
-            Snackbar.Add($"{product.ProductCode} Deleted.", Severity.Warning);
-            NavigateToProducts();
+            var _Response = await api.DeleteProductAsync(product.ProductID);
+            if (_Response.IsSuccessStatusCode)
+            {
+                Snackbar.Add($"{product.ProductCode} deleted.", Severity.Warning);
+                NavigateToProducts();
+            }
+            else
+                Snackbar.Add($"Error {(int)_Response.StatusCode}: {await _Response.GetErrorBodyAsync()}", Severity.Error);
         }
-        else
-            Snackbar.Add($"Error {(int)_Response.StatusCode}: {await _Response.GetErrorBodyAsync()}", Severity.Error);
+        catch (Exception ex)
+        {
+            Snackbar.Add($"An unexpected error occurred: {ex.Message}", Severity.Error);
+        }
     }
 
     protected override async Task OnInitializedAsync()
@@ -175,7 +197,11 @@ else
                 return;
             }
 
-            Snackbar.Add("Product Updated.", Severity.Success);
+            Snackbar.Add("Product updated.", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"An unexpected error occurred: {ex.Message}", Severity.Error);
         }
         finally
         {

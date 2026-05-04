@@ -25,6 +25,10 @@
             }
         </MudGrid>
     }
+    else if (loadError is not null)
+    {
+        <PageLoadError Message="@loadError" OnRetry="LoadDashboardAsync" />
+    }
     else
     {
         <MudGrid Spacing="3" Class="mb-6">
@@ -185,6 +189,7 @@
 
 @code {
     private bool isLoading = true;
+    private string? loadError;
     private List<Invoice> invoices = [];
     private List<Receipt> receipts = [];
     private List<Client> clients = [];
@@ -196,25 +201,39 @@
     private int outstandingCount;
 
     protected override async Task OnInitializedAsync()
+        => await LoadDashboardAsync();
+
+    private async Task LoadDashboardAsync()
     {
-        var invoicesTask = api.GetInvoicesAsync();
-        var receiptsTask = api.GetReceiptsAsync();
-        var clientsTask = api.GetClientsAsync();
-        var productsTask = api.GetProductsAsync();
-        var servicesTask = api.GetServicesAsync();
+        isLoading = true;
+        loadError = null;
+        try
+        {
+            var invoicesTask = api.GetInvoicesAsync();
+            var receiptsTask = api.GetReceiptsAsync();
+            var clientsTask = api.GetClientsAsync();
+            var productsTask = api.GetProductsAsync();
+            var servicesTask = api.GetServicesAsync();
 
-        await Task.WhenAll(invoicesTask, receiptsTask, clientsTask, productsTask, servicesTask);
+            await Task.WhenAll(invoicesTask, receiptsTask, clientsTask, productsTask, servicesTask);
 
-        invoices = (await invoicesTask).Invoices ?? [];
-        receipts = (await receiptsTask).Receipts ?? [];
-        clients = (await clientsTask).Clients ?? [];
-        products = (await productsTask).Products ?? [];
-        services = (await servicesTask).Services ?? [];
+            invoices = (await invoicesTask).Invoices ?? [];
+            receipts = (await receiptsTask).Receipts ?? [];
+            clients = (await clientsTask).Clients ?? [];
+            products = (await productsTask).Products ?? [];
+            services = (await servicesTask).Services ?? [];
 
-        totalOutstanding = invoices.Sum(x => Math.Max(0m, x.NetValue - x.OffsetValue));
-        totalReceived = receipts.Sum(x => x.NetValue);
-        outstandingCount = invoices.Count(x => x.Outstanding);
-
-        isLoading = false;
+            totalOutstanding = invoices.Sum(x => Math.Max(0m, x.NetValue - x.OffsetValue));
+            totalReceived = receipts.Sum(x => x.NetValue);
+            outstandingCount = invoices.Count(x => x.Outstanding);
+        }
+        catch (Exception ex)
+        {
+            loadError = ex.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
     }
 }

@@ -22,6 +22,12 @@
         <MudSkeleton Height="300px" Style="border-radius: 12px;" />
     </MudContainer>
 }
+else if (loadError is not null)
+{
+    <MudContainer MaxWidth="MaxWidth.Large" Class="pa-6">
+        <PageLoadError Message="@loadError" OnRetry="GetClientData" />
+    </MudContainer>
+}
 else
 {
     <div class="page-header">
@@ -180,6 +186,7 @@ else
     private MudMessageBox deleteConfirmationMessage = default!;
     private List<Invoice> invoices = [];
     private bool isLoading = true;
+    private string? loadError;
     private bool saving;
     private List<PaymentTerm> paymentTerms = [];
     private List<Receipt> receipts = [];
@@ -189,18 +196,26 @@ else
 
     private async Task GetClientData()
     {
-        var _Client = await api.GetClientAsync(id);
-        var _ClientInvoices = await api.GetClientInvoicesAsync(id);
-        var _ClientReceipts = await api.GetClientReceiptsAsync(id);
-        var _PaymentTerms = await api.GetPaymentTermsAsync();
+        loadError = null;
+        try
+        {
+            var _Client = await api.GetClientAsync(id);
+            var _ClientInvoices = await api.GetClientInvoicesAsync(id);
+            var _ClientReceipts = await api.GetClientReceiptsAsync(id);
+            var _PaymentTerms = await api.GetPaymentTermsAsync();
 
-        client = _Client.Client;
-        invoices = _ClientInvoices.Invoices;
-        receipts = _ClientReceipts.Receipts;
-        paymentTerms = _PaymentTerms.PaymentTerms ?? [];
+            client = _Client.Client;
+            invoices = _ClientInvoices.Invoices;
+            receipts = _ClientReceipts.Receipts;
+            paymentTerms = _PaymentTerms.PaymentTerms ?? [];
 
-        if (client.PaymentTermID > 0)
-            client.PaymentTerm = paymentTerms.FirstOrDefault(pt => pt.PaymentTermID == client.PaymentTermID);
+            if (client.PaymentTermID > 0)
+                client.PaymentTerm = paymentTerms.FirstOrDefault(pt => pt.PaymentTermID == client.PaymentTermID);
+        }
+        catch (Exception ex)
+        {
+            loadError = ex.Message;
+        }
     }
 
     private static string? ValidateEmail(string value)
@@ -251,14 +266,21 @@ else
         bool? result = await deleteConfirmationMessage.ShowAsync();
         if (result is null) return;
 
-        var _Response = await api.DeleteClientAsync(client.ClientID);
-        if (_Response.IsSuccessStatusCode)
+        try
         {
-            Snackbar.Add($"{client.ClientName} Deleted.", Severity.Warning);
-            NavigateToClients();
+            var _Response = await api.DeleteClientAsync(client.ClientID);
+            if (_Response.IsSuccessStatusCode)
+            {
+                Snackbar.Add($"{client.ClientName} deleted.", Severity.Warning);
+                NavigateToClients();
+            }
+            else
+                Snackbar.Add($"Error {(int)_Response.StatusCode}: {await _Response.GetErrorBodyAsync()}", Severity.Error);
         }
-        else
-            Snackbar.Add($"Error {(int)_Response.StatusCode}: {await _Response.GetErrorBodyAsync()}", Severity.Error);
+        catch (Exception ex)
+        {
+            Snackbar.Add($"An unexpected error occurred: {ex.Message}", Severity.Error);
+        }
     }
 
     protected override async Task OnInitializedAsync()
@@ -288,7 +310,11 @@ else
                 return;
             }
 
-            Snackbar.Add("Client Updated.", Severity.Success);
+            Snackbar.Add("Client updated.", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"An unexpected error occurred: {ex.Message}", Severity.Error);
         }
         finally
         {

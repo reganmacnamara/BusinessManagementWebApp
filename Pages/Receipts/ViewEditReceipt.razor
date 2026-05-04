@@ -21,6 +21,12 @@
         <MudSkeleton Height="300px" Style="border-radius: 12px;" />
     </MudContainer>
 }
+else if (loadError is not null)
+{
+    <MudContainer MaxWidth="MaxWidth.Large" Class="pa-6">
+        <PageLoadError Message="@loadError" OnRetry="LoadReceiptDataAsync" />
+    </MudContainer>
+}
 else
 {
     <div class="page-header">
@@ -202,6 +208,7 @@ else
 @code {
     private MudMessageBox deleteConfirmationMessage = default!;
     private bool isLoading = true;
+    private string? loadError;
     private bool saving;
     private Receipt receipt = new();
     private List<ReceiptItem> receiptItems = [];
@@ -216,10 +223,21 @@ else
 
     private async Task LoadReceiptDataAsync()
     {
-        var _Response = await api.GetReceiptAsync(id);
-        receipt = _Response.Receipt;
-        receiptItems = _Response.ReceiptItems;
-        isLoading = false;
+        loadError = null;
+        try
+        {
+            var _Response = await api.GetReceiptAsync(id);
+            receipt = _Response.Receipt;
+            receiptItems = _Response.ReceiptItems;
+        }
+        catch (Exception ex)
+        {
+            loadError = ex.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
     }
 
     private async Task ExportPdf()
@@ -343,14 +361,21 @@ else
         bool? result = await deleteConfirmationMessage.ShowAsync();
         if (result is null) return;
 
-        var _Response = await api.DeleteReceiptAsync(receipt.ReceiptID);
-        if (_Response.IsSuccessStatusCode)
+        try
         {
-            Snackbar.Add($"{receipt.ReceiptRef} Deleted.", Severity.Warning);
-            NavigateToReceipts();
+            var _Response = await api.DeleteReceiptAsync(receipt.ReceiptID);
+            if (_Response.IsSuccessStatusCode)
+            {
+                Snackbar.Add($"{receipt.ReceiptRef} deleted.", Severity.Warning);
+                NavigateToReceipts();
+            }
+            else
+                Snackbar.Add($"Error {(int)_Response.StatusCode}: {await _Response.GetErrorBodyAsync()}", Severity.Error);
         }
-        else
-            Snackbar.Add($"Error {(int)_Response.StatusCode}: {await _Response.GetErrorBodyAsync()}", Severity.Error);
+        catch (Exception ex)
+        {
+            Snackbar.Add($"An unexpected error occurred: {ex.Message}", Severity.Error);
+        }
     }
 
     private async Task OnSave()
@@ -397,7 +422,11 @@ else
                 }
             }
 
-            Snackbar.Add("Receipt Updated.", Severity.Success);
+            Snackbar.Add("Receipt updated.", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"An unexpected error occurred: {ex.Message}", Severity.Error);
         }
         finally
         {

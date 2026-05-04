@@ -13,6 +13,23 @@
 @inject NavigationManager NavigationManager
 @inject ISnackbar Snackbar
 
+@if (isLoading)
+{
+    <MudContainer MaxWidth="MaxWidth.Large" Class="pa-6">
+        <MudSkeleton Height="48px" Class="mb-2" Style="border-radius: 8px;" />
+        <MudSkeleton Height="20px" Width="40%" Class="mb-6" Style="border-radius: 8px;" />
+        <MudSkeleton Height="300px" Style="border-radius: 12px;" />
+    </MudContainer>
+}
+else if (loadError is not null)
+{
+    <MudContainer MaxWidth="MaxWidth.Large" Class="pa-6">
+        <PageLoadError Message="@loadError" OnRetry="LoadServiceAsync" />
+    </MudContainer>
+}
+else
+{
+
 <PageTitle>@(IsNew ? "New Service" : service.ServiceName)</PageTitle>
 
 <div class="page-header">
@@ -206,6 +223,8 @@
     </YesButton>
 </MudMessageBox>
 
+} @* end else (loaded) *@
+
 @code {
     [Parameter] public long serviceID { get; set; }
 
@@ -217,6 +236,8 @@
 
     private Service service = new();
     private List<ServiceActivity> activities = [];
+    private bool isLoading;
+    private string? loadError;
     private bool saving;
 
     // Activity dialog state
@@ -233,12 +254,27 @@
     };
 
     protected override async Task OnParametersSetAsync()
+        => await LoadServiceAsync();
+
+    private async Task LoadServiceAsync()
     {
-        if (!IsNew)
+        if (IsNew) return;
+
+        isLoading = true;
+        loadError = null;
+        try
         {
             var response = await api.GetServiceAsync(serviceID);
             service = response.Service;
             activities = service.ServiceActivities.OrderBy(a => a.SortOrder).ToList();
+        }
+        catch (Exception ex)
+        {
+            loadError = ex.Message;
+        }
+        finally
+        {
+            isLoading = false;
         }
     }
 
@@ -284,6 +320,10 @@
                 Snackbar.Add("Service updated.", Severity.Success);
             }
         }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"An unexpected error occurred: {ex.Message}", Severity.Error);
+        }
         finally
         {
             saving = false;
@@ -323,22 +363,29 @@
             return;
         }
 
-        var request = mapper.Map<UpsertServiceActivityRequest>(editingActivity);
-        var response = await api.UpsertServiceActivityAsync(request);
-
-        if (!response.IsSuccessStatusCode)
+        try
         {
-            Snackbar.Add($"Error {(int)response.StatusCode}: {await response.GetErrorBodyAsync()}", Severity.Error);
-            return;
+            var request = mapper.Map<UpsertServiceActivityRequest>(editingActivity);
+            var response = await api.UpsertServiceActivityAsync(request);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                Snackbar.Add($"Error {(int)response.StatusCode}: {await response.GetErrorBodyAsync()}", Severity.Error);
+                return;
+            }
+
+            activityDialogOpen = false;
+
+            // Refresh activities from API
+            var refreshed = await api.GetServiceAsync(serviceID);
+            activities = refreshed.Service.ServiceActivities.OrderBy(a => a.SortOrder).ToList();
+            Snackbar.Add("Activity saved.", Severity.Success);
+            StateHasChanged();
         }
-
-        activityDialogOpen = false;
-
-        // Refresh activities from API
-        var refreshed = await api.GetServiceAsync(serviceID);
-        activities = refreshed.Service.ServiceActivities.OrderBy(a => a.SortOrder).ToList();
-        Snackbar.Add("Activity saved.", Severity.Success);
-        StateHasChanged();
+        catch (Exception ex)
+        {
+            Snackbar.Add($"An unexpected error occurred: {ex.Message}", Severity.Error);
+        }
     }
 
     private async Task DeleteActivity(ServiceActivity activity)
@@ -347,14 +394,21 @@
         bool? result = await deleteActivityBox.ShowAsync();
         if (result is null) return;
 
-        var response = await api.DeleteServiceActivityAsync(activity.ServiceActivityID);
-        if (response.IsSuccessStatusCode)
+        try
         {
-            activities.Remove(activity);
-            Snackbar.Add("Activity deleted.", Severity.Warning);
-            StateHasChanged();
+            var response = await api.DeleteServiceActivityAsync(activity.ServiceActivityID);
+            if (response.IsSuccessStatusCode)
+            {
+                activities.Remove(activity);
+                Snackbar.Add("Activity deleted.", Severity.Warning);
+                StateHasChanged();
+            }
+            else
+                Snackbar.Add($"Error {(int)response.StatusCode}: {await response.GetErrorBodyAsync()}", Severity.Error);
         }
-        else
-            Snackbar.Add($"Error {(int)response.StatusCode}: {await response.GetErrorBodyAsync()}", Severity.Error);
+        catch (Exception ex)
+        {
+            Snackbar.Add($"An unexpected error occurred: {ex.Message}", Severity.Error);
+        }
     }
 }
