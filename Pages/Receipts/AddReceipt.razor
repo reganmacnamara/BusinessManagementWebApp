@@ -132,6 +132,7 @@
                     <MudText Typo="Typo.body2" Style="font-weight: 600;">@Math.Max(0m, receipt.NetValue - receipt.OffsetValue).ToString("C")</MudText>
                 </div>
                 <MudDataGrid @bind-SelectedItems="selectedReceiptItems"
+                             Breakpoint="Breakpoint.Sm"
                              Items="receiptItems"
                              EditMode="DataGridEditMode.Cell"
                              EditTrigger="DataGridEditTrigger.OnRowClick"
@@ -144,10 +145,11 @@
                         <PropertyColumn Editable="false" Property="x => x.Invoice.InvoiceRef" Title="Ref" />
                         <PropertyColumn Editable="false" Property="x => x.Invoice.InvoiceDate" Title="Date" Format="dd/MM/yyyy" />
                         <PropertyColumn Editable="false" Property="x => x.Invoice.NetValue" Title="Net" Format="C" />
-                        <PropertyColumn Editable="false"
-                                        Property="x => Math.Max(0m, x.Invoice.NetValue - x.Invoice.OffsetValue - x.NetValue)"
-                                        Title="Outstanding Amt."
-                                        Format="C" />
+                        <TemplateColumn Editable="false" Title="Outstanding Amt.">
+                            <CellTemplate>
+                                @GetInvoiceOutstandingAfterAllocation(context.Item).ToString("C")
+                            </CellTemplate>
+                        </TemplateColumn>
                         <TemplateColumn Editable="true" Title="Allocated">
                             <CellTemplate>
                                 @context.Item.NetValue.ToString("C")
@@ -204,7 +206,7 @@
 
     private void CompleteAllocation(ReceiptItem allocation)
     {
-        var invoiceRemaining = allocation.Invoice.NetValue - allocation.Invoice.OffsetValue + allocation.NetValue;
+        var invoiceRemaining = GetInvoiceAvailableBeforeAllocation(allocation);
         var receiptAvailable = receipt.NetValue - receipt.OffsetValue + allocation.NetValue;
         allocation.NetValue = Math.Min(invoiceRemaining, receiptAvailable);
         RecalculateOffsets();
@@ -254,7 +256,7 @@
 
     private void OnAllocationUpdated(decimal value, ReceiptItem item)
     {
-        var invoiceRemaining = item.Invoice.NetValue - item.Invoice.OffsetValue;
+        var invoiceRemaining = GetInvoiceAvailableBeforeAllocation(item);
         var receiptAvailable = receipt.NetValue - receipt.OffsetValue + item.NetValue;
         var maxAllowable = Math.Min(invoiceRemaining, receiptAvailable);
         if (value >= 0 && value <= maxAllowable)
@@ -386,6 +388,12 @@
 
     private void RecalculateOffsets()
         => receipt.OffsetValue = receiptItems.Sum(a => a.NetValue);
+
+    private decimal GetInvoiceAvailableBeforeAllocation(ReceiptItem item)
+        => Math.Max(0m, item.Invoice.NetValue - item.Invoice.OffsetValue);
+
+    private decimal GetInvoiceOutstandingAfterAllocation(ReceiptItem item)
+        => Math.Max(0m, GetInvoiceAvailableBeforeAllocation(item) - item.NetValue);
 
     private void SelectCreatedClient(Client client)
     {

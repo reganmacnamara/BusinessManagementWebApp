@@ -29,6 +29,7 @@
         @if (lineItemType == LineItemType.Product)
         {
             <MudDataGrid @bind-SelectedItems="selectedProducts"
+                         Breakpoint="Breakpoint.Sm"
                          Hover="true"
                          Items="@products"
                          Loading="@loadingProducts"
@@ -60,6 +61,7 @@
         else
         {
             <MudDataGrid @bind-SelectedItems="selectedServices"
+                         Breakpoint="Breakpoint.Sm"
                          Hover="true"
                          Items="@services"
                          Loading="@loadingServices"

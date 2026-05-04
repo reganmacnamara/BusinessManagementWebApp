@@ -130,6 +130,7 @@ else
                         <MudText Typo="Typo.body2" Style="font-weight: 600;">@Math.Max(0m, receipt.NetValue - receipt.OffsetValue).ToString("C")</MudText>
                     </div>
                     <MudDataGrid @bind-SelectedItems="selectedReceiptItems"
+                                 Breakpoint="Breakpoint.Sm"
                                  Items="receiptItems"
                                  EditMode="DataGridEditMode.Cell"
                                  EditTrigger="DataGridEditTrigger.OnRowClick"
@@ -150,10 +151,11 @@ else
                                             Property="x => x.Invoice.NetValue"
                                             Title="Net"
                                             Format="C" />
-                            <PropertyColumn Editable="false"
-                                            Property="x => Math.Max(0m, x.Invoice.NetValue - x.Invoice.OffsetValue - x.NetValue)"
-                                            Title="Outstanding Amt."
-                                            Format="C" />
+                            <TemplateColumn Editable="false" Title="Outstanding Amt.">
+                                <CellTemplate>
+                                    @GetInvoiceOutstandingAfterAllocation(context.Item).ToString("C")
+                                </CellTemplate>
+                            </TemplateColumn>
                             <TemplateColumn Editable="true" Title="Allocated">
                                 <CellTemplate>
                                     @context.Item.NetValue.ToString("C")
@@ -214,6 +216,7 @@ else
     private List<ReceiptItem> receiptItems = [];
     private List<ReceiptItem> receiptItemsToDelete = [];
     private HashSet<ReceiptItem> selectedReceiptItems = [];
+    private readonly Dictionary<long, decimal> originalReceiptItemNetValues = [];
 
     [Parameter]
     public long id { get; set; }
@@ -229,6 +232,9 @@ else
             var _Response = await api.GetReceiptAsync(id);
             receipt = _Response.Receipt;
             receiptItems = _Response.ReceiptItems;
+            originalReceiptItemNetValues.Clear();
+            foreach (var item in receiptItems.Where(item => item.ReceiptItemID != 0))
+                originalReceiptItemNetValues[item.ReceiptItemID] = item.NetValue;
         }
         catch (Exception ex)
         {
@@ -267,7 +273,7 @@ else
 
     private void CompleteAllocation(ReceiptItem allocation)
     {
-        var invoiceRemaining = allocation.Invoice.NetValue - allocation.Invoice.OffsetValue + allocation.NetValue;
+        var invoiceRemaining = GetInvoiceAvailableBeforeAllocation(allocation);
         var receiptAvailable = receipt.NetValue - receipt.OffsetValue + allocation.NetValue;
         allocation.NetValue = Math.Min(invoiceRemaining, receiptAvailable);
         RecalculateOffsets();
@@ -276,7 +282,7 @@ else
 
     private void OnAllocationUpdated(decimal value, ReceiptItem item)
     {
-        var invoiceRemaining = item.Invoice.NetValue - item.Invoice.OffsetValue + item.NetValue;
+        var invoiceRemaining = GetInvoiceAvailableBeforeAllocation(item);
         var receiptAvailable = receipt.NetValue - receipt.OffsetValue + item.NetValue;
         var maxAllowable = Math.Min(invoiceRemaining, receiptAvailable);
         if (value >= 0 && value <= maxAllowable)
@@ -297,6 +303,17 @@ else
 
     private void RecalculateOffsets()
         => receipt.OffsetValue = receiptItems.Sum(a => a.NetValue);
+
+    private decimal GetOriginalAllocationValue(ReceiptItem item)
+        => item.ReceiptItemID != 0 && originalReceiptItemNetValues.TryGetValue(item.ReceiptItemID, out var originalValue)
+            ? originalValue
+            : 0m;
+
+    private decimal GetInvoiceAvailableBeforeAllocation(ReceiptItem item)
+        => Math.Max(0m, item.Invoice.NetValue - item.Invoice.OffsetValue + GetOriginalAllocationValue(item));
+
+    private decimal GetInvoiceOutstandingAfterAllocation(ReceiptItem item)
+        => Math.Max(0m, GetInvoiceAvailableBeforeAllocation(item) - item.NetValue);
 
     private async Task RemoveSelectedItems()
     {

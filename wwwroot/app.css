@@ -14,7 +14,7 @@ html, body {
 .stat-card {
     background: white;
     border: 1px solid #E2E8F0;
-    border-radius: 12px !important;
+    border-radius: 8px !important;
     padding: 20px;
     transition: box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
 }
@@ -38,12 +38,12 @@ html, body {
 .stat-icon-wrap--lg {
     width: 52px;
     height: 52px;
-    border-radius: 12px;
+    border-radius: 8px;
 }
 
 .table-card {
     border: 1px solid #E2E8F0 !important;
-    border-radius: 12px !important;
+    border-radius: 8px !important;
     overflow: hidden;
 }
 
@@ -98,12 +98,24 @@ html, body {
     color: #3B82F6 !important;
 }
 
+.app-title {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 /* ─── Mobile responsiveness ─────────────────────────────────────────── */
 
 /* Tighter page header on phones */
 @media (max-width: 599px) {
     .page-header {
         padding: 10px 12px;
+        top: 56px;
+    }
+
+    .page-header .d-flex.align-center {
+        gap: 6px;
     }
 
     /* Reduce container padding on phones */
@@ -143,6 +155,10 @@ html, body {
         text-overflow: ellipsis;
         max-width: 140px;
     }
+
+    .app-title {
+        max-width: calc(100vw - 160px);
+    }
 }
 
 /* List-page title bar: wraps action buttons below title on phones */
@@ -179,14 +195,44 @@ html, body {
         justify-content: flex-end;
         flex-wrap: wrap;
     }
+
+    .list-header-actions .mud-button-root {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
 }
 
 /* DataGrid horizontal scroll on small screens */
+.table-card .mud-table-toolbar {
+    align-items: center;
+    gap: 8px;
+    min-height: auto;
+    padding: 12px;
+}
+
+.table-card .mud-table-toolbar .mud-input-control {
+    margin-top: 0;
+    min-width: min(260px, 100%);
+}
+
 @media (max-width: 599px) {
     .table-card .mud-table-container,
     .table-card .mud-data-grid {
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
+    }
+
+    .table-card .mud-table-toolbar {
+        flex-wrap: wrap;
+    }
+
+    .table-card .mud-table-toolbar .mud-spacer {
+        display: none;
+    }
+
+    .table-card .mud-table-toolbar .mud-input-control,
+    .table-card .mud-table-toolbar .mud-toggle-group {
+        width: 100%;
     }
 
     /* Tighter spacing inside forms on mobile */
@@ -197,6 +243,11 @@ html, body {
     /* Reduce page content padding on mobile */
     .mud-container.pa-6 {
         padding: 16px !important;
+    }
+
+    .mud-dialog .mud-dialog-content {
+        padding-left: 12px;
+        padding-right: 12px;
     }
 }
 

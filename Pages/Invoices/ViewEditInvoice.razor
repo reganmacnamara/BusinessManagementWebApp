@@ -104,6 +104,7 @@ else
                                    Disabled="@(!selectedInvoiceItems.Any())">Remove</MudButton>
                     </div>
                     <MudDataGrid @bind-SelectedItems="selectedInvoiceItems"
+                                 Breakpoint="Breakpoint.Sm"
                                  CommittedItemChanges="OnEditInvoiceItem"
                                  EditMode="DataGridEditMode.Cell"
                                  EditTrigger="DataGridEditTrigger.OnRowClick"
