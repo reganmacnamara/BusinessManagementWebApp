@@ -120,7 +120,7 @@
         }
     };
 
-    protected override void OnInitialized()
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (!tokenService.IsAuthenticated)
             NavigationManager.NavigateTo("/login");
