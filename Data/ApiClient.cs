@@ -29,6 +29,7 @@ using MacsBusinessManagementWebApp.Data.Receipts.GetReceipt;
 using MacsBusinessManagementWebApp.Data.Receipts.GetReceipts;
 using MacsBusinessManagementWebApp.Data.Receipts.UpdateReceipt;
 using MacsBusinessManagementWebApp.Data.Receipts.UpsertReceiptItem;
+using MacsBusinessManagementWebApp.Data.Reports;
 using MacsBusinessManagementWebApp.Data.Services.CreateService;
 using MacsBusinessManagementWebApp.Data.Services.GetService;
 using MacsBusinessManagementWebApp.Data.Services.GetServices;
@@ -219,6 +220,44 @@ namespace MacsBusinessManagementWebApp.Data
 
         public async Task<HttpResponseMessage> UpsertReceiptItemAsync(UpsertReceiptItemRequest request)
             => await http.PutAsJsonAsync("/Receipt/Item", request);
+
+        #endregion
+
+        #region Report Endpoints
+
+        public async Task<GetSalesSummaryResponse> GetSalesSummaryReportAsync(DateTime? dateFrom, DateTime? dateTo)
+            => await http.GetFromJsonAsync<GetSalesSummaryResponse>(BuildReportUrl("/Report/SalesSummary", dateFrom, dateTo));
+
+        public async Task<GetAgingReportResponse> GetAgingReportAsync()
+            => await http.GetFromJsonAsync<GetAgingReportResponse>("/Report/Aging");
+
+        public async Task<GetRevenueByClientResponse> GetRevenueByClientReportAsync(DateTime? dateFrom, DateTime? dateTo)
+            => await http.GetFromJsonAsync<GetRevenueByClientResponse>(BuildReportUrl("/Report/RevenueByClient", dateFrom, dateTo));
+
+        public async Task<GetRevenueByProductResponse> GetRevenueByProductReportAsync(DateTime? dateFrom, DateTime? dateTo)
+            => await http.GetFromJsonAsync<GetRevenueByProductResponse>(BuildReportUrl("/Report/RevenueByProduct", dateFrom, dateTo));
+
+        public async Task<GetRevenueByServiceResponse> GetRevenueByServiceReportAsync(DateTime? dateFrom, DateTime? dateTo)
+            => await http.GetFromJsonAsync<GetRevenueByServiceResponse>(BuildReportUrl("/Report/RevenueByService", dateFrom, dateTo));
+
+        public async Task<GetPaymentPerformanceResponse> GetPaymentPerformanceReportAsync(DateTime? dateFrom, DateTime? dateTo)
+            => await http.GetFromJsonAsync<GetPaymentPerformanceResponse>(BuildReportUrl("/Report/PaymentPerformance", dateFrom, dateTo));
+
+        public async Task<GetStockReportResponse> GetStockReportAsync()
+            => await http.GetFromJsonAsync<GetStockReportResponse>("/Report/Stock");
+
+        private static string BuildReportUrl(string path, DateTime? dateFrom, DateTime? dateTo)
+        {
+            var query = new List<string>();
+
+            if (dateFrom.HasValue)
+                query.Add($"dateFrom={dateFrom.Value:yyyy-MM-dd}");
+
+            if (dateTo.HasValue)
+                query.Add($"dateTo={dateTo.Value:yyyy-MM-dd}");
+
+            return query.Count == 0 ? path : $"{path}?{string.Join("&", query)}";
+        }
 
         #endregion
     }

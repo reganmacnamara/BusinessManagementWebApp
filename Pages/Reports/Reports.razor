@@ -1,0 +1,395 @@
+@page "/reports"
+@using MacsBusinessManagementWebApp.Data
+@using MacsBusinessManagementWebApp.Data.Reports
+
+@inject ApiClient api
+@inject NavigationManager NavigationManager
+
+<PageTitle>Reports</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pa-6">
+    <div class="list-header">
+        <div>
+            <MudText Typo="Typo.h5" Class="page-title">Reports</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">Sales, payment, inventory, and receivables reporting</MudText>
+        </div>
+        <div class="list-header-actions reports-filter">
+            <MudDatePicker Date="dateFrom"
+                           DateChanged="OnDateFromChanged"
+                           Format="dd/MM/yyyy"
+                           Label="From"
+                           Variant="Variant.Outlined" />
+            <MudDatePicker Date="dateTo"
+                           DateChanged="OnDateToChanged"
+                           Format="dd/MM/yyyy"
+                           Label="To"
+                           Variant="Variant.Outlined" />
+            <MudButton Color="Color.Primary"
+                       OnClick="LoadReportsAsync"
+                       StartIcon="@Icons.Material.Filled.Refresh"
+                       Variant="Variant.Filled"
+                       Disabled="@isLoading">
+                Refresh
+            </MudButton>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <MudGrid Spacing="3">
+            @for (var i = 0; i < 6; i++)
+            {
+                <MudItem xs="12" sm="6" md="4">
+                    <MudSkeleton Height="110px" Style="border-radius: 8px;" />
+                </MudItem>
+            }
+        </MudGrid>
+    }
+    else if (loadError is not null)
+    {
+        <PageLoadError Message="@loadError" OnRetry="LoadReportsAsync" />
+    }
+    else
+    {
+        <MudGrid Spacing="3" Class="mb-5">
+            <MudItem xs="12" sm="6" md="3">
+                <div class="stat-card">
+                    <div class="d-flex align-center" style="gap: 16px;">
+                        <div class="stat-icon-wrap stat-icon-wrap--lg" style="background: #EFF6FF;">
+                            <MudIcon Icon="@Icons.Material.Filled.ReceiptLong" Style="color: #3B82F6; font-size: 1.5rem;" />
+                        </div>
+                        <div>
+                            <MudText Typo="Typo.caption" Class="stat-label">Net Invoiced</MudText>
+                            <MudText Typo="Typo.h5" Class="stat-value">@salesSummary.TotalNetInvoiced.ToString("C")</MudText>
+                            <MudText Typo="Typo.caption" Class="stat-hint">@salesSummary.TotalInvoiceCount invoice(s)</MudText>
+                        </div>
+                    </div>
+                </div>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <div class="stat-card">
+                    <div class="d-flex align-center" style="gap: 16px;">
+                        <div class="stat-icon-wrap stat-icon-wrap--lg" style="background: #ECFDF5;">
+                            <MudIcon Icon="@Icons.Material.Filled.Payments" Style="color: #10B981; font-size: 1.5rem;" />
+                        </div>
+                        <div>
+                            <MudText Typo="Typo.caption" Class="stat-label">Received</MudText>
+                            <MudText Typo="Typo.h5" Class="stat-value">@salesSummary.TotalReceived.ToString("C")</MudText>
+                            <MudText Typo="Typo.caption" Class="stat-hint">@salesSummary.TotalReceiptCount receipt(s)</MudText>
+                        </div>
+                    </div>
+                </div>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <div class="stat-card">
+                    <div class="d-flex align-center" style="gap: 16px;">
+                        <div class="stat-icon-wrap stat-icon-wrap--lg" style="background: #FFFBEB;">
+                            <MudIcon Icon="@Icons.Material.Filled.PendingActions" Style="color: #F59E0B; font-size: 1.5rem;" />
+                        </div>
+                        <div>
+                            <MudText Typo="Typo.caption" Class="stat-label">Outstanding</MudText>
+                            <MudText Typo="Typo.h5" Class="stat-value">@agingReport.TotalOutstanding.ToString("C")</MudText>
+                            <MudText Typo="Typo.caption" Class="stat-hint">@salesSummary.OutstandingInvoiceCount open invoice(s)</MudText>
+                        </div>
+                    </div>
+                </div>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <div class="stat-card">
+                    <div class="d-flex align-center" style="gap: 16px;">
+                        <div class="stat-icon-wrap stat-icon-wrap--lg" style="background: #FEF2F2;">
+                            <MudIcon Icon="@Icons.Material.Filled.WarningAmber" Style="color: #EF4444; font-size: 1.5rem;" />
+                        </div>
+                        <div>
+                            <MudText Typo="Typo.caption" Class="stat-label">Overdue</MudText>
+                            <MudText Typo="Typo.h5" Class="stat-value">@agingReport.TotalOverdue.ToString("C")</MudText>
+                            <MudText Typo="Typo.caption" Class="stat-hint">@salesSummary.OverdueInvoiceCount overdue invoice(s)</MudText>
+                        </div>
+                    </div>
+                </div>
+            </MudItem>
+        </MudGrid>
+
+        <MudTabs Elevation="0" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pt-4">
+            <MudTabPanel Text="Summary" Icon="@Icons.Material.Filled.Dashboard">
+                <MudGrid Spacing="3">
+                    <MudItem xs="12" md="7">
+                        <MudPaper Elevation="0" Class="table-card pa-4">
+                            <MudText Typo="Typo.subtitle1" Style="font-weight: 600;" Class="mb-4">Sales Summary</MudText>
+                            <MudGrid Spacing="2">
+                                @foreach (var item in SummaryTiles)
+                                {
+                                    <MudItem xs="12" sm="6">
+                                        <div class="report-metric">
+                                            <MudText Typo="Typo.caption" Class="stat-label">@item.Label</MudText>
+                                            <MudText Typo="Typo.h6" Class="stat-value">@item.Value</MudText>
+                                        </div>
+                                    </MudItem>
+                                }
+                            </MudGrid>
+                        </MudPaper>
+                    </MudItem>
+                    <MudItem xs="12" md="5">
+                        <MudPaper Elevation="0" Class="table-card pa-4">
+                            <MudText Typo="Typo.subtitle1" Style="font-weight: 600;" Class="mb-4">Payment Performance</MudText>
+                            <div class="report-rate">
+                                <MudText Typo="Typo.h3" Class="stat-value">@paymentPerformance.OnTimePaymentRate.ToString("0.0")%</MudText>
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">Paid on time</MudText>
+                            </div>
+                            <div class="report-bar mt-4">
+                                <div style="@($"width: {GetPercentWidth(paymentPerformance.OnTimePaymentRate)}%;")"></div>
+                            </div>
+                            <MudGrid Spacing="2" Class="mt-3">
+                                <MudItem xs="6">
+                                    <div class="report-metric report-metric--compact">
+                                        <MudText Typo="Typo.caption" Class="stat-label">On Time</MudText>
+                                        <MudText Typo="Typo.h6" Class="stat-value">@paymentPerformance.PaidOnTimeCount</MudText>
+                                    </div>
+                                </MudItem>
+                                <MudItem xs="6">
+                                    <div class="report-metric report-metric--compact">
+                                        <MudText Typo="Typo.caption" Class="stat-label">Paid Late</MudText>
+                                        <MudText Typo="Typo.h6" Class="stat-value">@paymentPerformance.PaidLateCount</MudText>
+                                    </div>
+                                </MudItem>
+                            </MudGrid>
+                        </MudPaper>
+                    </MudItem>
+                </MudGrid>
+            </MudTabPanel>
+
+            <MudTabPanel Text="Aging" Icon="@Icons.Material.Filled.EventBusy">
+                <MudPaper Elevation="0" Class="table-card">
+                    <MudDataGrid Breakpoint="Breakpoint.Sm"
+                                 Items="agingReport.Lines"
+                                 Hover="true"
+                                 RowClass="cursor-pointer"
+                                 RowClick="OpenAgingInvoice"
+                                 SortMode="SortMode.Multiple"
+                                 T="AgingReportLine">
+                        <Columns>
+                            <PropertyColumn Property="x => x.AgingBucket" Title="Bucket" />
+                            <PropertyColumn Property="x => x.ClientName" Title="Client" />
+                            <PropertyColumn Property="x => x.InvoiceRef" Title="Invoice" />
+                            <PropertyColumn Property="x => x.InvoiceDate" Title="Invoice Date" Format="dd/MM/yyyy" />
+                            <PropertyColumn Property="x => x.DueDate" Title="Due Date" Format="dd/MM/yyyy" />
+                            <PropertyColumn Property="x => x.DaysOverdue" Title="Days" />
+                            <PropertyColumn Property="x => x.BalanceOutstanding" Title="Outstanding" Format="C" />
+                        </Columns>
+                    </MudDataGrid>
+                </MudPaper>
+            </MudTabPanel>
+
+            <MudTabPanel Text="Clients" Icon="@Icons.Material.Filled.People">
+                <MudPaper Elevation="0" Class="table-card">
+                    <MudDataGrid Breakpoint="Breakpoint.Sm"
+                                 Items="revenueByClient.Lines"
+                                 Hover="true"
+                                 SortMode="SortMode.Multiple"
+                                 T="ClientRevenueLine">
+                        <Columns>
+                            <PropertyColumn Property="x => x.ClientName" Title="Client" />
+                            <PropertyColumn Property="x => x.InvoiceCount" Title="Invoices" />
+                            <PropertyColumn Property="x => x.GrossInvoiced" Title="Gross" Format="C" />
+                            <PropertyColumn Property="x => x.TaxInvoiced" Title="Tax" Format="C" />
+                            <PropertyColumn Property="x => x.NetInvoiced" Title="Net" Format="C" />
+                            <PropertyColumn Property="x => x.TotalReceived" Title="Received" Format="C" />
+                            <PropertyColumn Property="x => x.TotalOutstanding" Title="Outstanding" Format="C" />
+                        </Columns>
+                    </MudDataGrid>
+                </MudPaper>
+            </MudTabPanel>
+
+            <MudTabPanel Text="Products" Icon="@Icons.Material.Filled.Inventory2">
+                <MudPaper Elevation="0" Class="table-card">
+                    <MudDataGrid Breakpoint="Breakpoint.Sm"
+                                 Items="revenueByProduct.Lines"
+                                 Hover="true"
+                                 SortMode="SortMode.Multiple"
+                                 T="ProductRevenueLine">
+                        <Columns>
+                            <PropertyColumn Property="x => x.ProductCode" Title="Code" />
+                            <PropertyColumn Property="x => x.ProductName" Title="Product" />
+                            <PropertyColumn Property="x => x.UnitsSold" Title="Sold" />
+                            <PropertyColumn Property="x => x.NetRevenue" Title="Net Revenue" Format="C" />
+                            <PropertyColumn Property="x => x.QuantityOnHand" Title="On Hand" />
+                            <PropertyColumn Property="x => x.UnitCost" Title="Cost" Format="C" />
+                            <PropertyColumn Property="x => x.UnitPrice" Title="Price" Format="C" />
+                            <PropertyColumn Property="x => x.StockValue" Title="Stock Value" Format="C" />
+                        </Columns>
+                    </MudDataGrid>
+                </MudPaper>
+            </MudTabPanel>
+
+            <MudTabPanel Text="Services" Icon="@Icons.Material.Filled.MiscellaneousServices">
+                <MudPaper Elevation="0" Class="table-card">
+                    <MudDataGrid Breakpoint="Breakpoint.Sm"
+                                 Items="revenueByService.Lines"
+                                 Hover="true"
+                                 SortMode="SortMode.Multiple"
+                                 T="ServiceRevenueLine">
+                        <Columns>
+                            <PropertyColumn Property="x => x.ServiceName" Title="Service" />
+                            <PropertyColumn Property="x => x.UnitsBilled" Title="Billed" />
+                            <PropertyColumn Property="x => x.GrossRevenue" Title="Gross" Format="C" />
+                            <PropertyColumn Property="x => x.TaxRevenue" Title="Tax" Format="C" />
+                            <PropertyColumn Property="x => x.NetRevenue" Title="Net" Format="C" />
+                            <PropertyColumn Property="x => x.UnitCost" Title="Cost" Format="C" />
+                            <PropertyColumn Property="x => x.UnitPrice" Title="Price" Format="C" />
+                        </Columns>
+                    </MudDataGrid>
+                </MudPaper>
+            </MudTabPanel>
+
+            <MudTabPanel Text="Payments" Icon="@Icons.Material.Filled.QueryStats">
+                <MudPaper Elevation="0" Class="table-card">
+                    <MudDataGrid Breakpoint="Breakpoint.Sm"
+                                 Items="paymentPerformance.ByClient"
+                                 Hover="true"
+                                 SortMode="SortMode.Multiple"
+                                 T="ClientPaymentPerformanceLine">
+                        <Columns>
+                            <PropertyColumn Property="x => x.ClientName" Title="Client" />
+                            <PropertyColumn Property="x => x.TotalInvoices" Title="Invoices" />
+                            <PropertyColumn Property="x => x.PaidOnTimeCount" Title="On Time" />
+                            <PropertyColumn Property="x => x.PaidLateCount" Title="Late" />
+                            <PropertyColumn Property="x => x.CurrentOutstandingCount" Title="Current" />
+                            <PropertyColumn Property="x => x.OverdueCount" Title="Overdue" />
+                            <TemplateColumn Title="On-Time Rate">
+                                <CellTemplate>
+                                    <div class="report-rate-cell">
+                                        <span>@context.Item.OnTimePaymentRate.ToString("0.0")%</span>
+                                        <div class="report-bar report-bar--small">
+                                            <div style="@($"width: {GetPercentWidth(context.Item.OnTimePaymentRate)}%;")"></div>
+                                        </div>
+                                    </div>
+                                </CellTemplate>
+                            </TemplateColumn>
+                        </Columns>
+                    </MudDataGrid>
+                </MudPaper>
+            </MudTabPanel>
+
+            <MudTabPanel Text="Stock" Icon="@Icons.Material.Filled.Warehouse">
+                <MudGrid Spacing="3" Class="mb-4">
+                    <MudItem xs="12" sm="6">
+                        <div class="stat-card">
+                            <MudText Typo="Typo.caption" Class="stat-label">Stock Value</MudText>
+                            <MudText Typo="Typo.h5" Class="stat-value">@stockReport.TotalStockValue.ToString("C")</MudText>
+                        </div>
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <div class="stat-card">
+                            <MudText Typo="Typo.caption" Class="stat-label">Retail Value</MudText>
+                            <MudText Typo="Typo.h5" Class="stat-value">@stockReport.TotalRetailValue.ToString("C")</MudText>
+                        </div>
+                    </MudItem>
+                </MudGrid>
+                <MudPaper Elevation="0" Class="table-card">
+                    <MudDataGrid Breakpoint="Breakpoint.Sm"
+                                 Items="stockReport.Lines"
+                                 Hover="true"
+                                 SortMode="SortMode.Multiple"
+                                 T="StockReportLine">
+                        <Columns>
+                            <PropertyColumn Property="x => x.ProductCode" Title="Code" />
+                            <PropertyColumn Property="x => x.ProductName" Title="Product" />
+                            <PropertyColumn Property="x => x.QuantityOnHand" Title="On Hand" />
+                            <PropertyColumn Property="x => x.UnitCost" Title="Cost" Format="C" />
+                            <PropertyColumn Property="x => x.UnitPrice" Title="Price" Format="C" />
+                            <PropertyColumn Property="x => x.StockValue" Title="Stock Value" Format="C" />
+                            <PropertyColumn Property="x => x.RetailValue" Title="Retail Value" Format="C" />
+                            <PropertyColumn Property="x => x.Margin" Title="Margin" Format="C" />
+                        </Columns>
+                    </MudDataGrid>
+                </MudPaper>
+            </MudTabPanel>
+        </MudTabs>
+    }
+</MudContainer>
+
+@code {
+    private bool isLoading = true;
+    private string? loadError;
+    private DateTime? dateFrom = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
+    private DateTime? dateTo = DateTime.Today;
+
+    private GetSalesSummaryResponse salesSummary = new();
+    private GetAgingReportResponse agingReport = new();
+    private GetRevenueByClientResponse revenueByClient = new();
+    private GetRevenueByProductResponse revenueByProduct = new();
+    private GetRevenueByServiceResponse revenueByService = new();
+    private GetPaymentPerformanceResponse paymentPerformance = new();
+    private GetStockReportResponse stockReport = new();
+
+    private IEnumerable<(string Label, string Value)> SummaryTiles =>
+    [
+        ("Gross Invoiced", salesSummary.TotalGrossInvoiced.ToString("C")),
+        ("Tax Invoiced", salesSummary.TotalTaxInvoiced.ToString("C")),
+        ("Net Invoiced", salesSummary.TotalNetInvoiced.ToString("C")),
+        ("Received", salesSummary.TotalReceived.ToString("C")),
+        ("Outstanding", agingReport.TotalOutstanding.ToString("C")),
+        ("Overdue", agingReport.TotalOverdue.ToString("C")),
+        ("Paid Invoices", salesSummary.PaidInvoiceCount.ToString()),
+        ("Open Invoices", salesSummary.OutstandingInvoiceCount.ToString())
+    ];
+
+    protected override async Task OnInitializedAsync()
+        => await LoadReportsAsync();
+
+    private async Task LoadReportsAsync()
+    {
+        isLoading = true;
+        loadError = null;
+
+        try
+        {
+            var salesTask = api.GetSalesSummaryReportAsync(dateFrom, dateTo);
+            var agingTask = api.GetAgingReportAsync();
+            var clientTask = api.GetRevenueByClientReportAsync(dateFrom, dateTo);
+            var productTask = api.GetRevenueByProductReportAsync(dateFrom, dateTo);
+            var serviceTask = api.GetRevenueByServiceReportAsync(dateFrom, dateTo);
+            var paymentTask = api.GetPaymentPerformanceReportAsync(dateFrom, dateTo);
+            var stockTask = api.GetStockReportAsync();
+
+            await Task.WhenAll(salesTask, agingTask, clientTask, productTask, serviceTask, paymentTask, stockTask);
+
+            salesSummary = await salesTask ?? new();
+            agingReport = await agingTask ?? new();
+            revenueByClient = await clientTask ?? new();
+            revenueByProduct = await productTask ?? new();
+            revenueByService = await serviceTask ?? new();
+            paymentPerformance = await paymentTask ?? new();
+            stockReport = await stockTask ?? new();
+        }
+        catch (Exception ex)
+        {
+            loadError = ex.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private Task OnDateFromChanged(DateTime? value)
+    {
+        dateFrom = value;
+        return Task.CompletedTask;
+    }
+
+    private Task OnDateToChanged(DateTime? value)
+    {
+        dateTo = value;
+        return Task.CompletedTask;
+    }
+
+    private void OpenAgingInvoice(DataGridRowClickEventArgs<AgingReportLine> args)
+    {
+        if (args.Item is not null)
+            NavigationManager.NavigateTo($"/invoices/{args.Item.InvoiceID}");
+    }
+
+    private static decimal GetPercentWidth(decimal value)
+        => Math.Clamp(value, 0m, 100m);
+}

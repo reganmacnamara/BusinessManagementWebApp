@@ -72,6 +72,56 @@ html, body {
     border-bottom: 1px solid #E2E8F0;
 }
 
+.reports-filter {
+    align-items: center;
+}
+
+.reports-filter .mud-picker,
+.reports-filter .mud-input-control {
+    min-width: 160px;
+}
+
+.report-metric {
+    background: #F8FAFC;
+    border: 1px solid #E2E8F0;
+    border-radius: 8px;
+    padding: 14px;
+}
+
+.report-metric--compact {
+    padding: 12px;
+}
+
+.report-rate {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.report-bar {
+    width: 100%;
+    height: 10px;
+    background: #E2E8F0;
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.report-bar > div {
+    height: 100%;
+    background: #10B981;
+}
+
+.report-bar--small {
+    height: 6px;
+    min-width: 110px;
+}
+
+.report-rate-cell {
+    display: grid;
+    gap: 6px;
+    min-width: 140px;
+}
+
 .page-title {
     font-weight: 700;
     color: #0F172A;
