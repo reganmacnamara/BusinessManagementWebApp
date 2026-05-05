@@ -1,5 +1,7 @@
 ﻿using MacsBusinessManagementWebApp.Data.Auth.Login;
+using MacsBusinessManagementWebApp.Data.Auth.ForgotPassword;
 using MacsBusinessManagementWebApp.Data.Auth.Register;
+using MacsBusinessManagementWebApp.Data.Auth.ResetPassword;
 using MacsBusinessManagementWebApp.Data.Clients.CreateClient;
 using MacsBusinessManagementWebApp.Data.Clients.GetClient;
 using MacsBusinessManagementWebApp.Data.Clients.GetClients;
@@ -52,6 +54,12 @@ namespace MacsBusinessManagementWebApp.Data
         public async Task<HttpResponseMessage> RegisterAsync(RegisterAccountRequest request)
             => await http.PostAsJsonAsync("/Auth/Register", request);
 
+        public async Task<HttpResponseMessage> ForgotPasswordAsync(ForgotPasswordRequest request)
+            => await http.PostAsJsonAsync("/Auth/ForgotPassword", request);
+
+        public async Task<HttpResponseMessage> ResetPasswordAsync(ResetPasswordRequest request)
+            => await http.PostAsJsonAsync("/Auth/ResetPassword", request);
+
         public async Task<HttpResponseMessage> RefreshAsync()
             => await http.PostAsync("/Auth/Refresh", content: null);
 
@@ -76,6 +84,9 @@ namespace MacsBusinessManagementWebApp.Data
 
         public async Task<HttpResponseMessage> UpdateAccountAsync(UpdateAccountRequest request)
             => await http.PatchAsJsonAsync("/Account", request);
+
+        public async Task<HttpResponseMessage> UpdatePasswordAsync(UpdatePasswordRequest request)
+            => await http.PatchAsJsonAsync("/Account/Password", request);
 
         #endregion
 
@@ -219,6 +230,9 @@ namespace MacsBusinessManagementWebApp.Data
 
         public async Task<HttpResponseMessage> ExportReceiptPdfAsync(long receiptID)
             => await http.GetAsync($"/Receipt/{receiptID}/pdf");
+
+        public async Task<HttpResponseMessage> ExportClientStatementPdfAsync(long clientID, DateTime? dateFrom, DateTime? dateTo)
+            => await http.GetAsync(BuildReportUrl($"/Report/ClientStatement/{clientID}/pdf", dateFrom, dateTo));
 
         #endregion
 

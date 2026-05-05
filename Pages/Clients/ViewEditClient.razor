@@ -46,6 +46,7 @@ else
             </div>
             <MudSpacer />
             <MudStack Row="true" Spacing="2">
+                <MudButton Color="Color.Info" OnClick="OpenStatementDialogAsync" StartIcon="@Icons.Material.Filled.Assessment" Variant="Variant.Outlined">Statement</MudButton>
                 <MudButton Color="Color.Primary" OnClick="OnSave" StartIcon="@Icons.Material.Filled.Save" Variant="Variant.Filled" Disabled="@saving">
                     @if (saving) { <MudProgressCircular Size="Size.Small" Color="Color.Inherit" Indeterminate="true" Class="mr-2" /> }
                     Save
@@ -248,6 +249,15 @@ else
             client.PaymentTermID = newPaymentTerm.PaymentTermID;
             StateHasChanged();
         }
+    }
+
+    private async Task OpenStatementDialogAsync()
+    {
+        await DialogService.ShowAsync<ClientStatementDialog>("", new DialogParameters<ClientStatementDialog>
+        {
+            { x => x.ClientID, client.ClientID },
+            { x => x.ClientName, client.ClientName }
+        });
     }
 
     private void InvoiceSelected(DataGridRowClickEventArgs<Invoice> args)

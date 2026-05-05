@@ -1,0 +1,146 @@
+@using MacsBusinessManagementWebApp.Data
+
+@inject ApiClient api
+@inject IJSRuntime JS
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.Assessment" Class="mr-3" /> Generate Statement
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-4">
+            @ClientName
+        </MudText>
+
+        <MudGrid Spacing="3">
+            <MudItem xs="12" sm="6">
+                <MudDatePicker Date="dateFrom"
+                               DateChanged="OnDateFromChanged"
+                               DateFormat="dd/MM/yyyy"
+                               Label="From"
+                               Variant="Variant.Outlined" />
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudDatePicker Date="dateTo"
+                               DateChanged="OnDateToChanged"
+                               DateFormat="dd/MM/yyyy"
+                               Label="To"
+                               Variant="Variant.Outlined" />
+            </MudItem>
+        </MudGrid>
+
+        @if (StatementError is not null)
+        {
+            <MudAlert Severity="Severity.Error" Dense="true" Class="mt-4">
+                @StatementError
+            </MudAlert>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Text"
+                   Color="Color.Default"
+                   OnClick="ClearDates"
+                   StartIcon="@Icons.Material.Filled.Clear"
+                   Disabled="@isGenerating">
+            Clear Dates
+        </MudButton>
+        <MudButton Variant="Variant.Text"
+                   Color="Color.Default"
+                   OnClick="Cancel"
+                   Disabled="@isGenerating">
+            Cancel
+        </MudButton>
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   OnClick="GenerateStatementAsync"
+                   StartIcon="@Icons.Material.Filled.PictureAsPdf"
+                   Disabled="@(isGenerating || DateRangeInvalid)">
+            @if (isGenerating)
+            {
+                <MudProgressCircular Size="Size.Small" Color="Color.Inherit" Indeterminate="true" Class="mr-2" />
+            }
+            Generate PDF
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private DateTime? dateFrom;
+    private DateTime? dateTo;
+    private bool isGenerating;
+
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = default!;
+
+    [Parameter]
+    public long ClientID { get; set; }
+
+    [Parameter]
+    public string ClientName { get; set; } = string.Empty;
+
+    private string? StatementError { get; set; }
+
+    private bool DateRangeInvalid => dateFrom.HasValue && dateTo.HasValue && dateFrom.Value.Date > dateTo.Value.Date;
+
+    private Task OnDateFromChanged(DateTime? value)
+    {
+        dateFrom = value;
+        StatementError = DateRangeInvalid ? "From date cannot be after to date." : null;
+        return Task.CompletedTask;
+    }
+
+    private Task OnDateToChanged(DateTime? value)
+    {
+        dateTo = value;
+        StatementError = DateRangeInvalid ? "From date cannot be after to date." : null;
+        return Task.CompletedTask;
+    }
+
+    private void ClearDates()
+    {
+        dateFrom = null;
+        dateTo = null;
+        StatementError = null;
+    }
+
+    private void Cancel()
+        => MudDialog.Cancel();
+
+    private async Task GenerateStatementAsync()
+    {
+        StatementError = null;
+
+        if (DateRangeInvalid)
+        {
+            StatementError = "From date cannot be after to date.";
+            return;
+        }
+
+        isGenerating = true;
+        try
+        {
+            var response = await api.ExportClientStatementPdfAsync(ClientID, dateFrom, dateTo);
+            if (!response.IsSuccessStatusCode)
+            {
+                StatementError = $"Error {(int)response.StatusCode}: {await response.GetErrorBodyAsync()}";
+                return;
+            }
+
+            var bytes = await response.Content.ReadAsByteArrayAsync();
+            var fileName = response.GetDownloadFileName() ?? $"ClientStatement_{ClientID}.pdf";
+            await JS.InvokeVoidAsync("downloadPdf", fileName, bytes);
+            Snackbar.Add("Client statement generated.", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            StatementError = $"An unexpected error occurred: {ex.Message}";
+        }
+        finally
+        {
+            isGenerating = false;
+        }
+    }
+}

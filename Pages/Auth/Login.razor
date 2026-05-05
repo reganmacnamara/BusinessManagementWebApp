@@ -50,6 +50,7 @@
                               OnAdornmentClick="() => showPassword = !showPassword"
                               Required="true"
                               RequiredError="Password is required"
+                              Validation="@(new Func<string, string?>(ValidatePassword))"
                               Class="mb-4" />
 
                 @if (isRegisterMode)
@@ -71,6 +72,11 @@
                     <MudAlert Severity="Severity.Error" Class="mb-4" Dense="true">@errorMessage</MudAlert>
                 }
 
+                @if (!string.IsNullOrEmpty(successMessage))
+                {
+                    <MudAlert Severity="Severity.Success" Class="mb-4" Dense="true">@successMessage</MudAlert>
+                }
+
                 <MudButton Variant="Variant.Filled"
                            Color="Color.Primary"
                            FullWidth="true"
@@ -89,6 +95,14 @@
             <MudDivider Class="my-4" />
 
             <div style="text-align: center;">
+                @if (!isRegisterMode)
+                {
+                    <MudLink Href="/forgot-password"
+                             Style="font-weight: 600; display: inline-block; margin-bottom: 12px;">
+                        Forgot password?
+                    </MudLink>
+                }
+
                 <MudText Typo="Typo.body2" Style="color: #64748B;">
                     @(isRegisterMode ? "Already have an account?" : "Don't have an account?")
                     <MudLink OnClick="ToggleMode"
@@ -107,6 +121,7 @@
     private string password = string.Empty;
     private string confirmPassword = string.Empty;
     private string errorMessage = string.Empty;
+    private string successMessage = string.Empty;
     private bool isLoading;
     private bool isRegisterMode;
     private bool showPassword;
@@ -122,6 +137,8 @@
 
     protected override void OnInitialized()
     {
+        successMessage = GetQueryValue("message") ?? string.Empty;
+
         if (tokenService.IsAuthenticated)
             NavigationManager.NavigateTo("/");
     }
@@ -206,10 +223,38 @@
         return null;
     }
 
+    private string? ValidatePassword(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return null;
+
+        if (isRegisterMode && value.Length < 8)
+            return "Password must be at least 8 characters.";
+
+        return null;
+    }
+
     private void ToggleMode()
     {
         isRegisterMode = !isRegisterMode;
         errorMessage = string.Empty;
+        successMessage = string.Empty;
         confirmPassword = string.Empty;
+    }
+
+    private string? GetQueryValue(string key)
+    {
+        var query = NavigationManager.ToAbsoluteUri(NavigationManager.Uri).Query;
+        if (string.IsNullOrWhiteSpace(query)) return null;
+
+        foreach (var part in query.TrimStart('?').Split('&', StringSplitOptions.RemoveEmptyEntries))
+        {
+            var pieces = part.Split('=', 2);
+            if (!string.Equals(Uri.UnescapeDataString(pieces[0]), key, StringComparison.OrdinalIgnoreCase)) continue;
+
+            return pieces.Length == 2 ? Uri.UnescapeDataString(pieces[1].Replace("+", " ")) : string.Empty;
+        }
+
+        return null;
     }
 }

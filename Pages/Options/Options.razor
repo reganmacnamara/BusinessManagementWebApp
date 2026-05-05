@@ -14,6 +14,7 @@
 @inject IMapper mapper
 @inject ISnackbar Snackbar
 @inject AuthTokenService tokenService
+@inject NavigationManager NavigationManager
 
 <PageTitle>Options</PageTitle>
 
@@ -127,6 +128,90 @@
         </MudTabPanel>
 
         @* ───────── Accounts Tab ───────── *@
+        <MudTabPanel Text="Security" Icon="@Icons.Material.Filled.Security">
+            <MudPaper Elevation="0" Class="table-card pa-6">
+                <MudForm @ref="securityForm">
+                    <MudGrid Spacing="3">
+                        <MudItem xs="12">
+                            <MudText Typo="Typo.subtitle1" Style="font-weight: 600;" Class="mb-2">Change Password</MudText>
+                            <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-4">
+                                Update the password for your signed-in account.
+                            </MudText>
+                        </MudItem>
+
+                        <MudItem xs="12" md="4">
+                            <MudTextField @bind-Value="currentPassword"
+                                          Label="Current password"
+                                          Variant="Variant.Outlined"
+                                          InputType="@(showSecurityPasswords ? InputType.Text : InputType.Password)"
+                                          Adornment="Adornment.End"
+                                          AdornmentIcon="@(showSecurityPasswords ? Icons.Material.Filled.Visibility : Icons.Material.Filled.VisibilityOff)"
+                                          OnAdornmentClick="() => showSecurityPasswords = !showSecurityPasswords"
+                                          Required="true"
+                                          RequiredError="Current password is required" />
+                        </MudItem>
+
+                        <MudItem xs="12" md="4">
+                            <MudTextField @bind-Value="newPassword"
+                                          Label="New password"
+                                          Variant="Variant.Outlined"
+                                          InputType="@(showSecurityPasswords ? InputType.Text : InputType.Password)"
+                                          Adornment="Adornment.End"
+                                          AdornmentIcon="@(showSecurityPasswords ? Icons.Material.Filled.Visibility : Icons.Material.Filled.VisibilityOff)"
+                                          OnAdornmentClick="() => showSecurityPasswords = !showSecurityPasswords"
+                                          Required="true"
+                                          RequiredError="New password is required"
+                                          Validation="@(new Func<string, string?>(ValidateNewPassword))" />
+                        </MudItem>
+
+                        <MudItem xs="12" md="4">
+                            <MudTextField @bind-Value="confirmNewPassword"
+                                          Label="Confirm new password"
+                                          Variant="Variant.Outlined"
+                                          InputType="@(showSecurityPasswords ? InputType.Text : InputType.Password)"
+                                          Adornment="Adornment.End"
+                                          AdornmentIcon="@(showSecurityPasswords ? Icons.Material.Filled.Visibility : Icons.Material.Filled.VisibilityOff)"
+                                          OnAdornmentClick="() => showSecurityPasswords = !showSecurityPasswords"
+                                          Required="true"
+                                          RequiredError="Please confirm your new password" />
+                        </MudItem>
+
+                        @if (!string.IsNullOrWhiteSpace(passwordChangeError))
+                        {
+                            <MudItem xs="12">
+                                <MudAlert Severity="Severity.Error" Dense="true">
+                                    @passwordChangeError
+                                </MudAlert>
+                            </MudItem>
+                        }
+
+                        <MudItem xs="12" Class="d-flex justify-end">
+                            <MudStack Row="true" Spacing="2">
+                                <MudButton Color="Color.Default"
+                                           Variant="Variant.Text"
+                                           StartIcon="@Icons.Material.Filled.Close"
+                                           OnClick="ClearPasswordChangeForm"
+                                           Disabled="@passwordChanging">
+                                    Cancel
+                                </MudButton>
+                                <MudButton Color="Color.Primary"
+                                           Variant="Variant.Filled"
+                                           StartIcon="@Icons.Material.Filled.Save"
+                                           OnClick="ChangePassword"
+                                           Disabled="@passwordChanging">
+                                    @if (passwordChanging)
+                                    {
+                                        <MudProgressCircular Size="Size.Small" Color="Color.Inherit" Indeterminate="true" Class="mr-2" />
+                                    }
+                                    Save Password
+                                </MudButton>
+                            </MudStack>
+                        </MudItem>
+                    </MudGrid>
+                </MudForm>
+            </MudPaper>
+        </MudTabPanel>
+
         <MudTabPanel Text="Accounts" Icon="@Icons.Material.Filled.ManageAccounts">
             <MudPaper Elevation="0" Class="table-card">
                 <div class="d-flex align-center pa-4" style="border-bottom: 1px solid #E2E8F0;">
@@ -547,6 +632,107 @@
             return "Invalid email address.";
 
         return null;
+    }
+
+    #endregion
+
+    #region Security
+
+    private MudForm securityForm = default!;
+    private string currentPassword = string.Empty;
+    private string newPassword = string.Empty;
+    private string confirmNewPassword = string.Empty;
+    private string? passwordChangeError;
+    private bool passwordChanging;
+    private bool showSecurityPasswords;
+
+    private async Task ChangePassword()
+    {
+        await securityForm.Validate();
+        if (!securityForm.IsValid) return;
+
+        passwordChangeError = ValidatePasswordChange();
+        if (passwordChangeError is not null) return;
+
+        passwordChanging = true;
+
+        try
+        {
+            var response = await api.UpdatePasswordAsync(new UpdatePasswordRequest
+            {
+                CurrentPassword = currentPassword,
+                NewPassword = newPassword
+            });
+
+            if (response.IsSuccessStatusCode)
+            {
+                ClearPasswordChangeForm();
+                tokenService.ClearToken();
+
+                var message = Uri.EscapeDataString("Your password has been changed. Please sign in again.");
+                NavigationManager.NavigateTo($"/login?message={message}", forceLoad: true);
+            }
+            else
+            {
+                passwordChangeError = await GetPasswordChangeError(response);
+                ClearPasswordFields();
+            }
+        }
+        catch
+        {
+            passwordChangeError = "Unable to change your password. Please try again.";
+            ClearPasswordFields();
+        }
+        finally
+        {
+            passwordChanging = false;
+        }
+    }
+
+    private string? ValidatePasswordChange()
+    {
+        if (newPassword != confirmNewPassword)
+            return "Passwords do not match.";
+
+        if (currentPassword == newPassword)
+            return "New password must be different from your current password.";
+
+        return null;
+    }
+
+    private static async Task<string> GetPasswordChangeError(HttpResponseMessage response)
+    {
+        return response.StatusCode switch
+        {
+            System.Net.HttpStatusCode.Unauthorized => "The current password is incorrect.",
+            System.Net.HttpStatusCode.TooManyRequests => "Too many attempts. Please try again shortly.",
+            System.Net.HttpStatusCode.BadRequest => await response.GetErrorBodyAsync(),
+            _ => "Unable to change your password. Please try again."
+        };
+    }
+
+    private static string? ValidateNewPassword(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return null;
+
+        if (value.Length < 8)
+            return "Password must be at least 8 characters.";
+
+        return null;
+    }
+
+    private void ClearPasswordChangeForm()
+    {
+        passwordChangeError = null;
+        ClearPasswordFields();
+    }
+
+    private void ClearPasswordFields()
+    {
+        currentPassword = string.Empty;
+        newPassword = string.Empty;
+        confirmNewPassword = string.Empty;
     }
 
     #endregion
