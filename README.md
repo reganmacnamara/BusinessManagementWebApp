@@ -14,8 +14,11 @@ A modern, responsive business management frontend for tracking clients, invoices
 ## Features
 
 ### Authentication
-- JWT-based login and registration with automatic token expiry handling
+- JWT-based login and registration with short-lived access tokens (60 min) and long-lived refresh tokens (30 days)
+- Refresh tokens stored server-side and automatically rotated on use
+- Automatic token refresh on expiry with transparent retry of failed requests
 - Bearer token attached to all API requests via a custom `DelegatingHandler`
+- Logout revokes refresh token server-side
 - Unauthenticated users are automatically redirected to the login screen
 
 ### Dashboard
@@ -83,7 +86,7 @@ Data/
 └── ApiClient.cs             # Central HTTP client wrapping all API calls
 
 Infrastructure/
-├── Services/Auth/           # AuthTokenService, AuthHeaderHandler
+├── Services/Auth/           # AuthTokenService (token + refresh cookie storage), AuthHeaderHandler (auto-refresh on 401, cookie attach/capture)
 └── AutoMapper/              # Mapping profiles between entities and DTOs
 ```
 
@@ -148,7 +151,7 @@ Create Client  →  Raise Invoice  →  Add Line Items  →  Receive Payment  �
 
 | Module | Endpoints |
 |---|---|
-| **Auth** | `POST /Auth/Login` · `POST /Auth/Register` |
+| **Auth** | `POST /Auth/Login` · `POST /Auth/Register` · `POST /Auth/Refresh` · `POST /Auth/Logout` |
 | **Clients** | `GET /Client` · `GET /Client/{id}` · `POST /Client` · `PATCH /Client` · `DELETE /Client/{id}` |
 | **Invoices** | `GET /Invoice` · `GET /Invoice/{id}` · `GET /Invoice/Client/{id}` · `POST /Invoice` · `PATCH /Invoice` · `DELETE /Invoice/{id}` · `PUT /Invoice/Item` · `DELETE /Invoice/Item/{id}` · `GET /Invoice/{id}/pdf` |
 | **Receipts** | `GET /Receipt` · `GET /Receipt/{id}` · `GET /Receipt/Client/{id}` · `POST /Receipt` · `PATCH /Receipt` · `DELETE /Receipt/{id}` · `PUT /Receipt/Item` · `DELETE /Receipt/Item/{id}` · `GET /Receipt/{id}/pdf` |
