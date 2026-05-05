@@ -50,6 +50,12 @@ namespace MacsBusinessManagementWebApp.Data
         public async Task<HttpResponseMessage> RegisterAsync(RegisterAccountRequest request)
             => await http.PostAsJsonAsync("/Auth/Register", request);
 
+        public async Task<HttpResponseMessage> RefreshAsync()
+            => await http.PostAsync("/Auth/Refresh", content: null);
+
+        public async Task<HttpResponseMessage> LogoutAsync()
+            => await http.PostAsync("/Auth/Logout", content: null);
+
         #endregion
 
         #region Client Endpoints

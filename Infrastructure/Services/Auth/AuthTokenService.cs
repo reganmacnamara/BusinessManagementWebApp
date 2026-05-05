@@ -8,6 +8,7 @@ public class AuthTokenService
     public DateTime? Expiry { get; private set; }
     public bool IsAuthenticated => !string.IsNullOrEmpty(Token) && Expiry > DateTime.UtcNow;
     public bool HasCompany { get; private set; }
+    public string? RefreshCookie { get; private set; }
 
     public void SetToken(string token, DateTime expiry)
     {
@@ -20,10 +21,13 @@ public class AuthTokenService
         HasCompany = companyIdClaim is not null && long.TryParse(companyIdClaim.Value, out var id) && id > 0;
     }
 
+    public void SetRefreshCookie(string cookie) => RefreshCookie = cookie;
+
     public void ClearToken()
     {
         Token = null;
         Expiry = null;
         HasCompany = false;
+        RefreshCookie = null;
     }
 }

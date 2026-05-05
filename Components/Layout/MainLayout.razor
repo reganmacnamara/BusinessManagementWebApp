@@ -1,5 +1,7 @@
 @inherits LayoutComponentBase
+@using MacsBusinessManagementWebApp.Data
 @using MacsBusinessManagementWebApp.Infrastructure.Services.Auth
+@inject ApiClient api
 @inject AuthTokenService tokenService
 @inject NavigationManager NavigationManager
 
@@ -132,8 +134,17 @@
 
     private void NavigateToOptions() => NavigationManager.NavigateTo("/options");
 
-    private void Logout()
+    private async Task Logout()
     {
+        try
+        {
+            await api.LogoutAsync();
+        }
+        catch
+        {
+            // Ignore — clearing local state below still ends the session client-side.
+        }
+
         tokenService.ClearToken();
         NavigationManager.NavigateTo("/login", forceLoad: true);
     }
