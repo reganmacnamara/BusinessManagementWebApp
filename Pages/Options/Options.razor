@@ -1,16 +1,19 @@
 @page "/options"
 @using AutoMapper
 @using MacsBusinessManagementWebApp.Data
+@using MacsBusinessManagementWebApp.Data.Accounts
 @using MacsBusinessManagementWebApp.Data.Companies.UpdateCompany
 @using MacsBusinessManagementWebApp.Data.CompanySettings.UpsertCompanySettings
 @using MacsBusinessManagementWebApp.Data.Entities
 @using MacsBusinessManagementWebApp.Data.PaymentTerms.UpdatePaymentTerm
+@using MacsBusinessManagementWebApp.Infrastructure.Services.Auth
 @using MudBlazor
 
 @inject ApiClient api
 @inject IDialogService DialogService
 @inject IMapper mapper
 @inject ISnackbar Snackbar
+@inject AuthTokenService tokenService
 
 <PageTitle>Options</PageTitle>
 
@@ -119,6 +122,181 @@
                             </MudButton>
                         </MudItem>
                     </MudGrid>
+                }
+            </MudPaper>
+        </MudTabPanel>
+
+        @* ───────── Accounts Tab ───────── *@
+        <MudTabPanel Text="Accounts" Icon="@Icons.Material.Filled.ManageAccounts">
+            <MudPaper Elevation="0" Class="table-card">
+                <div class="d-flex align-center pa-4" style="border-bottom: 1px solid #E2E8F0;">
+                    <div>
+                        <MudText Typo="Typo.subtitle1" Style="font-weight: 600;">Accounts</MudText>
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">Create and manage logins that can access this company.</MudText>
+                    </div>
+                    <MudSpacer />
+                    <MudTooltip Text="Refresh accounts">
+                        <MudIconButton Icon="@Icons.Material.Filled.Refresh"
+                                       Color="Color.Primary"
+                                       OnClick="LoadAccounts"
+                                       Disabled="@accountsLoading" />
+                    </MudTooltip>
+                </div>
+
+                <div class="pa-4" style="border-bottom: 1px solid #E2E8F0;">
+                    <MudGrid Spacing="2">
+                        <MudItem xs="12" md="5">
+                            <MudTextField @bind-Value="addAccountEmail"
+                                          Label="New account email"
+                                          Placeholder="teammate@example.com"
+                                          InputType="InputType.Email"
+                                          Variant="Variant.Outlined"
+                                          Immediate="true"
+                                          HelperText="Creates a new login with access to this company."
+                                          Error="@(!string.IsNullOrWhiteSpace(addAccountError))"
+                                          ErrorText="@addAccountError"
+                                          Validation="@(new Func<string, string?>(ValidateEmail))" />
+                        </MudItem>
+                        <MudItem xs="12" md="4">
+                            <MudTextField @bind-Value="addAccountPassword"
+                                          Label="Temporary password"
+                                          InputType="InputType.Password"
+                                          Variant="Variant.Outlined"
+                                          Immediate="true"
+                                          Error="@(!string.IsNullOrWhiteSpace(addAccountPasswordError))"
+                                          ErrorText="@addAccountPasswordError" />
+                        </MudItem>
+                        <MudItem xs="12" md="3" Class="d-flex justify-end">
+                            <MudButton Color="Color.Primary"
+                                       Variant="Variant.Filled"
+                                       StartIcon="@Icons.Material.Filled.PersonAdd"
+                                       OnClick="AddAccount"
+                                       Disabled="@accountAdding">
+                                @if (accountAdding)
+                                {
+                                    <MudProgressCircular Size="Size.Small" Color="Color.Inherit" Indeterminate="true" Class="mr-2" />
+                                }
+                                Add Account
+                            </MudButton>
+                        </MudItem>
+                    </MudGrid>
+                    @if (!string.IsNullOrWhiteSpace(addAccountFormError))
+                    {
+                        <MudAlert Severity="Severity.Error" Dense="true" Class="mt-3">
+                            @addAccountFormError
+                        </MudAlert>
+                    }
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(accountActionMessage))
+                {
+                    <MudAlert Severity="@accountActionSeverity" Dense="true" Class="ma-4">
+                        @accountActionMessage
+                    </MudAlert>
+                }
+
+                @if (accountsLoadError)
+                {
+                    <MudAlert Severity="Severity.Warning" Class="ma-4">
+                        Unable to load company accounts.
+                    </MudAlert>
+                }
+                else
+                {
+                    <MudTable Items="@accounts"
+                              Hover="true"
+                              Dense="true"
+                              Loading="@accountsLoading"
+                              Breakpoint="Breakpoint.Sm"
+                              Class="account-table">
+                        <HeaderContent>
+                            <MudTh>Email</MudTh>
+                            <MudTh>Status</MudTh>
+                            <MudTh>Created</MudTh>
+                            <MudTh>Last Login</MudTh>
+                            <MudTh Style="width: 150px; text-align: right;">Actions</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd DataLabel="Email">
+                                @if (IsEditingAccount(context))
+                                {
+                                    <MudTextField @bind-Value="editingAccount.Email"
+                                                  Label="Email"
+                                                  InputType="InputType.Email"
+                                                  Variant="Variant.Outlined"
+                                                  Immediate="true"
+                                                  Error="@(!string.IsNullOrWhiteSpace(editAccountError))"
+                                                  ErrorText="@editAccountError"
+                                                  Validation="@(new Func<string, string?>(ValidateEmail))" />
+                                }
+                                else
+                                {
+                                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                                        <MudText>@context.Email</MudText>
+                                        @if (IsCurrentAccount(context))
+                                        {
+                                            <MudChip T="string" Size="Size.Small" Color="Color.Info" Variant="Variant.Outlined">You</MudChip>
+                                        }
+                                    </MudStack>
+                                }
+                            </MudTd>
+                            <MudTd DataLabel="Status">
+                                @if (IsEditingAccount(context))
+                                {
+                                    <MudSwitch @bind-Value="editingAccount.IsActive"
+                                               Color="Color.Primary"
+                                               Label="Active"
+                                               Disabled="@IsCurrentAccount(context)" />
+                                }
+                                else
+                                {
+                                    <MudChip T="string"
+                                             Size="Size.Small"
+                                             Color="@(context.IsActive ? Color.Success : Color.Default)"
+                                             Variant="Variant.Filled">
+                                        @(context.IsActive ? "Active" : "Inactive")
+                                    </MudChip>
+                                }
+                            </MudTd>
+                            <MudTd DataLabel="Created">@FormatDate(context.CreatedDate)</MudTd>
+                            <MudTd DataLabel="Last Login">@FormatDate(context.LastLoginDate)</MudTd>
+                            <MudTd DataLabel="Actions" Style="text-align: right;">
+                                @if (IsEditingAccount(context))
+                                {
+                                    <MudTooltip Text="Save account">
+                                        <MudIconButton Icon="@Icons.Material.Filled.Save"
+                                                       Color="Color.Primary"
+                                                       OnClick="SaveAccount"
+                                                       Disabled="@accountUpdating" />
+                                    </MudTooltip>
+                                    <MudTooltip Text="Cancel edit">
+                                        <MudIconButton Icon="@Icons.Material.Filled.Close"
+                                                       Color="Color.Default"
+                                                       OnClick="CancelAccountEdit"
+                                                       Disabled="@accountUpdating" />
+                                    </MudTooltip>
+                                }
+                                else
+                                {
+                                    <MudTooltip Text="Edit account">
+                                        <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                                       Color="Color.Primary"
+                                                       OnClick="@(() => BeginAccountEdit(context))"
+                                                       Disabled="@(accountEditing || accountsLoading)" />
+                                    </MudTooltip>
+                                    <MudTooltip Text="@GetRemoveAccountTooltip(context)">
+                                        <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                                       Color="Color.Error"
+                                                       OnClick="@(() => ConfirmRemoveAccount(context))"
+                                                       Disabled="@(!CanRemoveAccount(context) || accountRemoving)" />
+                                    </MudTooltip>
+                                }
+                            </MudTd>
+                        </RowTemplate>
+                        <NoRecordsContent>
+                            <MudText Class="pa-4" Color="Color.Secondary">No company accounts found.</MudText>
+                        </NoRecordsContent>
+                    </MudTable>
                 }
             </MudPaper>
         </MudTabPanel>
@@ -279,6 +457,17 @@
 
 </MudContainer>
 
+<MudMessageBox @ref="removeAccountConfirmationMessage"
+               Title="Remove account"
+               CancelText="Cancel">
+    <MessageContent>
+        Remove @accountToRemove?.Email from this company?
+    </MessageContent>
+    <YesButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.PersonRemove">Remove</MudButton>
+    </YesButton>
+</MudMessageBox>
+
 @* Delete confirmation for payment terms *@
 <MudMessageBox @ref="deleteConfirmationMessage"
                Title="Warning"
@@ -359,6 +548,261 @@
 
         return null;
     }
+
+    #endregion
+
+    #region Accounts
+
+    private MudMessageBox removeAccountConfirmationMessage = default!;
+    private List<CompanyAccount> accounts = [];
+    private CompanyAccount editingAccount = new();
+    private CompanyAccount? accountToRemove;
+    private string addAccountEmail = string.Empty;
+    private string addAccountPassword = string.Empty;
+    private string? addAccountError;
+    private string? addAccountPasswordError;
+    private string? addAccountFormError;
+    private string? editAccountError;
+    private string? accountActionMessage;
+    private Severity accountActionSeverity = Severity.Info;
+    private bool accountsLoading = true;
+    private bool accountsLoadError;
+    private bool accountAdding;
+    private bool accountEditing;
+    private bool accountUpdating;
+    private bool accountRemoving;
+    private long editingAccountID;
+
+    private async Task LoadAccounts()
+    {
+        accountsLoading = true;
+        accountsLoadError = false;
+
+        try
+        {
+            var response = await api.GetAccountsAsync();
+            accounts = response.Accounts ?? [];
+        }
+        catch
+        {
+            accounts = [];
+            accountsLoadError = true;
+        }
+        finally
+        {
+            accountsLoading = false;
+        }
+    }
+
+    private async Task AddAccount()
+    {
+        addAccountError = ValidateRequiredEmail(addAccountEmail);
+        addAccountPasswordError = ValidatePassword(addAccountPassword);
+        addAccountFormError = null;
+        if (addAccountError is not null || addAccountPasswordError is not null) return;
+
+        accountAdding = true;
+        accountActionMessage = null;
+
+        try
+        {
+            var response = await api.AddAccountAsync(new AddAccountRequest
+            {
+                Email = addAccountEmail.Trim(),
+                Password = addAccountPassword
+            });
+
+            if (response.IsSuccessStatusCode)
+            {
+                addAccountEmail = string.Empty;
+                addAccountPassword = string.Empty;
+                addAccountError = null;
+                addAccountPasswordError = null;
+                addAccountFormError = null;
+                SetAccountMessage("Account added.", Severity.Success);
+                await LoadAccounts();
+            }
+            else
+            {
+                addAccountFormError = await response.GetErrorBodyAsync();
+            }
+        }
+        catch
+        {
+            addAccountFormError = "Unable to add account.";
+        }
+        finally
+        {
+            accountAdding = false;
+        }
+    }
+
+    private async Task BeginAccountEdit(CompanyAccount account)
+    {
+        accountEditing = true;
+        editAccountError = null;
+        accountActionMessage = null;
+
+        try
+        {
+            var latest = await api.GetAccountAsync(account.AccountID);
+            editingAccountID = latest.AccountID;
+            editingAccount = new CompanyAccount
+            {
+                AccountID = latest.AccountID,
+                Email = latest.Email,
+                IsActive = latest.IsActive,
+                CreatedDate = latest.CreatedDate,
+                LastLoginDate = latest.LastLoginDate
+            };
+        }
+        catch
+        {
+            SetAccountMessage("Unable to load the latest account details.", Severity.Error);
+            accountEditing = false;
+            editingAccountID = 0;
+        }
+    }
+
+    private async Task SaveAccount()
+    {
+        editAccountError = ValidateRequiredEmail(editingAccount.Email);
+        if (editAccountError is not null) return;
+
+        accountUpdating = true;
+
+        try
+        {
+            var response = await api.UpdateAccountAsync(new UpdateAccountRequest
+            {
+                AccountID = editingAccount.AccountID,
+                Email = editingAccount.Email.Trim(),
+                IsActive = editingAccount.IsActive
+            });
+
+            if (response.IsSuccessStatusCode)
+            {
+                CancelAccountEdit();
+                SetAccountMessage("Account updated.", Severity.Success);
+                await LoadAccounts();
+            }
+            else
+            {
+                editAccountError = await response.GetErrorBodyAsync();
+            }
+        }
+        catch
+        {
+            editAccountError = "Unable to update account.";
+        }
+        finally
+        {
+            accountUpdating = false;
+        }
+    }
+
+    private void CancelAccountEdit()
+    {
+        accountEditing = false;
+        editingAccountID = 0;
+        editingAccount = new();
+        editAccountError = null;
+    }
+
+    private async Task ConfirmRemoveAccount(CompanyAccount account)
+    {
+        if (!CanRemoveAccount(account)) return;
+
+        accountToRemove = account;
+        var result = await removeAccountConfirmationMessage.ShowAsync();
+        if (result is null)
+        {
+            accountToRemove = null;
+            return;
+        }
+
+        await RemoveAccount(account);
+        accountToRemove = null;
+    }
+
+    private async Task RemoveAccount(CompanyAccount account)
+    {
+        accountRemoving = true;
+        accountActionMessage = null;
+
+        try
+        {
+            var response = await api.RemoveAccountAsync(account.AccountID);
+            if (response.IsSuccessStatusCode)
+            {
+                SetAccountMessage("Account removed.", Severity.Success);
+                await LoadAccounts();
+            }
+            else
+            {
+                SetAccountMessage(await response.GetErrorBodyAsync(), Severity.Error);
+            }
+        }
+        catch
+        {
+            SetAccountMessage("Unable to remove account.", Severity.Error);
+        }
+        finally
+        {
+            accountRemoving = false;
+        }
+    }
+
+    private bool IsEditingAccount(CompanyAccount account)
+        => editingAccountID == account.AccountID;
+
+    private bool IsCurrentAccount(CompanyAccount account)
+        => account.AccountID == tokenService.AccountID;
+
+    private bool CanRemoveAccount(CompanyAccount account)
+        => !IsCurrentAccount(account) && accounts.Count > 1;
+
+    private string GetRemoveAccountTooltip(CompanyAccount account)
+    {
+        if (IsCurrentAccount(account))
+            return "You cannot remove your own account";
+
+        if (accounts.Count <= 1)
+            return "The company must keep at least one account";
+
+        return "Remove account";
+    }
+
+    private void SetAccountMessage(string message, Severity severity)
+    {
+        accountActionMessage = message;
+        accountActionSeverity = severity;
+    }
+
+    private static string? ValidateRequiredEmail(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return "Email is required.";
+
+        return ValidateEmail(value);
+    }
+
+    private static string? ValidatePassword(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return "Password is required.";
+
+        if (value.Length < 8)
+            return "Password must be at least 8 characters.";
+
+        return null;
+    }
+
+    private static string FormatDate(DateTime value)
+        => value == default ? "-" : value.ToLocalTime().ToString("dd MMM yyyy h:mm tt");
+
+    private static string FormatDate(DateTime? value)
+        => value.HasValue ? FormatDate(value.Value) : "-";
 
     #endregion
 
@@ -513,10 +957,11 @@
     protected override async Task OnInitializedAsync()
     {
         var companyTask = LoadCompany();
+        var accountsTask = LoadAccounts();
         var termsTask = LoadPaymentTerms();
         var settingsTask = LoadSettings();
 
-        await Task.WhenAll(companyTask, termsTask, settingsTask);
+        await Task.WhenAll(companyTask, accountsTask, termsTask, settingsTask);
         StateHasChanged();
     }
 }

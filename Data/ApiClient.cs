@@ -36,6 +36,8 @@ using MacsBusinessManagementWebApp.Data.Services.GetServices;
 using MacsBusinessManagementWebApp.Data.Services.UpdateService;
 using MacsBusinessManagementWebApp.Data.Services.UpsertServiceActivity;
 
+using MacsBusinessManagementWebApp.Data.Accounts;
+
 namespace MacsBusinessManagementWebApp.Data
 {
 
@@ -55,6 +57,25 @@ namespace MacsBusinessManagementWebApp.Data
 
         public async Task<HttpResponseMessage> LogoutAsync()
             => await http.PostAsync("/Auth/Logout", content: null);
+
+        #endregion
+
+        #region Account Endpoints
+
+        public async Task<HttpResponseMessage> AddAccountAsync(AddAccountRequest request)
+            => await http.PostAsJsonAsync("/Account", request);
+
+        public async Task<HttpResponseMessage> RemoveAccountAsync(long accountID)
+            => await http.DeleteAsync($"/Account/{accountID}");
+
+        public async Task<GetAccountResponse> GetAccountAsync(long accountID)
+            => await http.GetFromJsonAsync<GetAccountResponse>($"/Account/{accountID}") ?? new();
+
+        public async Task<GetAccountsResponse> GetAccountsAsync()
+            => await http.GetFromJsonAsync<GetAccountsResponse>("/Account") ?? new();
+
+        public async Task<HttpResponseMessage> UpdateAccountAsync(UpdateAccountRequest request)
+            => await http.PatchAsJsonAsync("/Account", request);
 
         #endregion
 
